@@ -7,6 +7,8 @@ import CadastroScreen from './screens/CadastroScreen';
 import ListaScreen from './screens/ListaScreen';
 import ExameScreen from './screens/ExameScreen';
 import SobreScreen from './screens/SobreScreen';
+import ScanScreen from './screens/ScanScreen';
+import ResultadoScreen from './screens/ResultadoScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -39,6 +41,9 @@ export default function App() {
 
         <Stack.Screen name="Exame" component={ExameScreen} />
         <Stack.Screen name="Sobre" component={SobreScreen} />
+        <Stack.Screen name="Scan" component={ScanScreen} />
+        <Stack.Screen name="Resultado" component={ResultadoScreen} />
+
       </Stack.Navigator>
     </NavigationContainer>
   );
