@@ -8,25 +8,33 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import ImageZoom from 'react-native-image-pan-zoom';
+import Slider from '@react-native-community/slider';
 
 const { width, height } = Dimensions.get('window');
 
 export default function ResultadoScreen({ route }) {
   const { paciente, idade, sexo, etnia, exame } = route.params;
   const [selectedId, setSelectedId] = useState(null);
+  const [contrast, setContrast] = useState(1); // 0.5 (baixo) a 1.5 (alto)
 
-  // Usando a imagem enviada
   const imagemColuna = require('../assets/coluna-lombar.jpeg');
 
-  // Retângulos interativos para L1 a L4
   const vertebras = [
     { id: 'L1', x: 110, y: 30, width: 125, height: 70 },
     { id: 'L2', x: 110, y: 105, width: 125, height: 70 },
-    { id: 'L3', x: 110, y: 185, width: 125, height: 70 },
+    { id: 'L3', x: 114, y: 185, width: 120, height: 70 },
     { id: 'L4', x: 110, y: 260, width: 125, height: 70 },
   ];
 
   const selected = vertebras.find(v => v.id === selectedId);
+
+  const overlayOpacity = contrast < 1 ? 1 - contrast : 0;
+  const imageStyle = {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'contain',
+    
+  };
 
   return (
     <View style={styles.container}>
@@ -46,8 +54,18 @@ export default function ResultadoScreen({ route }) {
         imageHeight={height * 0.5}
       >
         <View style={styles.imageWrapper}>
-          <Image source={imagemColuna} style={styles.image} />
-
+          <Image source={imagemColuna} style={imageStyle} />
+          <View
+            style={{
+              position: 'absolute',
+              left: 40,
+              top: 0,
+              width: '76%',
+              height: '100%',
+              backgroundColor: '#000000ff',
+              opacity: overlayOpacity,
+            }}
+          />
           {vertebras.map((v) => (
             <TouchableOpacity
               key={v.id}
@@ -65,6 +83,18 @@ export default function ResultadoScreen({ route }) {
           ))}
         </View>
       </ImageZoom>
+
+      <View style={styles.sliderBox}>
+        <Text style={styles.label}>Contraste: {contrast.toFixed(2)}</Text>
+        <Slider
+          minimumValue={0.5}
+          maximumValue={1.5}
+          value={contrast}
+          onValueChange={setContrast}
+          minimumTrackTintColor="#00ffff"
+          maximumTrackTintColor="#ccc"
+        />
+      </View>
 
       <View style={styles.laudoBox}>
         <Text style={styles.laudoTitle}>Laudo Técnico</Text>
@@ -92,10 +122,19 @@ const styles = StyleSheet.create({
     width: '90%',
   },
   infoText: { fontSize: 16, color: '#333', marginBottom: 5 },
-  imageWrapper: { width: width * 0.8, height: height * 0.5 },
-  image: { width: '100%', height: '100%', resizeMode: 'contain' },
+  imageWrapper: {
+    width: width * 0.8,
+    height: height * 0.5,
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  sliderBox: {
+    width: '90%',
+    marginTop: 10,
+    marginBottom: 20,
+  },
+  label: { fontSize: 16, fontWeight: '600', marginBottom: 5 },
   laudoBox: {
-    marginTop: 20,
     padding: 15,
     backgroundColor: '#f0f4f8',
     borderRadius: 8,

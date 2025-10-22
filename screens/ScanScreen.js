@@ -21,7 +21,7 @@ export default function ScanScreen({ route }) {
   useEffect(() => {
     Animated.timing(scanAnim, {
       toValue: 0,
-      duration: 4000,
+      duration: 5000,
       useNativeDriver: true,
     }).start();
 
@@ -59,12 +59,6 @@ export default function ScanScreen({ route }) {
         />
       </MaskedView>
 
-      <Animated.View
-        style={[
-          styles.scanLine,
-          { transform: [{ translateY: scanAnim }] },
-        ]}
-      />
 
       <Text style={styles.text}>Escaneando {exame}...</Text>
     </View>
@@ -92,14 +86,6 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
     backgroundColor: '#fff',
-  },
-  scanLine: {
-    position: 'absolute',
-    width: '80%',
-    height: 4,
-    backgroundColor: '#00ffff',
-    borderRadius: 2,
-    zIndex: 10,
   },
   text: {
     position: 'absolute',
