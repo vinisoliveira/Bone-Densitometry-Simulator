@@ -54,7 +54,7 @@ export default function ScanScreen({ route }) {
         }
       >
         <Image
-          source={require('../assets/coluna-lombar.png')}
+          source={require('../assets/coluna-lombar.jpeg')}
           style={styles.image}
         />
       </MaskedView>

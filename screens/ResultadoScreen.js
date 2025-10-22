@@ -8,7 +8,6 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import ImageZoom from 'react-native-image-pan-zoom';
-import Svg, { Circle } from 'react-native-svg';
 
 const { width, height } = Dimensions.get('window');
 
@@ -16,34 +15,18 @@ export default function ResultadoScreen({ route }) {
   const { paciente, idade, sexo, etnia, exame } = route.params;
   const [selectedId, setSelectedId] = useState(null);
 
-  // Mapeamento de imagens e laudos
-  const imagens = {
-    'Coluna Lombar': require('../assets/coluna-lombar.png'),
-    'Raio-X Torácico': require('../assets/torax.png'),
-    'Tomografia Cervical': require('../assets/cervical.png'),
-  };
+  // Usando a imagem enviada
+  const imagemColuna = require('../assets/coluna-lombar.jpeg');
 
-  const laudos = {
-    'Coluna Lombar':
-      'Retificação da lordose lombar fisiológica. Sem fraturas ou lesões agudas. Estruturas articulares preservadas.',
-    'Raio-X Torácico':
-      'Campos pulmonares sem alterações. Silhueta cardíaca dentro dos limites. Sem derrame pleural.',
-    'Tomografia Cervical':
-      'Alinhamento vertebral preservado. Discretas alterações degenerativas em C5-C6. Sem compressão medular.',
-  };
+  // Retângulos interativos para L1 a L4
+  const vertebras = [
+    { id: 'L1', x: 110, y: 30, width: 125, height: 70 },
+    { id: 'L2', x: 110, y: 105, width: 125, height: 70 },
+    { id: 'L3', x: 110, y: 185, width: 125, height: 70 },
+    { id: 'L4', x: 110, y: 260, width: 125, height: 70 },
+  ];
 
-  // Pontos interativos (exemplo para coluna lombar)
-  const pontos = exame === 'Coluna Lombar'
-    ? [
-        { id: 'L1', x: 150, y: 100 },
-        { id: 'L2', x: 150, y: 140 },
-        { id: 'L3', x: 150, y: 180 },
-        { id: 'L4', x: 150, y: 220 },
-        { id: 'L5', x: 150, y: 260 },
-      ]
-    : [];
-
-  const selected = pontos.find(p => p.id === selectedId);
+  const selected = vertebras.find(v => v.id === selectedId);
 
   return (
     <View style={styles.container}>
@@ -63,33 +46,21 @@ export default function ResultadoScreen({ route }) {
         imageHeight={height * 0.5}
       >
         <View style={styles.imageWrapper}>
-          <Image
-            source={imagens[exame]}
-            style={styles.image}
-          />
-          <Svg style={StyleSheet.absoluteFill}>
-            {selected && (
-              <Circle
-                cx={selected.x}
-                cy={selected.y}
-                r="20"
-                stroke="#00ffff"
-                strokeWidth="3"
-                fill="transparent"
-              />
-            )}
-          </Svg>
-          {pontos.map((ponto) => (
+          <Image source={imagemColuna} style={styles.image} />
+
+          {vertebras.map((v) => (
             <TouchableOpacity
-              key={ponto.id}
+              key={v.id}
               style={{
                 position: 'absolute',
-                left: ponto.x - 20,
-                top: ponto.y - 20,
-                width: 40,
-                height: 40,
+                left: v.x,
+                top: v.y,
+                width: v.width,
+                height: v.height,
+                borderWidth: selectedId === v.id ? 2 : 0,
+                borderColor: '#00ffff',
               }}
-              onPress={() => setSelectedId(ponto.id)}
+              onPress={() => setSelectedId(v.id)}
             />
           ))}
         </View>
@@ -97,7 +68,9 @@ export default function ResultadoScreen({ route }) {
 
       <View style={styles.laudoBox}>
         <Text style={styles.laudoTitle}>Laudo Técnico</Text>
-        <Text style={styles.laudoText}>{laudos[exame]}</Text>
+        <Text style={styles.laudoText}>
+          Retificação da lordose lombar fisiológica. Sem fraturas ou lesões agudas. Estruturas articulares preservadas.
+        </Text>
         {selected && (
           <Text style={styles.laudoText}>
             Vértebra selecionada: {selected.id}
