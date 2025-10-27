@@ -22,8 +22,7 @@ const SobreScreen = ({ navigation }) => {
         • React Native{'\n'}
         • Expo{'\n'}
         • React Navigation{'\n'}
-        • Gesture Handler{'\n'}
-        • Animações com Animated API
+        
       </Text>
 
       <Text style={styles.sectionTitle}>👨‍💻 Desenvolvedores</Text>

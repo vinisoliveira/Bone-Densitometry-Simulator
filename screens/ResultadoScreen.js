@@ -8,6 +8,9 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import ImageZoom from 'react-native-image-pan-zoom';
+import { colors, spacing, typography } from '../src/styles/theme';
+import { useNavigation } from '@react-navigation/native';
+
 
 const { width, height } = Dimensions.get('window');
 
@@ -15,10 +18,10 @@ export default function ResultadoScreen({ route }) {
   const { paciente, idade, sexo, etnia, exame } = route.params;
   const [selectedId, setSelectedId] = useState(null);
 
-  // Usando a imagem enviada
   const imagemColuna = require('../assets/coluna-lombar.jpeg');
 
-  // Retângulos interativos para L1 a L4
+  const navigation = useNavigation();
+
   const vertebras = [
     { id: 'L1', x: 110, y: 30, width: 125, height: 70 },
     { id: 'L2', x: 110, y: 105, width: 125, height: 70 },
@@ -26,11 +29,11 @@ export default function ResultadoScreen({ route }) {
     { id: 'L4', x: 110, y: 260, width: 125, height: 70 },
   ];
 
-  const selected = vertebras.find(v => v.id === selectedId);
+  const vertebraSelecionada = vertebras.find((v) => v.id === selectedId);
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Resultado: {exame}</Text>
+      <Text style={styles.title}>GLOBAL ROI {exame}</Text>
 
       <View style={styles.infoBox}>
         <Text style={styles.infoText}>Paciente: {paciente}</Text>
@@ -47,7 +50,6 @@ export default function ResultadoScreen({ route }) {
       >
         <View style={styles.imageWrapper}>
           <Image source={imagemColuna} style={styles.image} />
-
           {vertebras.map((v) => (
             <TouchableOpacity
               key={v.id}
@@ -58,49 +60,109 @@ export default function ResultadoScreen({ route }) {
                 width: v.width,
                 height: v.height,
                 borderWidth: selectedId === v.id ? 2 : 0,
-                borderColor: '#00ffff',
+                borderColor: "yellow",
               }}
               onPress={() => setSelectedId(v.id)}
             />
           ))}
+
+          {vertebraSelecionada && (
+            <Text
+              style={{
+                position: 'absolute',
+                left: vertebraSelecionada.x,
+                top: vertebraSelecionada.y + 1,
+                color: "yellow",
+                fontWeight: 'bold',
+                fontSize: 16,
+                paddingHorizontal: 4,
+              }}
+            >
+              {vertebraSelecionada.id}
+            </Text>
+          )}
         </View>
       </ImageZoom>
 
-      <View style={styles.laudoBox}>
-        <Text style={styles.laudoTitle}>Laudo Técnico</Text>
-        <Text style={styles.laudoText}>
-          Retificação da lordose lombar fisiológica. Sem fraturas ou lesões agudas. Estruturas articulares preservadas.
-        </Text>
-        {selected && (
-          <Text style={styles.laudoText}>
-            Vértebra selecionada: {selected.id}
-          </Text>
-        )}
+      <View style={styles.divider} />
+
+      <View style={styles.controls}>
+        <TouchableOpacity style={styles.button}>
+          <Text style={typography.buttonText}>Aplicar Ajustes</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.button, { backgroundColor: colors.accent }]}
+          onPress={() =>
+            navigation.navigate('Relatorio', {
+              paciente,
+              idade,
+              sexo,
+              etnia,
+              exame,
+              vertebraSelecionada: selectedId,
+            })
+          }
+        >
+          <Text style={typography.buttonText}>📝 Ver Relatório</Text>
+        </TouchableOpacity>
+
+
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff', paddingTop: 40, alignItems: 'center' },
-  title: { fontSize: 22, fontWeight: 'bold', marginBottom: 20, color: '#0a1f44' },
+  container: {
+    flex: 1,
+    backgroundColor: 'white',
+    paddingTop: spacing.xl,
+    alignItems: 'center',
+  },
+  title: {
+    ...typography.title,
+    fontSize: 22,
+    marginBottom: spacing.lg,
+    color: colors.dark,
+  },
   infoBox: {
-    marginBottom: 20,
-    padding: 15,
-    backgroundColor: '#f0f4f8',
+    marginBottom: spacing.lg,
+    padding: spacing.md,
+    backgroundColor: colors.surface,
     borderRadius: 8,
     width: '90%',
+    elevation: 2,
   },
-  infoText: { fontSize: 16, color: '#333', marginBottom: 5 },
-  imageWrapper: { width: width * 0.8, height: height * 0.5 },
-  image: { width: '100%', height: '100%', resizeMode: 'contain' },
-  laudoBox: {
-    marginTop: 20,
-    padding: 15,
-    backgroundColor: '#f0f4f8',
-    borderRadius: 8,
+  infoText: {
+    fontSize: 16,
+    color: colors.text,
+    marginBottom: spacing.sm,
+  },
+  imageWrapper: {
+    width: width * 0.8,
+    height: height * 0.5,
+  },
+  image: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'contain',
+  },
+  divider: {
+    height: 1,
     width: '90%',
+    backgroundColor: colors.border,
+    marginVertical: spacing.lg,
   },
-  laudoTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 10, color: '#0a1f44' },
-  laudoText: { fontSize: 16, lineHeight: 22, color: '#333' },
+  controls: {
+    width: '90%',
+    marginBottom: spacing.xl,
+  },
+  button: {
+    backgroundColor: colors.primary,
+    paddingVertical: spacing.md,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: spacing.md,
+  },
 });

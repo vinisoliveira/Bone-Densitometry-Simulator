@@ -33,7 +33,7 @@ export default function ScanScreen({ route }) {
         etnia,
         exame,
       });
-    }, 4000);
+    }, 5000);
 
     return () => clearTimeout(timer);
   }, []);
@@ -59,12 +59,7 @@ export default function ScanScreen({ route }) {
         />
       </MaskedView>
 
-      <Animated.View
-        style={[
-          styles.scanLine,
-          { transform: [{ translateY: scanAnim }] },
-        ]}
-      />
+      
 
       <Text style={styles.text}>Escaneando {exame}...</Text>
     </View>

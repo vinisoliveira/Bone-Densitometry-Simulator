@@ -3,11 +3,12 @@ import {
   View,
   Text,
   TextInput,
-  Button,
   StyleSheet,
   TouchableOpacity,
+  ScrollView,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { colors, spacing, typography } from '../src/styles/theme';
 
 export default function CadastroScreen() {
   const navigation = useNavigation();
@@ -57,7 +58,7 @@ export default function CadastroScreen() {
   );
 
   return (
-    <View style={styles.container}>
+    <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>Cadastro do Paciente</Text>
 
       <TextInput
@@ -65,6 +66,7 @@ export default function CadastroScreen() {
         value={nome}
         onChangeText={setNome}
         style={styles.input}
+        placeholderTextColor={colors.muted}
       />
       <TextInput
         placeholder="Idade"
@@ -72,6 +74,7 @@ export default function CadastroScreen() {
         onChangeText={setIdade}
         keyboardType="numeric"
         style={styles.input}
+        placeholderTextColor={colors.muted}
       />
 
       <Text style={styles.label}>Sexo:</Text>
@@ -81,50 +84,76 @@ export default function CadastroScreen() {
       {renderOptions(['Branca', 'Parda', 'Preta', 'Amarela', 'Indígena'], etnia, setEtnia)}
 
       <Text style={styles.label}>Tipo de Exame:</Text>
-      {renderOptions(['Coluna Lombar', 'Raio-X Torácico', 'Tomografia Cervical'], exame, setExame)}
+      {renderOptions(['Coluna Lombar', 'Fêmur', 'Punho'], exame, setExame)}
 
-      <View style={{ marginTop: 30 }}>
-        <Button title="Iniciar Escaneamento" onPress={iniciarExame} />
-      </View>
-    </View>
+      <TouchableOpacity style={styles.button} onPress={iniciarExame}>
+        <Text style={typography.buttonText}>Iniciar Escaneamento</Text>
+      </TouchableOpacity>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, justifyContent: 'center' },
-  title: { fontSize: 22, fontWeight: 'bold', marginBottom: 20 },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    padding: 10,
-    marginBottom: 15,
-    borderRadius: 5,
+  container: {
+    flexGrow: 1,
+    backgroundColor: colors.background,
+    padding: spacing.lg,
+    justifyContent: 'center',
   },
-  label: { fontSize: 16, fontWeight: '600', marginBottom: 5, marginTop: 10 },
+  title: {
+    ...typography.title,
+    color: colors.primary,
+    marginBottom: spacing.xl,
+    textAlign: 'center',
+  },
+  input: {
+    backgroundColor: colors.surface,
+    borderRadius: 8,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
+    fontSize: 16,
+    marginBottom: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    color: colors.text,
+  },
+  label: {
+    ...typography.label,
+    marginBottom: spacing.sm,
+    marginTop: spacing.md,
+  },
   optionRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginBottom: 15,
+    marginBottom: spacing.md,
   },
   optionButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 12,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: '#ccc',
-    marginRight: 10,
-    marginBottom: 10,
+    borderColor: colors.border,
+    marginRight: spacing.sm,
+    marginBottom: spacing.sm,
+    backgroundColor: colors.surface,
   },
   optionSelected: {
-    backgroundColor: '#007aff',
-    borderColor: '#007aff',
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
   optionText: {
     fontSize: 14,
-    color: '#333',
+    color: colors.text,
   },
   optionTextSelected: {
-    color: '#fff',
-    fontWeight: 'bold',
+    color: colors.surface,
+    fontWeight: '600',
+  },
+  button: {
+    backgroundColor: colors.primary,
+    paddingVertical: spacing.md,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: spacing.xl,
   },
 });
