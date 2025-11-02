@@ -1,125 +1,140 @@
 import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  TextInput,
-  StyleSheet,
-  TouchableOpacity,
-  ScrollView,
-} from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { colors, spacing, typography } from '../src/styles/theme';
+import { salvarPaciente } from '../utils/storage';
 
-
-export default function CadastroScreen() {
-  const navigation = useNavigation();
-  const [nome, setNome] = useState('');
+export default function CadastroScreen({ navigation }) {
+  const [paciente, setPaciente] = useState('');
   const [idade, setIdade] = useState('');
-  const [sexo, setSexo] = useState('Masculino');
-  const [etnia, setEtnia] = useState('Parda');
-  const [exame, setExame] = useState('Coluna Lombar');
+  const [sexo, setSexo] = useState('');
+  const [etnia, setEtnia] = useState('');
+  const [exame, setExame] = useState('');
 
-  const iniciarExame = () => {
-    if (!nome || !idade) {
-      alert('Preencha nome e idade!');
-      return;
+  const validarCampos = () => {
+    if (!paciente || !idade || !sexo || !etnia || !exame) {
+      Alert.alert('Atenção', 'Preencha todos os campos e selecione o exame.');
+      return false;
     }
+    return true;
+  };
 
-    navigation.navigate('Scan', {
-      paciente: nome,
+  const iniciarEscaneamento = () => {
+    if (!validarCampos()) return;
+
+    const novoPaciente = {
+      id: Date.now().toString(),
+      nome: paciente,
       idade,
       sexo,
       etnia,
       exame,
+    };
+
+    salvarPaciente(novoPaciente);
+
+    navigation.navigate('Scan', {
+      ...novoPaciente,
+      vertebraSelecionada: null,
     });
   };
 
-  const renderOptions = (options, selected, setSelected) => (
-    <View style={styles.optionRow}>
-      {options.map((opt) => (
-        <TouchableOpacity
-          key={opt}
-          style={[
-            styles.optionButton,
-            selected === opt && styles.optionSelected,
-          ]}
-          onPress={() => setSelected(opt)}
-        >
-          <Text
-            style={[
-              styles.optionText,
-              selected === opt && styles.optionTextSelected,
-            ]}
-          >
-            {opt}
-          </Text>
-        </TouchableOpacity>
-      ))}
-    </View>
-  );
-
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <View style={styles.container}>
       <Text style={styles.title}>Cadastro do Paciente</Text>
 
       <TextInput
-        placeholder="Nome"
-        value={nome}
-        onChangeText={setNome}
         style={styles.input}
-        placeholderTextColor={colors.muted}
+        placeholder="Nome do paciente"
+        value={paciente}
+        onChangeText={setPaciente}
       />
       <TextInput
+        style={styles.input}
         placeholder="Idade"
+        keyboardType="numeric"
         value={idade}
         onChangeText={setIdade}
-        keyboardType="numeric"
-        style={styles.input}
-        placeholderTextColor={colors.muted}
       />
 
       <Text style={styles.label}>Sexo:</Text>
-      {renderOptions(['Masculino', 'Feminino', 'Outro'], sexo, setSexo)}
+      <View style={styles.optionRow}>
+        {['Masculino', 'Feminino', 'Outro'].map((opcao) => (
+          <TouchableOpacity
+            key={opcao}
+            style={[
+              styles.optionButton,
+              sexo === opcao && styles.optionSelected,
+            ]}
+            onPress={() => setSexo(opcao)}
+          >
+            <Text style={styles.optionText}>{opcao}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
 
       <Text style={styles.label}>Etnia:</Text>
-      {renderOptions(['Branca', 'Parda', 'Preta', 'Amarela', 'Indígena'], etnia, setEtnia)}
+      <View style={styles.optionRow}>
+        {['Branca', 'Parda', 'Preta', 'Amarela', 'Indígena'].map((opcao) => (
+          <TouchableOpacity
+            key={opcao}
+            style={[
+              styles.optionButton,
+              etnia === opcao && styles.optionSelected,
+            ]}
+            onPress={() => setEtnia(opcao)}
+          >
+            <Text style={styles.optionText}>{opcao}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
 
       <Text style={styles.label}>Tipo de Exame:</Text>
-      {renderOptions(['Coluna Lombar', 'Fêmur', 'Punho'], exame, setExame)}
+      <View style={styles.optionRow}>
+        {['Coluna Lombar', 'Fêmur', 'Punho'].map((opcao) => (
+          <TouchableOpacity
+            key={opcao}
+            style={[
+              styles.optionButton,
+              exame === opcao && styles.optionSelected,
+            ]}
+            onPress={() => setExame(opcao)}
+          >
+            <Text style={styles.optionText}>{opcao}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
 
-      <TouchableOpacity style={styles.button} onPress={iniciarExame}>
-        <Text style={typography.buttonText}>Iniciar Escaneamento</Text>
+      <TouchableOpacity style={styles.scanButton} onPress={iniciarEscaneamento}>
+        <Text style={typography.buttonText}> Iniciar Escaneamento</Text>
       </TouchableOpacity>
-    </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flexGrow: 1,
+    flex: 1,
     backgroundColor: colors.background,
     padding: spacing.lg,
     justifyContent: 'center',
   },
   title: {
     ...typography.title,
-    color: colors.primary,
-    marginBottom: spacing.xl,
+    fontSize: 22,
+    marginBottom: spacing.lg,
     textAlign: 'center',
   },
   input: {
-    backgroundColor: colors.surface,
-    borderRadius: 8,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.md,
-    fontSize: 16,
-    marginBottom: spacing.md,
     borderWidth: 1,
     borderColor: colors.border,
-    color: colors.text,
+    borderRadius: 8,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+    backgroundColor: 'white',
   },
   label: {
-    ...typography.label,
+    fontSize: 16,
+    color: colors.text,
     marginBottom: spacing.sm,
     marginTop: spacing.md,
   },
@@ -129,32 +144,24 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   optionButton: {
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: colors.border,
+    backgroundColor: colors.surface,
+    padding: spacing.sm,
+    borderRadius: 8,
     marginRight: spacing.sm,
     marginBottom: spacing.sm,
-    backgroundColor: colors.surface,
   },
   optionSelected: {
     backgroundColor: colors.primary,
-    borderColor: colors.primary,
   },
   optionText: {
-    fontSize: 14,
     color: colors.text,
+    fontSize: 14,
   },
-  optionTextSelected: {
-    color: colors.surface,
-    fontWeight: '600',
-  },
-  button: {
+  scanButton: {
     backgroundColor: colors.primary,
-    paddingVertical: spacing.md,
+    padding: spacing.md,
     borderRadius: 8,
     alignItems: 'center',
-    marginTop: spacing.xl,
+    marginTop: spacing.lg,
   },
 });
