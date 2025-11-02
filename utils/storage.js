@@ -1,23 +1,24 @@
-// utils/storage.js
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-export const salvarPaciente = async (paciente) => {
+const STORAGE_KEY = 'PACIENTES';
+
+export const salvarPaciente = async (novoPaciente) => {
   try {
-    const pacientes = await AsyncStorage.getItem('pacientes');
-    const lista = pacientes ? JSON.parse(pacientes) : [];
-    lista.push(paciente);
-    await AsyncStorage.setItem('pacientes', JSON.stringify(lista));
-  } catch (e) {
-    console.error('Erro ao salvar paciente', e);
+    const dadosExistentes = await AsyncStorage.getItem(STORAGE_KEY);
+    const lista = dadosExistentes ? JSON.parse(dadosExistentes) : [];
+    lista.push(novoPaciente);
+    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(lista));
+  } catch (error) {
+    console.error('Erro ao salvar paciente:', error);
   }
 };
 
-export const consultarPacientes = async () => {
+export const carregarPacientes = async () => {
   try {
-    const pacientes = await AsyncStorage.getItem('pacientes');
-    return pacientes ? JSON.parse(pacientes) : [];
-  } catch (e) {
-    console.error('Erro ao consultar pacientes', e);
+    const dados = await AsyncStorage.getItem(STORAGE_KEY);
+    return dados ? JSON.parse(dados) : [];
+  } catch (error) {
+    console.error('Erro ao carregar pacientes:', error);
     return [];
   }
 };

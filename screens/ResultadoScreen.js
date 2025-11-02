@@ -10,6 +10,7 @@ import {
 import ImageZoom from 'react-native-image-pan-zoom';
 import { colors, spacing, typography } from '../src/styles/theme';
 import { useNavigation } from '@react-navigation/native';
+import { salvarPaciente } from '../utils/storage';
 
 
 const { width, height } = Dimensions.get('window');
@@ -87,9 +88,28 @@ export default function ResultadoScreen({ route }) {
       <View style={styles.divider} />
 
       <View style={styles.controls}>
-        <TouchableOpacity style={styles.button}>
-          <Text style={typography.buttonText}>Aplicar Ajustes</Text>
-        </TouchableOpacity>
+        <TouchableOpacity
+  style={styles.button}
+  onPress={() => {
+    salvarPaciente({
+      id: Date.now().toString(),
+      nome: paciente,
+      exame,
+    });
+
+    navigation.navigate('Relatorio', {
+      paciente,
+      idade,
+      sexo,
+      etnia,
+      exame,
+      vertebraSelecionada: selectedId,
+    });
+  }}
+>
+  <Text style={typography.buttonText}>Salvar Exame</Text>
+</TouchableOpacity>
+
 
         <TouchableOpacity
           style={[styles.button, { backgroundColor: colors.accent }]}

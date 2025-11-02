@@ -12,12 +12,12 @@ const SobreScreen = ({ navigation }) => {
         <Text style={styles.title}>Sobre o Projeto</Text>
       </View>
 
-      <Text style={styles.sectionTitle}>🧠 Propósito</Text>
+      <Text style={styles.sectionTitle}> Propósito</Text>
       <Text style={styles.text}>
         Este projeto é voltado para visualização e organização de exames de imagem, com foco em radiografias da coluna e membros. Ele simula o ambiente de um laboratório moderno, oferecendo uma experiência imersiva e funcional.
       </Text>
 
-      <Text style={styles.sectionTitle}>🛠️ Tecnologias</Text>
+      <Text style={styles.sectionTitle}> Tecnologias</Text>
       <Text style={styles.text}>
         • React Native{'\n'}
         • Expo{'\n'}
@@ -25,14 +25,14 @@ const SobreScreen = ({ navigation }) => {
         
       </Text>
 
-      <Text style={styles.sectionTitle}>👨‍💻 Desenvolvedores</Text>
+      <Text style={styles.sectionTitle}> Desenvolvedores</Text>
       <Text style={styles.text}>
         • Bernardo Nascimento{'\n'}
         • Vinícius Oliveira{'\n'}
         • Fernando Vinícius
       </Text>
 
-      <Text style={styles.sectionTitle}>🔬 Turma Radiologia</Text>
+      <Text style={styles.sectionTitle}> Turma Radiologia</Text>
       <Text style={styles.text}>
         Nome
         Nome

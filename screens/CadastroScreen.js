@@ -10,6 +10,7 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { colors, spacing, typography } from '../src/styles/theme';
 
+
 export default function CadastroScreen() {
   const navigation = useNavigation();
   const [nome, setNome] = useState('');
