@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, ActivityIndicator, Platform, StyleSheet } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
-import { createStackNavigator } from '@react-navigation/stack';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ThemeProvider, useTheme } from './src/context/ThemeContext';
 
@@ -13,7 +13,7 @@ import ScanScreen from './screens/ScanScreen';
 import SobreScreen from './screens/SobreScreen';
 import ConfiguracoesScreen from './screens/ConfiguracoesScreen';
 
-const Stack = createStackNavigator();
+const Stack = createNativeStackNavigator();
 
 // Telas placeholder para as que ainda não foram recriadas
 const PlaceholderScreen = ({ route, navigation }) => {
