@@ -1,6 +1,33 @@
+import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const STORAGE_KEY = 'PACIENTES';
+
+// Storage wrapper para compatibilidade web
+const storage = {
+  async getItem(key) {
+    if (Platform.OS === 'web') {
+      try {
+        return localStorage.getItem(key);
+      } catch (error) {
+        console.log('localStorage error:', error);
+        return null;
+      }
+    }
+    return AsyncStorage.getItem(key);
+  },
+  async setItem(key, value) {
+    if (Platform.OS === 'web') {
+      try {
+        localStorage.setItem(key, value);
+      } catch (error) {
+        console.log('localStorage error:', error);
+      }
+      return;
+    }
+    return AsyncStorage.setItem(key, value);
+  }
+};
 
 // Cache simples para evitar leituras desnecessárias
 let cacheMemoria = null;
@@ -9,10 +36,10 @@ const CACHE_DURATION = 30000; // 30 segundos
 
 export const salvarPaciente = async (novoPaciente) => {
   try {
-    const dadosExistentes = await AsyncStorage.getItem(STORAGE_KEY);
+    const dadosExistentes = await storage.getItem(STORAGE_KEY);
     const lista = dadosExistentes ? JSON.parse(dadosExistentes) : [];
     lista.push(novoPaciente);
-    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(lista));
+    await storage.setItem(STORAGE_KEY, JSON.stringify(lista));
     
     // Atualizar cache
     cacheMemoria = lista;
@@ -33,7 +60,7 @@ export const carregarPacientes = async () => {
       return cacheMemoria;
     }
 
-    const dados = await AsyncStorage.getItem(STORAGE_KEY);
+    const dados = await storage.getItem(STORAGE_KEY);
     const pacientes = dados ? JSON.parse(dados) : [];
     
     // Atualizar cache
