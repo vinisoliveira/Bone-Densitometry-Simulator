@@ -42,8 +42,8 @@ const ExameScreen = ({ route, navigation }) => {
   const imagemExame =
     exame === 'coluna_lombar_ap.jpg'
       ? require('../assets/coluna_lombar_ap.jpg')
-      : exame === 'femur_esquerdo.jpg'
-      ? require('../assets/femur_esquerdo.jpg')
+      : exame === 'femur.jpeg'
+      ? require('../assets/femur.jpeg')
       : null;
 
   const maskHeight = revealAnim.interpolate({

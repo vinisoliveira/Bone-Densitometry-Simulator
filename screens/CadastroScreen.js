@@ -105,7 +105,7 @@ export default function CadastroScreen({ navigation }) {
       </View>
 
       <TouchableOpacity style={styles.scanButton} onPress={iniciarEscaneamento}>
-        <Text style={typography.buttonText}> Iniciar Escaneamento</Text>
+        <Text style={typography.buttonText}>🧪 Iniciar Escaneamento</Text>
       </TouchableOpacity>
     </View>
   );

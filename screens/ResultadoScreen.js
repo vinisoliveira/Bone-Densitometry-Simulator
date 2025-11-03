@@ -12,25 +12,40 @@ import { colors, spacing, typography } from '../src/styles/theme';
 import { useNavigation } from '@react-navigation/native';
 import { salvarPaciente } from '../utils/storage';
 
-
 const { width, height } = Dimensions.get('window');
 
 export default function ResultadoScreen({ route }) {
   const { paciente, idade, sexo, etnia, exame } = route.params;
   const [selectedId, setSelectedId] = useState(null);
-
-  const imagemColuna = require('../assets/coluna-lombar.jpeg');
-
   const navigation = useNavigation();
 
-  const vertebras = [
-    { id: 'L1', x: 110, y: 30, width: 125, height: 70 },
-    { id: 'L2', x: 110, y: 105, width: 125, height: 70 },
-    { id: 'L3', x: 110, y: 185, width: 125, height: 70 },
-    { id: 'L4', x: 110, y: 260, width: 125, height: 70 },
-  ];
+  // Imagens por exame
+  const imagemExame = {
+    'Coluna Lombar': require('../assets/coluna-lombar.jpeg'),
+    'Fêmur': require('../assets/femur.jpeg'),
+    'Punho': require('../assets/punho.jpg'),
+  };
 
-  const vertebraSelecionada = vertebras.find((v) => v.id === selectedId);
+  // Regiões interativas por exame
+  const regioesPorExame = {
+    'Coluna Lombar': [
+      { id: 'L1', x: 110, y: 30, width: 125, height: 70 },
+      { id: 'L2', x: 110, y: 105, width: 125, height: 70 },
+      { id: 'L3', x: 110, y: 185, width: 125, height: 70 },
+      { id: 'L4', x: 110, y: 260, width: 125, height: 70 },
+    ],
+    'Fêmur': [
+      { id: 'Cabeça Femoral', x: 100, y: 40, width: 140, height: 80 },
+      { id: 'Diáfise', x: 100, y: 150, width: 140, height: 100 },
+    ],
+    'Punho': [
+      { id: 'Rádio', x: 90, y: 60, width: 160, height: 80 },
+      { id: 'Ulna', x: 90, y: 160, width: 160, height: 80 },
+    ],
+  };
+
+  const regioes = regioesPorExame[exame] || [];
+  const regiaoSelecionada = regioes.find((r) => r.id === selectedId);
 
   return (
     <View style={styles.container}>
@@ -50,36 +65,36 @@ export default function ResultadoScreen({ route }) {
         imageHeight={height * 0.5}
       >
         <View style={styles.imageWrapper}>
-          <Image source={imagemColuna} style={styles.image} />
-          {vertebras.map((v) => (
+          <Image source={imagemExame[exame]} style={styles.image} />
+          {regioes.map((r) => (
             <TouchableOpacity
-              key={v.id}
+              key={r.id}
               style={{
                 position: 'absolute',
-                left: v.x,
-                top: v.y,
-                width: v.width,
-                height: v.height,
-                borderWidth: selectedId === v.id ? 2 : 0,
-                borderColor: "yellow",
+                left: r.x,
+                top: r.y,
+                width: r.width,
+                height: r.height,
+                borderWidth: selectedId === r.id ? 2 : 0,
+                borderColor: 'yellow',
               }}
-              onPress={() => setSelectedId(v.id)}
+              onPress={() => setSelectedId(r.id)}
             />
           ))}
 
-          {vertebraSelecionada && (
+          {regiaoSelecionada && (
             <Text
               style={{
                 position: 'absolute',
-                left: vertebraSelecionada.x,
-                top: vertebraSelecionada.y + 1,
-                color: "yellow",
+                left: regiaoSelecionada.x,
+                top: regiaoSelecionada.y + 2,
+                color: 'yellow',
                 fontWeight: 'bold',
                 fontSize: 16,
                 paddingHorizontal: 4,
               }}
             >
-              {vertebraSelecionada.id}
+              {regiaoSelecionada.id}
             </Text>
           )}
         </View>
@@ -89,27 +104,26 @@ export default function ResultadoScreen({ route }) {
 
       <View style={styles.controls}>
         <TouchableOpacity
-  style={styles.button}
-  onPress={() => {
-    salvarPaciente({
-      id: Date.now().toString(),
-      nome: paciente,
-      exame,
-    });
+          style={styles.button}
+          onPress={() => {
+            salvarPaciente({
+              id: Date.now().toString(),
+              nome: paciente,
+              exame,
+            });
 
-    navigation.navigate('Relatorio', {
-      paciente,
-      idade,
-      sexo,
-      etnia,
-      exame,
-      vertebraSelecionada: selectedId,
-    });
-  }}
->
-  <Text style={typography.buttonText}>Salvar Exame</Text>
-</TouchableOpacity>
-
+            navigation.navigate('Relatorio', {
+              paciente,
+              idade,
+              sexo,
+              etnia,
+              exame,
+              vertebraSelecionada: selectedId,
+            });
+          }}
+        >
+          <Text style={typography.buttonText}>Salvar Exame</Text>
+        </TouchableOpacity>
 
         <TouchableOpacity
           style={[styles.button, { backgroundColor: colors.accent }]}
@@ -126,8 +140,6 @@ export default function ResultadoScreen({ route }) {
         >
           <Text style={typography.buttonText}>📝 Ver Relatório</Text>
         </TouchableOpacity>
-
-
       </View>
     </View>
   );

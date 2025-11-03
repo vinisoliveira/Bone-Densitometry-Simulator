@@ -10,13 +10,20 @@ import {
 import MaskedView from '@react-native-masked-view/masked-view';
 import { useNavigation } from '@react-navigation/native';
 
-const { height, width } = Dimensions.get('window');
+const { height } = Dimensions.get('window');
 
 export default function ScanScreen({ route }) {
   const navigation = useNavigation();
   const scanAnim = useRef(new Animated.Value(height)).current;
 
   const { paciente, idade, sexo, etnia, exame } = route.params;
+
+  // Mapeia o exame para a imagem correspondente
+  const imagemExame = {
+    'Coluna Lombar': require('../assets/coluna-lombar.jpeg'),
+    'Fêmur': require('../assets/femur.jpeg'),
+    'Punho': require('../assets/punho.jpg'),
+  };
 
   useEffect(() => {
     Animated.timing(scanAnim, {
@@ -54,12 +61,10 @@ export default function ScanScreen({ route }) {
         }
       >
         <Image
-          source={require('../assets/coluna-lombar.jpeg')}
+          source={imagemExame[exame]}
           style={styles.image}
         />
       </MaskedView>
-
-      
 
       <Text style={styles.text}>Escaneando {exame}...</Text>
     </View>
@@ -87,14 +92,6 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
     backgroundColor: '#fff',
-  },
-  scanLine: {
-    position: 'absolute',
-    width: '80%',
-    height: 4,
-    backgroundColor: '#00ffff',
-    borderRadius: 2,
-    zIndex: 10,
   },
   text: {
     position: 'absolute',
