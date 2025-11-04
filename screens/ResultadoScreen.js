@@ -18,7 +18,7 @@ import { FontAwesome5 } from '@expo/vector-icons';
 const { width, height } = Dimensions.get('window');
 
 export default function ResultadoScreen({ route }) {
-  const { paciente, idade, sexo, etnia, exame } = route.params;
+  const { id, paciente, idade, sexo, etnia, exame } = route.params;
   const [selectedId, setSelectedId] = useState(null);
   const [showSaveAnimation, setShowSaveAnimation] = useState(false);
   const navigation = useNavigation();
@@ -84,19 +84,13 @@ export default function ResultadoScreen({ route }) {
       }),
     ]).start();
 
-    salvarPaciente({
-      id: Date.now().toString(),
-      nome: paciente,
-      exame,
-      idade,
-      sexo,
-      etnia,
-    });
-
+    // NÃO salva novamente - paciente já foi salvo no CadastroScreen
+    
     setTimeout(() => {
       saveSuccessAnim.setValue(0);
       setShowSaveAnimation(false);
       navigation.navigate('Relatorio', {
+        id,
         paciente,
         idade,
         sexo,
@@ -237,6 +231,7 @@ export default function ResultadoScreen({ route }) {
           style={[styles.button, styles.buttonSecondary]}
           onPress={() =>
             navigation.navigate('Relatorio', {
+              id,
               paciente,
               idade,
               sexo,

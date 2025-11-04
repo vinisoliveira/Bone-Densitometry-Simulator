@@ -22,7 +22,7 @@ export default function ScanScreen({ route }) {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const [progress, setProgress] = useState(0);
 
-  const { paciente, idade, sexo, etnia, exame } = route.params;
+  const { id, paciente, idade, sexo, etnia, exame } = route.params;
 
   // Mapeia o exame para a imagem correspondente
   const imagemExame = {
@@ -92,6 +92,7 @@ export default function ScanScreen({ route }) {
 
     const timer = setTimeout(() => {
       navigation.replace('Resultado', {
+        id,
         paciente,
         idade,
         sexo,

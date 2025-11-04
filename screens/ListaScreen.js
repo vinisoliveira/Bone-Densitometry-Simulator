@@ -1,70 +1,8 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { View, Text, FlatList, StyleSheet, TouchableOpacity, Animated, Alert } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
-import { carregarPacientes, deletarPaciente, deletarTodosPacientes } from '../utils/storage';
+import { carregarPacientes, deletarPaciente } from '../utils/storage';
 import { colors, spacing, typography } from '../src/styles/theme';
-
-// Componente animado para cada item
-const AnimatedItem = ({ item, index, onPress, onDelete }) => {
-  const itemFadeAnim = useRef(new Animated.Value(0)).current;
-  const itemSlideAnim = useRef(new Animated.Value(20)).current;
-
-  useEffect(() => {
-    Animated.sequence([
-      Animated.delay(index * 100),
-      Animated.parallel([
-        Animated.timing(itemFadeAnim, {
-          toValue: 1,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-        Animated.spring(itemSlideAnim, {
-          toValue: 0,
-          friction: 8,
-          useNativeDriver: true,
-        }),
-      ]),
-    ]).start();
-  }, []);
-
-  return (
-    <Animated.View
-      style={{
-        opacity: itemFadeAnim,
-        transform: [{ translateY: itemSlideAnim }],
-      }}
-    >
-      <View style={styles.cardWrapper}>
-        <TouchableOpacity
-          style={styles.card}
-          onPress={onPress}
-          activeOpacity={0.7}
-        >
-          <View style={styles.cardIcon}>
-            <FontAwesome5 name="user-circle" size={32} color="#4A90E2" />
-          </View>
-          <View style={styles.cardContent}>
-            <Text style={styles.nome}>{item.nome}</Text>
-            <View style={styles.exameContainer}>
-              <FontAwesome5 name="file-medical-alt" size={12} color="#999" />
-              <Text style={styles.exame}>{item.exame}</Text>
-            </View>
-          </View>
-          <FontAwesome5 name="chevron-right" size={16} color="#666" />
-        </TouchableOpacity>
-        
-        {/* Botão de Deletar */}
-        <TouchableOpacity
-          style={styles.deleteButton}
-          onPress={onDelete}
-          activeOpacity={0.7}
-        >
-          <FontAwesome5 name="trash-alt" size={18} color="#FF4444" />
-        </TouchableOpacity>
-      </View>
-    </Animated.View>
-  );
-};
 
 export default function ListaScreen({ navigation }) {
   const [pacientes, setPacientes] = useState([]);
@@ -136,60 +74,43 @@ export default function ListaScreen({ navigation }) {
     );
   };
 
-  const handleDeleteAll = () => {
-    Alert.alert(
-      'Confirmar Exclusão em Massa',
-      'Deseja realmente excluir TODOS os exames? Esta ação não pode ser desfeita.',
-      [
-        {
-          text: 'Cancelar',
-          style: 'cancel'
-        },
-        {
-          text: 'Excluir Todos',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await deletarTodosPacientes();
-              setPacientes([]);
-              
-              // Animação de sucesso
-              setShowDeleteAnimation(true);
-              Animated.sequence([
-                Animated.spring(deleteSuccessAnim, {
-                  toValue: 1,
-                  friction: 8,
-                  useNativeDriver: true,
-                }),
-              ]).start();
-
-              setTimeout(() => {
-                deleteSuccessAnim.setValue(0);
-                setShowDeleteAnimation(false);
-              }, 1500);
-            } catch (error) {
-              Alert.alert('Erro', 'Não foi possível excluir os exames');
-            }
-          }
-        }
-      ]
-    );
-  };
-
   const renderItem = ({ item, index }) => {
     return (
-      <AnimatedItem
-        item={item}
-        index={index}
-        onPress={() => navigation.navigate('Resultado', { 
-          paciente: item.nome, 
-          exame: item.exame,
-          idade: item.idade,
-          sexo: item.sexo,
-          etnia: item.etnia,
-        })}
-        onDelete={() => handleDelete(item.id, item.nome)}
-      />
+      <View style={styles.cardWrapper}>
+        <TouchableOpacity
+          style={styles.card}
+          onPress={() => navigation.navigate('Resultado', { 
+            id: item.id,
+            paciente: item.nome, 
+            exame: item.exame,
+            idade: item.idade,
+            sexo: item.sexo,
+            etnia: item.etnia,
+          })}
+          activeOpacity={0.7}
+        >
+          <View style={styles.cardIcon}>
+            <FontAwesome5 name="user-circle" size={32} color="#4A90E2" />
+          </View>
+          <View style={styles.cardContent}>
+            <Text style={styles.nome}>{item.nome}</Text>
+            <View style={styles.exameContainer}>
+              <FontAwesome5 name="file-medical-alt" size={12} color="#999" />
+              <Text style={styles.exame}>{item.exame}</Text>
+            </View>
+          </View>
+          <FontAwesome5 name="chevron-right" size={16} color="#666" />
+        </TouchableOpacity>
+        
+        {/* Botão de Deletar */}
+        <TouchableOpacity
+          style={styles.deleteButton}
+          onPress={() => handleDelete(item.id, item.nome)}
+          activeOpacity={0.7}
+        >
+          <FontAwesome5 name="trash-alt" size={18} color="#FF4444" />
+        </TouchableOpacity>
+      </View>
     );
   };
 
@@ -241,27 +162,13 @@ export default function ListaScreen({ navigation }) {
           </TouchableOpacity>
         </Animated.View>
       ) : (
-        <>
-          <FlatList
-            data={pacientes}
-            keyExtractor={(item) => item.id}
-            renderItem={renderItem}
-            contentContainerStyle={styles.list}
-            showsVerticalScrollIndicator={false}
-          />
-          
-          {/* Botão para deletar todos */}
-          <View style={styles.footer}>
-            <TouchableOpacity 
-              style={styles.deleteAllButton}
-              onPress={handleDeleteAll}
-              activeOpacity={0.8}
-            >
-              <FontAwesome5 name="trash" size={16} color="#FFFFFF" />
-              <Text style={styles.deleteAllText}>Excluir Todos ({pacientes.length})</Text>
-            </TouchableOpacity>
-          </View>
-        </>
+        <FlatList
+          data={pacientes}
+          keyExtractor={(item) => item.id}
+          renderItem={renderItem}
+          contentContainerStyle={styles.list}
+          showsVerticalScrollIndicator={false}
+        />
       )}
 
       {/* Animação de Sucesso ao Deletar */}
@@ -331,13 +238,12 @@ const styles = StyleSheet.create({
   },
   list: {
     paddingHorizontal: spacing.lg,
-    paddingBottom: 100,
+    paddingBottom: spacing.lg,
   },
   cardWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: spacing.md,
-    gap: 8,
   },
   card: {
     flex: 1,
@@ -346,6 +252,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#2a3142',
     borderRadius: 12,
     padding: spacing.md,
+    marginRight: 8,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -420,31 +327,6 @@ const styles = StyleSheet.create({
   emptyButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#FFFFFF',
-  },
-  footer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: '#1a1d29',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    borderTopWidth: 1,
-    borderTopColor: '#3a3f52',
-  },
-  deleteAllButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#FF4444',
-    paddingVertical: 14,
-    borderRadius: 12,
-    gap: 10,
-  },
-  deleteAllText: {
-    fontSize: 16,
-    fontWeight: '700',
     color: '#FFFFFF',
   },
   deleteOverlay: {

@@ -76,14 +76,6 @@ const SobreScreen = ({ navigation }) => {
           </Text>
         </InfoCard>
 
-        <TouchableOpacity
-          style={styles.homeButton}
-          onPress={() => navigation.navigate('Home')}
-          activeOpacity={0.8}
-        >
-          <FontAwesome5 name="home" size={18} color="#FFFFFF" />
-        </TouchableOpacity>
-
         <View style={styles.footer}>
           <Text style={styles.footerText}>© 2025 AIFP</Text>
         </View>
@@ -240,22 +232,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#ccc',
     lineHeight: 22,
-  },
-  homeButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#4A90E2',
-    borderRadius: 12,
-    paddingVertical: 14,
-    gap: 10,
-    marginTop: 10,
-    marginBottom: 20,
-  },
-  homeText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#FFFFFF',
   },
   footer: {
     alignItems: 'center',
