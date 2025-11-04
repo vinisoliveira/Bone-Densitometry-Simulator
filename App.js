@@ -1,29 +1,18 @@
-import React, { useState, lazy, Suspense } from 'react';
+import React, { useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { View, ActivityIndicator, Text } from 'react-native';
 
-// Importação imediata apenas da tela principal
 import HomeScreen from './screens/HomeScreen';
+import CadastroScreen from './screens/CadastroScreen';
+import ListaScreen from './screens/ListaScreen';
+import ExameScreen from './screens/ExameScreen';
+import SobreScreen from './screens/SobreScreen';
+import ScanScreen from './screens/ScanScreen';
+import ResultadoScreen from './screens/ResultadoScreen';
+import RelatorioScreen from './screens/RelatorioScreen'; // ajuste o caminho conforme sua pasta
 
-// Lazy loading das outras telas
-const CadastroScreen = lazy(() => import('./screens/CadastroScreen'));
-const ListaScreen = lazy(() => import('./screens/ListaScreen'));
-const ExameScreen = lazy(() => import('./screens/ExameScreen'));
-const SobreScreen = lazy(() => import('./screens/SobreScreen'));
-const ScanScreen = lazy(() => import('./screens/ScanScreen'));
-const ResultadoScreen = lazy(() => import('./screens/ResultadoScreen'));
-const RelatorioScreen = lazy(() => import('./screens/RelatorioScreen'));
 
 const Stack = createNativeStackNavigator();
-
-// Componente de loading
-const LoadingScreen = () => (
-  <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#0a1f44' }}>
-    <ActivityIndicator size="large" color="#00e6e6" />
-    <Text style={{ color: '#e6f2ff', marginTop: 10 }}>Carregando...</Text>
-  </View>
-);
 
 export default function App() {
   const [pacientes, setPacientes] = useState([]);
@@ -35,66 +24,32 @@ export default function App() {
 
         <Stack.Screen name="Cadastro">
           {(props) => (
-            <Suspense fallback={<LoadingScreen />}>
-              <CadastroScreen
-                {...props}
-                pacientes={pacientes}
-                setPacientes={setPacientes}
-              />
-            </Suspense>
+            <CadastroScreen
+              {...props}
+              pacientes={pacientes}
+              setPacientes={setPacientes}
+            />
           )}
         </Stack.Screen>
 
         <Stack.Screen name="Lista">
           {(props) => (
-            <Suspense fallback={<LoadingScreen />}>
-              <ListaScreen
-                {...props}
-                pacientes={pacientes}
-              />
-            </Suspense>
+            <ListaScreen
+              {...props}
+              pacientes={pacientes}
+            />
           )}
         </Stack.Screen>
 
-        <Stack.Screen name="Exame">
-          {(props) => (
-            <Suspense fallback={<LoadingScreen />}>
-              <ExameScreen {...props} />
-            </Suspense>
-          )}
-        </Stack.Screen>
-
-        <Stack.Screen name="Sobre">
-          {(props) => (
-            <Suspense fallback={<LoadingScreen />}>
-              <SobreScreen {...props} />
-            </Suspense>
-          )}
-        </Stack.Screen>
-
-        <Stack.Screen name="Scan">
-          {(props) => (
-            <Suspense fallback={<LoadingScreen />}>
-              <ScanScreen {...props} />
-            </Suspense>
-          )}
-        </Stack.Screen>
-
-        <Stack.Screen name="Resultado">
-          {(props) => (
-            <Suspense fallback={<LoadingScreen />}>
-              <ResultadoScreen {...props} />
-            </Suspense>
-          )}
-        </Stack.Screen>
-
-        <Stack.Screen name="Relatorio">
-          {(props) => (
-            <Suspense fallback={<LoadingScreen />}>
-              <RelatorioScreen {...props} />
-            </Suspense>
-          )}
-        </Stack.Screen>
+        <Stack.Screen name="Exame" component={ExameScreen} />
+        <Stack.Screen name="Sobre" component={SobreScreen} />
+        <Stack.Screen name="Scan" component={ScanScreen} />
+        <Stack.Screen name="Resultado" component={ResultadoScreen} />
+        <Stack.Screen
+          name="Relatorio"
+          component={RelatorioScreen}
+        />
+  
       </Stack.Navigator>
     </NavigationContainer>
   );
