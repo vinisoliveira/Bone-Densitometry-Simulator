@@ -55,20 +55,36 @@ export default function ResultadoScreen({ route }) {
   
   const regioesPorExame = {
     'Coluna Lombar': [
-      { id: 'L1', x: imageWidth * 0.32, y: imageHeight * 0.08, width: imageWidth * 0.36, height: imageHeight * 0.14 },
-      { id: 'L2', x: imageWidth * 0.32, y: imageHeight * 0.24, width: imageWidth * 0.36, height: imageHeight * 0.14 },
-      { id: 'L3', x: imageWidth * 0.32, y: imageHeight * 0.40, width: imageWidth * 0.36, height: imageHeight * 0.14 },
-      { id: 'L4', x: imageWidth * 0.32, y: imageHeight * 0.56, width: imageWidth * 0.36, height: imageHeight * 0.14 },
+      { id: 'L1', x: imageWidth * 0.32, y: imageHeight * 0.06, width: imageWidth * 0.36, height: imageHeight * 0.17 },
+      { id: 'L2', x: imageWidth * 0.32, y: imageHeight * 0.24, width: imageWidth * 0.36, height: imageHeight * 0.17 },
+      { id: 'L3', x: imageWidth * 0.32, y: imageHeight * 0.42, width: imageWidth * 0.36, height: imageHeight * 0.17 },
+      { id: 'L4', x: imageWidth * 0.32, y: imageHeight * 0.60, width: imageWidth * 0.36, height: imageHeight * 0.16 },
     ],
     'Fêmur': [
-      { id: 'Cabeça Femoral', x: imageWidth * 0.30, y: imageHeight * 0.10, width: imageWidth * 0.40, height: imageHeight * 0.18 },
-      { id: 'Diáfise', x: imageWidth * 0.30, y: imageHeight * 0.35, width: imageWidth * 0.40, height: imageHeight * 0.25 },
-    ],
+    { 
+      id: '1', 
+      x: imageWidth * 0.50, 
+      y: imageHeight * 0.36, 
+      width: imageWidth * 0.34, 
+      height: imageHeight * 0.10,
+      transform: [{ rotate: '-45deg' }]  
+    },
+    { 
+      id: '2', 
+      x: imageWidth * 0.65, 
+      y: imageHeight * 0.40, 
+      width: imageWidth * 0.10, 
+      height: imageHeight * 0.10,
+      transform: [{ rotate: '-45deg' }]  
+    },
+  ],
     'Punho': [
       { id: 'Rádio', x: imageWidth * 0.27, y: imageHeight * 0.15, width: imageWidth * 0.46, height: imageHeight * 0.20 },
       { id: 'Ulna', x: imageWidth * 0.27, y: imageHeight * 0.40, width: imageWidth * 0.46, height: imageHeight * 0.20 },
     ],
   };
+
+  
 
   const regioes = regioesPorExame[exame] || [];
   const regiaoSelecionada = regioes.find((r) => r.id === selectedId);
@@ -190,6 +206,7 @@ export default function ResultadoScreen({ route }) {
                   borderColor: selectedId === r.id ? '#4A90E2' : 'rgba(74, 144, 226, 0.5)',
                   backgroundColor: selectedId === r.id ? 'rgba(74, 144, 226, 0.2)' : 'transparent',
                   borderRadius: 4,
+                  transform: r.transform || ['-200deg'],
                 }}
                 onPress={() => setSelectedId(r.id)}
               />
