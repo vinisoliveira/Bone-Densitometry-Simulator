@@ -1,63 +1,16 @@
-import React, { memo, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Dimensions, Animated } from 'react-native';
+import React, { memo } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { colors, spacing, typography } from '../src/styles/theme';
 
 const { width } = Dimensions.get('window');
 
 const HomeScreen = memo(({ navigation }) => {
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(50)).current;
-
-  useEffect(() => {
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 600,
-        useNativeDriver: true,
-      }),
-      Animated.spring(slideAnim, {
-        toValue: 0,
-        friction: 8,
-        tension: 40,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  }, []);
-
   const navegarPara = (tela) => () => navigation.navigate(tela);
 
-  const MenuItem = ({ icon, label, subtitle, onPress, delay = 0 }) => {
-    const scaleAnim = useRef(new Animated.Value(0.8)).current;
-    const itemFadeAnim = useRef(new Animated.Value(0)).current;
-
-    useEffect(() => {
-      Animated.sequence([
-        Animated.delay(delay),
-        Animated.parallel([
-          Animated.spring(scaleAnim, {
-            toValue: 1,
-            friction: 8,
-            useNativeDriver: true,
-          }),
-          Animated.timing(itemFadeAnim, {
-            toValue: 1,
-            duration: 300,
-            useNativeDriver: true,
-          }),
-        ]),
-      ]).start();
-    }, []);
-
+  const MenuItem = ({ icon, label, subtitle, onPress }) => {
     return (
-      <Animated.View
-        style={[
-          { 
-            opacity: itemFadeAnim,
-            transform: [{ scale: scaleAnim }] 
-          }
-        ]}
-      >
+      <View>
         <TouchableOpacity 
           style={styles.menuItem}
           onPress={onPress}
@@ -72,22 +25,14 @@ const HomeScreen = memo(({ navigation }) => {
           </View>
           <FontAwesome5 name="chevron-right" size={18} color="#666" />
         </TouchableOpacity>
-      </Animated.View>
+      </View>
     );
   };
 
   return (
     <View style={styles.container}>
       {/* Botão de Configurações Flutuante */}
-      <Animated.View 
-        style={[
-          styles.configButton,
-          {
-            opacity: fadeAnim,
-            transform: [{ scale: fadeAnim }]
-          }
-        ]}
-      >
+      <View style={styles.configButton}>
         <TouchableOpacity 
           style={styles.configButtonInner}
           onPress={navegarPara('Configuracoes')}
@@ -95,17 +40,9 @@ const HomeScreen = memo(({ navigation }) => {
         >
           <FontAwesome5 name="cog" size={24} color="#4A90E2" />
         </TouchableOpacity>
-      </Animated.View>
+      </View>
 
-      <Animated.View 
-        style={[
-          styles.header,
-          {
-            opacity: fadeAnim,
-            transform: [{ translateY: slideAnim }]
-          }
-        ]}
-      >
+      <View style={styles.header}>
         <View style={styles.logoContainer}>
           <FontAwesome5 name="bone" size={48} color="#4A90E2" />
         </View>
@@ -113,7 +50,7 @@ const HomeScreen = memo(({ navigation }) => {
         <Text style={styles.description}>
           Simulador para análise de densitometria óssea
         </Text>
-      </Animated.View>
+      </View>
 
       <View style={styles.menuSection}> 
         <MenuItem
@@ -121,7 +58,6 @@ const HomeScreen = memo(({ navigation }) => {
           label="Exames"
           subtitle="Visualizar exames"
           onPress={navegarPara('Lista')}
-          delay={100}
         />
         
         <MenuItem
@@ -129,7 +65,6 @@ const HomeScreen = memo(({ navigation }) => {
           label="Novo Exame"
           subtitle="Adicionar paciente"
           onPress={navegarPara('Cadastro')}
-          delay={200}
         />
         
         <MenuItem
@@ -137,7 +72,6 @@ const HomeScreen = memo(({ navigation }) => {
           label="Sobre"
           subtitle="Informações do app"
           onPress={navegarPara('Sobre')}
-          delay={300}
         />
       </View>
     </View>

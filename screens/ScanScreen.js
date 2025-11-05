@@ -22,7 +22,7 @@ export default function ScanScreen({ route }) {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const [progress, setProgress] = useState(0);
 
-  const { id, paciente, idade, sexo, etnia, exame } = route.params;
+  const { id, nome, idade, sexo, etnia, exame } = route.params;
 
   // Mapeia o exame para a imagem correspondente
   const imagemExame = {
@@ -93,7 +93,7 @@ export default function ScanScreen({ route }) {
     const timer = setTimeout(() => {
       navigation.replace('Resultado', {
         id,
-        paciente,
+        nome,
         idade,
         sexo,
         etnia,
@@ -193,7 +193,7 @@ export default function ScanScreen({ route }) {
             <View style={styles.patientRow}>
               <FontAwesome5 name="user" size={14} color="#4A90E2" />
               <Text style={styles.patientLabel}>Paciente:</Text>
-              <Text style={styles.patientValue}>{paciente}</Text>
+              <Text style={styles.patientValue}>{nome}</Text>
             </View>
             <View style={styles.patientRow}>
               <FontAwesome5 name="birthday-cake" size={14} color="#4A90E2" />
