@@ -18,21 +18,15 @@ const ExameScreen = ({ route, navigation }) => {
 
   // Memoizar dados computados para evitar recálculos
   const dadosExame = useMemo(() => {
-    const nomeExame =
-      exame === 'coluna_lombar_ap.jpg'
-        ? 'Coluna lombar AP'
-        : exame === 'femur_esquerdo.jpg'
-        ? 'Fêmur esquerdo'
-        : exame;
+    const nomeExame = exame;
 
-  const imagemExame =
-    exame === 'coluna_lombar_ap.jpg'
-      ? require('../assets/coluna_lombar_ap.jpg')
-      : exame === 'femur.jpeg'
-      ? require('../assets/femur.jpeg')
-      : null;
+    const imagemExame = {
+      'Coluna Lombar': require('../assets/coluna-lombar.jpeg'),
+      'Fêmur': require('../assets/femur.jpeg'),
+      'Punho': require('../assets/punho.jpg'),
+    };
 
-    return { nomeExame, imagemExame };
+    return { nomeExame, imagemExame: imagemExame[exame] };
   }, [exame]);
 
   useEffect(() => {
