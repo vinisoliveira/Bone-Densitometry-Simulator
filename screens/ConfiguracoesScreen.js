@@ -9,6 +9,32 @@ const ConfiguracoesScreen = ({ navigation }) => {
   const [darkModeEnabled, setDarkModeEnabled] = useState(true);
   const [autoSaveEnabled, setAutoSaveEnabled] = useState(true);
 
+  const handleClearData = () => {
+    Alert.alert(
+      'Limpar Dados',
+      'Tem certeza que deseja excluir todos os dados? Esta ação não pode ser desfeita.',
+      [
+        {
+          text: 'Cancelar',
+          style: 'cancel',
+        },
+        {
+          text: 'Confirmar',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await deletarTodosPacientes();
+              await limparCache();
+              Alert.alert('Sucesso', 'Todos os dados foram removidos.');
+            } catch (error) {
+              Alert.alert('Erro', 'Não foi possível limpar os dados.');
+            }
+          },
+        },
+      ]
+    );
+  };
+
   const SettingItem = ({ icon, title, subtitle, type, value, onValueChange }) => (
     <View style={styles.settingItem}>
       <View style={styles.settingIcon}>
