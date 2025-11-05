@@ -123,8 +123,7 @@ const HomeScreen = memo(({ navigation }) => {
       </View>
     </View>
   );
-};
-
+});
 export default HomeScreen;
 
 const styles = StyleSheet.create({
