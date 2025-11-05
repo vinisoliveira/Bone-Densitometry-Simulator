@@ -10,7 +10,7 @@ import SobreScreen from './screens/SobreScreen';
 import ScanScreen from './screens/ScanScreen';
 import ResultadoScreen from './screens/ResultadoScreen';
 import RelatorioScreen from './screens/RelatorioScreen'; // ajuste o caminho conforme sua pasta
-
+import ConfiguracoesScreen from './screens/ConfiguracoesScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -43,6 +43,7 @@ export default function App() {
 
         <Stack.Screen name="Exame" component={ExameScreen} />
         <Stack.Screen name="Sobre" component={SobreScreen} />
+        <Stack.Screen name="Configuracoes" component={ConfiguracoesScreen} />
         <Stack.Screen name="Scan" component={ScanScreen} />
         <Stack.Screen name="Resultado" component={ResultadoScreen} />
         <Stack.Screen

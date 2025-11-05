@@ -78,6 +78,25 @@ const HomeScreen = memo(({ navigation }) => {
 
   return (
     <View style={styles.container}>
+      {/* Botão de Configurações Flutuante */}
+      <Animated.View 
+        style={[
+          styles.configButton,
+          {
+            opacity: fadeAnim,
+            transform: [{ scale: fadeAnim }]
+          }
+        ]}
+      >
+        <TouchableOpacity 
+          style={styles.configButtonInner}
+          onPress={navegarPara('Configuracoes')}
+          activeOpacity={0.8}
+        >
+          <FontAwesome5 name="cog" size={24} color="#4A90E2" />
+        </TouchableOpacity>
+      </Animated.View>
+
       <Animated.View 
         style={[
           styles.header,
@@ -124,6 +143,7 @@ const HomeScreen = memo(({ navigation }) => {
     </View>
   );
 });
+
 export default HomeScreen;
 
 const styles = StyleSheet.create({
@@ -225,5 +245,24 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#666',
     textAlign: 'center',
+  },
+  configButton: {
+    position: 'absolute',
+    top: spacing.xl,
+    right: spacing.lg,
+    zIndex: 1,
+  },
+  configButtonInner: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#2a3142',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
 });

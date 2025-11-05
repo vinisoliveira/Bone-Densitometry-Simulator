@@ -23,6 +23,9 @@ export const carregarPacientes = async () => {
   }
 };
 
+let cacheMemoria = null;
+let ultimaAtualizacao = 0;
+
 export const limparCache = () => {
   cacheMemoria = null;
   ultimaAtualizacao = 0;

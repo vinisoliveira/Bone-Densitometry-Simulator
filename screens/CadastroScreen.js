@@ -104,8 +104,11 @@ export default function CadastroScreen({ navigation }) {
   const iniciarEscaneamento = () => {
     if (!validarCampos()) return;
 
+    // Gerar ID único aqui
+    const idUnico = Date.now().toString();
+
     const novoPaciente = {
-      id: Date.now().toString(),
+      id: idUnico,
       nome: paciente,
       idade,
       sexo,
@@ -118,7 +121,7 @@ export default function CadastroScreen({ navigation }) {
     // Mostrar animação de sucesso
     animarSucesso();
 
-    // Navegar após a animação
+    // Navegar após a animação - PASSA O ID
     setTimeout(() => {
       resetarAnimacoes();
       setShowSuccessAnimation(false);
