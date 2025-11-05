@@ -2,47 +2,12 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch, Alert } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { deletarTodosPacientes, limparCache } from '../utils/storage';
 
 const ConfiguracoesScreen = ({ navigation }) => {
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [darkModeEnabled, setDarkModeEnabled] = useState(true);
   const [autoSaveEnabled, setAutoSaveEnabled] = useState(true);
-
-  const handleClearData = () => {
-    Alert.alert(
-      '⚠️ Atenção',
-      'Tem certeza que deseja excluir TODOS os dados?\n\nTodos os exames cadastrados serão removidos permanentemente.\n\nEsta ação não pode ser desfeita!',
-      [
-        {
-          text: 'Cancelar',
-          style: 'cancel'
-        },
-        {
-          text: 'Excluir Tudo',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              // Limpa todo o AsyncStorage
-              await AsyncStorage.clear();
-              Alert.alert(
-                '✅ Sucesso',
-                'Todos os dados foram excluídos com sucesso!',
-                [
-                  {
-                    text: 'OK',
-                    onPress: () => navigation.navigate('Home')
-                  }
-                ]
-              );
-            } catch (error) {
-              console.error('Erro ao limpar dados:', error);
-              Alert.alert('❌ Erro', 'Não foi possível limpar os dados. Tente novamente.');
-            }
-          }
-        }
-      ]
-    );
-  };
 
   const SettingItem = ({ icon, title, subtitle, type, value, onValueChange }) => (
     <View style={styles.settingItem}>

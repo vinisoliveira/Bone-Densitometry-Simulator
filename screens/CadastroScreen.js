@@ -2,7 +2,6 @@ import React, { useState, useRef } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ScrollView, KeyboardAvoidingView, Platform, Animated, Easing } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { colors, spacing, typography } from '../src/styles/theme';
-import { salvarPaciente } from '../utils/storage';
 
 export default function CadastroScreen({ navigation }) {
   const [paciente, setPaciente] = useState('');
@@ -101,13 +100,19 @@ export default function CadastroScreen({ navigation }) {
     });
   };
 
-  const iniciarEscaneamento = () => {
+  const iniciarEscaneamento = async () => {
     if (!validarCampos()) return;
 
-    // Gerar ID único aqui
-    const idUnico = Date.now().toString();
+    // Gerar ID único usando timestamp + random
+    // Formato: timestamp-random-random
+    // Exemplo: 1699123456789-a3b2c1-d4e5f6
+    const timestamp = Date.now();
+    const random1 = Math.random().toString(36).substring(2, 8);
+    const random2 = Math.random().toString(36).substring(2, 8);
+    const idUnico = `${timestamp}-${random1}-${random2}`;
 
-    const novoPaciente = {
+    // NÃO salva ainda - apenas passa os dados para as próximas telas
+    const dadosPaciente = {
       id: idUnico,
       nome: paciente,
       idade,
@@ -116,19 +121,14 @@ export default function CadastroScreen({ navigation }) {
       exame,
     };
 
-    salvarPaciente(novoPaciente);
-
     // Mostrar animação de sucesso
     animarSucesso();
 
-    // Navegar após a animação - PASSA O ID
+    // Navegar após a animação - PASSA TODOS OS DADOS
     setTimeout(() => {
       resetarAnimacoes();
       setShowSuccessAnimation(false);
-      navigation.navigate('Scan', {
-        ...novoPaciente,
-        vertebraSelecionada: null,
-      });
+      navigation.navigate('Scan', dadosPaciente);
     }, 1500);
   };
 
@@ -243,9 +243,9 @@ export default function CadastroScreen({ navigation }) {
               </View>
               <View style={styles.examOptions}>
                 {[
-                  { nome: 'Coluna Lombar', icon: 'spine' },
-                  { nome: 'Fêmur', icon: 'bone' },
-                  { nome: 'Punho', icon: 'hand-paper' }
+                  { nome: 'Coluna Lombar' },
+                  { nome: 'Fêmur' },
+                  { nome: 'Punho' }
                 ].map((opcao) => (
                   <TouchableOpacity
                     key={opcao.nome}
@@ -256,11 +256,6 @@ export default function CadastroScreen({ navigation }) {
                     onPress={() => setExame(opcao.nome)}
                     activeOpacity={0.7}
                   >
-                    <FontAwesome5 
-                      name={opcao.icon} 
-                      size={24} 
-                      color={exame === opcao.nome ? '#FFFFFF' : '#4A90E2'} 
-                    />
                     <Text style={[
                       styles.examText,
                       exame === opcao.nome && styles.examTextSelected

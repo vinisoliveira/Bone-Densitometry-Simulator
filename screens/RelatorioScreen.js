@@ -5,7 +5,7 @@ import { colors, spacing, typography } from '../src/styles/theme';
 import { FontAwesome5 } from '@expo/vector-icons';
 
 export default function RelatorioScreen({ route, navigation }) {
-  const { paciente, idade, sexo, etnia, exame, vertebraSelecionada } = route.params;
+  const { nome, idade, sexo, etnia, exame, vertebraSelecionada } = route.params;
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
@@ -38,7 +38,7 @@ export default function RelatorioScreen({ route, navigation }) {
         </head>
         <body>
           <h1>Relatório de Densitometria Óssea</h1>
-          <div class="info"><strong>Paciente:</strong> ${paciente}</div>
+          <div class="info"><strong>Paciente:</strong> ${nome}</div>
           <div class="info"><strong>Idade:</strong> ${idade}</div>
           <div class="info"><strong>Sexo:</strong> ${sexo}</div>
           <div class="info"><strong>Etnia:</strong> ${etnia}</div>
@@ -92,7 +92,7 @@ export default function RelatorioScreen({ route, navigation }) {
               <Text style={styles.cardTitle}>Dados do Paciente</Text>
             </View>
             <View style={styles.cardContent}>
-              <InfoRow icon="user" label="Paciente" value={paciente} />
+              <InfoRow icon="user" label="Paciente" value={nome} />
               <InfoRow icon="birthday-cake" label="Idade" value={`${idade} anos`} />
               <InfoRow icon="venus-mars" label="Sexo" value={sexo} />
               <InfoRow icon="globe-americas" label="Etnia" value={etnia} />

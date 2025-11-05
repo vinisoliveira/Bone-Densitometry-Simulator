@@ -1,116 +1,78 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { View, Text, FlatList, StyleSheet, TouchableOpacity, Animated, Alert } from 'react-native';
+import { View, Text, FlatList, StyleSheet, TouchableOpacity, Animated } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
-import { carregarPacientes, deletarPaciente } from '../utils/storage';
+import { carregarPacientes } from '../utils/storage';
 import { colors, spacing, typography } from '../src/styles/theme';
 
 export default function ListaScreen({ navigation }) {
   const [pacientes, setPacientes] = useState([]);
-  const [showDeleteAnimation, setShowDeleteAnimation] = useState(false);
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
-  const deleteSuccessAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     const fetchData = async () => {
-      const lista = await carregarPacientes();
-      setPacientes(lista);
-      
-      // Animações de entrada
-      Animated.parallel([
-        Animated.timing(fadeAnim, {
-          toValue: 1,
-          duration: 500,
-          useNativeDriver: true,
-        }),
-        Animated.spring(slideAnim, {
-          toValue: 0,
-          friction: 8,
-          useNativeDriver: true,
-        }),
-      ]).start();
+      try {
+        const lista = await carregarPacientes();
+        setPacientes(lista);
+        
+        // Animações de entrada
+        Animated.parallel([
+          Animated.timing(fadeAnim, {
+            toValue: 1,
+            duration: 500,
+            useNativeDriver: true,
+          }),
+          Animated.spring(slideAnim, {
+            toValue: 0,
+            friction: 8,
+            useNativeDriver: true,
+          }),
+        ]).start();
+        
+      } catch (error) {
+        console.error('❌ Erro ao carregar dados na ListaScreen:', error);
+      }
     };
-    const unsubscribe = navigation.addListener('focus', fetchData);
+    
+    // Carrega dados quando a tela recebe foco
+    const unsubscribe = navigation.addListener('focus', () => {
+      fetchData();
+    });
+    
+    // Também carrega na montagem inicial
+    fetchData();
+    
     return unsubscribe;
   }, [navigation]);
 
-  const handleDelete = (id, nome) => {
-    Alert.alert(
-      'Confirmar Exclusão',
-      `Deseja realmente excluir o exame de ${nome}?`,
-      [
-        {
-          text: 'Cancelar',
-          style: 'cancel'
-        },
-        {
-          text: 'Excluir',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              const novaLista = await deletarPaciente(id);
-              setPacientes(novaLista);
-              
-              // Animação de sucesso
-              setShowDeleteAnimation(true);
-              Animated.sequence([
-                Animated.spring(deleteSuccessAnim, {
-                  toValue: 1,
-                  friction: 8,
-                  useNativeDriver: true,
-                }),
-              ]).start();
-
-              setTimeout(() => {
-                deleteSuccessAnim.setValue(0);
-                setShowDeleteAnimation(false);
-              }, 1500);
-            } catch (error) {
-              Alert.alert('Erro', 'Não foi possível excluir o exame');
-            }
-          }
-        }
-      ]
-    );
-  };
-
   const renderItem = ({ item, index }) => {
     return (
-      <View style={styles.cardWrapper}>
-        <TouchableOpacity
-          style={styles.card}
-          onPress={() => navigation.navigate('Resultado', { 
-            id: item.id,
-            paciente: item.nome, 
-            exame: item.exame,
-            idade: item.idade,
-            sexo: item.sexo,
-            etnia: item.etnia,
-          })}
-          activeOpacity={0.7}
-        >
-          <View style={styles.cardIcon}>
-            <FontAwesome5 name="user-circle" size={32} color="#4A90E2" />
+      <TouchableOpacity
+        style={styles.card}
+        onPress={() => navigation.navigate('ExameDetalhe', { 
+          id: item.id,
+          nome: item.nome, 
+          idade: item.idade,
+          sexo: item.sexo,
+          etnia: item.etnia,
+          exame: item.exame,
+          vertebraSelecionada: item.vertebraSelecionada,
+          dataCriacao: item.dataCriacao,
+        })}
+        activeOpacity={0.7}
+      >
+        <View style={styles.cardIcon}>
+          <FontAwesome5 name="user-circle" size={32} color="#4A90E2" />
+        </View>
+        <View style={styles.cardContent}>
+          <Text style={styles.nome}>{item.nome}</Text>
+          <View style={styles.exameContainer}>
+            <FontAwesome5 name="file-medical-alt" size={12} color="#999" />
+            <Text style={styles.exame}>{item.exame}</Text>
           </View>
-          <View style={styles.cardContent}>
-            <Text style={styles.nome}>{item.nome}</Text>
-            <View style={styles.exameContainer}>
-              <FontAwesome5 name="file-medical-alt" size={12} color="#999" />
-              <Text style={styles.exame}>{item.exame}</Text>
-            </View>
-          </View>
-          <FontAwesome5 name="chevron-right" size={16} color="#666" />
-        </TouchableOpacity>
-        
-        {/* Botão de Deletar */}
-        <TouchableOpacity
-          style={styles.deleteButton}
-          onPress={() => handleDelete(item.id, item.nome)}
-          activeOpacity={0.7}
-        >
-          <FontAwesome5 name="trash-alt" size={18} color="#FF4444" />
-        </TouchableOpacity>
-      </View>
+        </View>
+        <FontAwesome5 name="chevron-right" size={16} color="#666" />
+      </TouchableOpacity>
     );
   };
 
@@ -171,32 +133,6 @@ export default function ListaScreen({ navigation }) {
         />
       )}
 
-      {/* Animação de Sucesso ao Deletar */}
-      {showDeleteAnimation && (
-        <View style={styles.deleteOverlay}>
-          <Animated.View
-            style={[
-              styles.deleteCircle,
-              {
-                transform: [{ scale: deleteSuccessAnim }],
-                opacity: deleteSuccessAnim,
-              },
-            ]}
-          >
-            <FontAwesome5 name="check" size={40} color="#FFFFFF" />
-          </Animated.View>
-          <Animated.Text
-            style={[
-              styles.deleteText,
-              {
-                opacity: deleteSuccessAnim,
-              },
-            ]}
-          >
-            Excluído com Sucesso!
-          </Animated.Text>
-        </View>
-      )}
     </View>
   );
 }
@@ -240,34 +176,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingBottom: spacing.lg,
   },
-  cardWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: spacing.md,
-  },
   card: {
-    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#2a3142',
     borderRadius: 12,
     padding: spacing.md,
-    marginRight: 8,
+    marginBottom: spacing.md,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 2,
-  },
-  deleteButton: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: 'rgba(255, 68, 68, 0.15)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 68, 68, 0.3)',
   },
   cardIcon: {
     width: 48,
@@ -328,35 +248,5 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#FFFFFF',
-  },
-  deleteOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'rgba(26, 29, 41, 0.95)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 1000,
-  },
-  deleteCircle: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: '#4CAF50',
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#4CAF50',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.8,
-    shadowRadius: 20,
-    elevation: 10,
-  },
-  deleteText: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#FFFFFF',
-    marginTop: 20,
   },
 });
