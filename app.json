@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Bone Densitometry Simulator",
-    "slug": "BoneDensitometrySimulator",
+    "slug": "SpineViewer",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -21,7 +21,7 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.vinisoliveira.SpineViewer"
+      "package": "com.vinisoliveira.SpBoneDensitometrySimulator"
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -30,6 +30,11 @@
       "eas": {
         "projectId": "793a4376-2819-48ab-bce5-fdcea33b83bf"
       }
-    }
+    },
+    "owner": "vinisoliveira",
+    "plugins": [
+      "expo-asset",
+      "expo-font"
+    ]
   }
 }

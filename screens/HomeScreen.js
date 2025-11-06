@@ -1,73 +1,202 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import React, { memo } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
+import { FontAwesome5 } from '@expo/vector-icons';
+import { colors, spacing, typography } from '../src/styles/theme';
 
-const HomeScreen = ({ navigation }) => {
+const { width } = Dimensions.get('window');
+
+const HomeScreen = memo(({ navigation }) => {
+  const navegarPara = (tela) => () => navigation.navigate(tela);
+
+  const MenuItem = ({ icon, label, subtitle, onPress }) => {
+    return (
+      <View>
+        <TouchableOpacity 
+          style={styles.menuItem}
+          onPress={onPress}
+          activeOpacity={0.7}
+        >
+          <View style={styles.menuIconContainer}>
+            <FontAwesome5 name={icon} size={28} color="#4A90E2" solid />
+          </View>
+          <View style={styles.menuTextContainer}>
+            <Text style={styles.menuLabel}>{label}</Text>
+            <Text style={styles.menuSubtitle}>{subtitle}</Text>
+          </View>
+          <FontAwesome5 name="chevron-right" size={18} color="#666" />
+        </TouchableOpacity>
+      </View>
+    );
+  };
+
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Bone Densitometry Simulator</Text>
+      {/* Botão de Configurações Flutuante */}
+      <View style={styles.configButton}>
+        <TouchableOpacity 
+          style={styles.configButtonInner}
+          onPress={navegarPara('Configuracoes')}
+          activeOpacity={0.8}
+        >
+          <FontAwesome5 name="cog" size={24} color="#4A90E2" />
+        </TouchableOpacity>
+      </View>
 
-      <TouchableOpacity
-        style={styles.button}
-        onPress={() => navigation.navigate('Lista')}
-      >
-        <Ionicons name="people" size={24} color="#00e6e6" style={styles.icon} />
-        <Text style={styles.buttonText}>Pacientes</Text>
-      </TouchableOpacity>
+      <View style={styles.header}>
+        <View style={styles.logoContainer}>
+          <FontAwesome5 name="bone" size={48} color="#4A90E2" />
+        </View>
+        <Text style={styles.title}>Bone Densitometry</Text>
+        <Text style={styles.description}>
+          Simulador para análise de densitometria óssea
+        </Text>
+      </View>
 
-      <TouchableOpacity
-        style={styles.button}
-        onPress={() => navigation.navigate('Cadastro')}
-      >
-        <Ionicons name="add-circle" size={24} color="#00e6e6" style={styles.icon} />
-        <Text style={styles.buttonText}>Adicionar Exame</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        style={styles.button}
-        onPress={() => navigation.navigate('Sobre')}
-      >
-        <Ionicons name="information-circle" size={24} color="#00e6e6" style={styles.icon} />
-        <Text style={styles.buttonText}>Sobre</Text>
-      </TouchableOpacity>
+      <View style={styles.menuSection}> 
+        <MenuItem
+          icon="folder-open"
+          label="Exames"
+          subtitle="Visualizar exames"
+          onPress={navegarPara('Lista')}
+        />
+        
+        <MenuItem
+          icon="plus-circle"
+          label="Novo Exame"
+          subtitle="Adicionar paciente"
+          onPress={navegarPara('Cadastro')}
+        />
+        
+        <MenuItem
+          icon="info-circle"
+          label="Sobre"
+          subtitle="Informações do app"
+          onPress={navegarPara('Sobre')}
+        />
+      </View>
     </View>
   );
-};
+});
+
+export default HomeScreen;
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0a1f44',
+    backgroundColor: '#1a1d29',
+  },
+  header: {
+    paddingTop: spacing.xl * 2,
+    paddingHorizontal: spacing.lg,
+    alignItems: 'center',
+    marginBottom: spacing.xl,
+  },
+  logoContainer: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: '#FFFFFF',
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 30,
+    marginBottom: spacing.lg,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 5,
   },
   title: {
-    fontSize: 32,
-    color: '#e6f2ff',
+    fontSize: 28,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    textAlign: 'center',
+  },
+  subtitle: {
+    fontSize: 20,
+    fontWeight: '300',
+    color: '#FFFFFF',
+    textAlign: 'center',
+    marginTop: spacing.xs,
+    marginBottom: spacing.md,
+  },
+  description: {
+    fontSize: 14,
+    color: '#999',
+    textAlign: 'center',
+    paddingHorizontal: spacing.xl,
+  },
+  menuSection: {
+    flex: 1,
+    paddingHorizontal: spacing.lg,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginBottom: spacing.md,
+  },
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#2a3142',
+    borderRadius: 16,
+    padding: spacing.lg,
+    marginBottom: spacing.md,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  menuIconContainer: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: 'rgba(74, 144, 226, 0.15)',
     justifyContent: 'center',
     alignItems: 'center',
-    fontWeight: 'bold',
-    marginBottom: 30,
+    marginRight: spacing.md,
   },
-  button: {
-    flexDirection: 'row',
-    backgroundColor: '#1e2a38',
-    paddingVertical: 15,
-    paddingHorizontal: 25,
-    borderRadius: 10,
-    marginVertical: 10,
-    alignItems: 'center',
-    width: '100%',
+  menuTextContainer: {
+    flex: 1,
   },
-  buttonText: {
-    color: '#e6f2ff',
+  menuLabel: {
     fontSize: 18,
-    marginLeft: 10,
+    fontWeight: '600',
+    color: '#FFFFFF',
+    marginBottom: 4,
   },
-  icon: {
-    marginRight: 5,
+  menuSubtitle: {
+    fontSize: 14,
+    color: '#999',
+  },
+  footer: {
+    paddingBottom: spacing.xl,
+    paddingHorizontal: spacing.lg,
+    alignItems: 'center',
+  },
+  footerText: {
+    fontSize: 12,
+    color: '#666',
+    textAlign: 'center',
+  },
+  configButton: {
+    position: 'absolute',
+    top: spacing.xl,
+    right: spacing.lg,
+    zIndex: 1,
+  },
+  configButtonInner: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#2a3142',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
 });
-
-export default HomeScreen;

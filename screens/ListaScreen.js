@@ -1,116 +1,252 @@
-import React from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  FlatList,
-  TouchableOpacity,
-} from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import React, { useEffect, useState, useRef } from 'react';
+import { View, Text, FlatList, StyleSheet, TouchableOpacity, Animated } from 'react-native';
+import { FontAwesome5 } from '@expo/vector-icons';
+import { carregarPacientes } from '../utils/storage';
+import { colors, spacing, typography } from '../src/styles/theme';
 
-const ListaScreen = ({ pacientes = [], navigation }) => {
-  const listaSegura = Array.isArray(pacientes) ? pacientes : [];
+export default function ListaScreen({ navigation }) {
+  const [pacientes, setPacientes] = useState([]);
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(30)).current;
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const lista = await carregarPacientes();
+        setPacientes(lista);
+        
+        // Animações de entrada
+        Animated.parallel([
+          Animated.timing(fadeAnim, {
+            toValue: 1,
+            duration: 500,
+            useNativeDriver: true,
+          }),
+          Animated.spring(slideAnim, {
+            toValue: 0,
+            friction: 8,
+            useNativeDriver: true,
+          }),
+        ]).start();
+        
+      } catch (error) {
+        console.error('❌ Erro ao carregar dados na ListaScreen:', error);
+      }
+    };
+    
+    // Carrega dados quando a tela recebe foco
+    const unsubscribe = navigation.addListener('focus', () => {
+      fetchData();
+    });
+    
+    // Também carrega na montagem inicial
+    fetchData();
+    
+    return unsubscribe;
+  }, [navigation]);
+
+  const renderItem = ({ item, index }) => {
+    return (
+      <TouchableOpacity
+        style={styles.card}
+        onPress={() => navigation.navigate('ExameDetalhe', { 
+          id: item.id,
+          nome: item.nome, 
+          idade: item.idade,
+          sexo: item.sexo,
+          etnia: item.etnia,
+          exame: item.exame,
+          vertebraSelecionada: item.vertebraSelecionada,
+          dataCriacao: item.dataCriacao,
+        })}
+        activeOpacity={0.7}
+      >
+        <View style={styles.cardIcon}>
+          <FontAwesome5 name="user-circle" size={32} color="#4A90E2" />
+        </View>
+        <View style={styles.cardContent}>
+          <Text style={styles.nome}>{item.nome}</Text>
+          <View style={styles.exameContainer}>
+            <FontAwesome5 name="file-medical-alt" size={12} color="#999" />
+            <Text style={styles.exame}>{item.exame}</Text>
+          </View>
+        </View>
+        <FontAwesome5 name="chevron-right" size={16} color="#666" />
+      </TouchableOpacity>
+    );
+  };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>📋 Exames Cadastrados</Text>
+      <Animated.View 
+        style={[
+          styles.header,
+          {
+            opacity: fadeAnim,
+            transform: [{ translateY: slideAnim }]
+          }
+        ]}
+      >
+        <TouchableOpacity 
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+        >
+          <FontAwesome5 name="arrow-left" size={20} color="#4A90E2" />
+        </TouchableOpacity>
+        <Text style={styles.title}>Lista de Exames</Text>
+        <TouchableOpacity 
+          style={styles.addButton}
+          onPress={() => navigation.navigate('Cadastro')}
+        >
+          <FontAwesome5 name="plus" size={20} color="#4A90E2" />
+        </TouchableOpacity>
+      </Animated.View>
 
-      {listaSegura.length === 0 ? (
-        <Text style={styles.empty}>Nenhum exame cadastrado ainda.</Text>
+      {pacientes.length === 0 ? (
+        <Animated.View 
+          style={[
+            styles.emptyContainer,
+            { opacity: fadeAnim }
+          ]}
+        >
+          <FontAwesome5 name="folder-open" size={64} color="#4A90E2" />
+          <Text style={styles.emptyText}>Nenhum exame cadastrado</Text>
+          <Text style={styles.emptySubtext}>
+            Adicione um novo exame para começar
+          </Text>
+          <TouchableOpacity 
+            style={styles.emptyButton}
+            onPress={() => navigation.navigate('Cadastro')}
+            activeOpacity={0.8}
+          >
+            <FontAwesome5 name="plus" size={16} color="#FFFFFF" />
+            <Text style={styles.emptyButtonText}>Adicionar Exame</Text>
+          </TouchableOpacity>
+        </Animated.View>
       ) : (
         <FlatList
-          data={listaSegura}
+          data={pacientes}
           keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
-            <TouchableOpacity
-              style={styles.card}
-              onPress={() => navigation.navigate('Exame', item)}
-            >
-              <View style={styles.cardHeader}>
-                <Ionicons name="person-circle" size={24} color="#00e6e6" />
-                <Text style={styles.nome}>{item.nome}</Text>
-              </View>
-              <Text style={styles.info}>
-                ID: {item.id} • {item.idade} anos • {item.sexo}
-              </Text>
-              <Text style={styles.exame}>Exame: {item.exame}</Text>
-            </TouchableOpacity>
-          )}
+          renderItem={renderItem}
+          contentContainerStyle={styles.list}
+          showsVerticalScrollIndicator={false}
         />
       )}
 
-      <TouchableOpacity
-        style={styles.homeButton}
-        onPress={() => navigation.navigate('Home')}
-      >
-        <Ionicons name="home" size={20} color="#00e6e6" style={styles.icon} />
-        <Text style={styles.buttonText}>Voltar para Início</Text>
-      </TouchableOpacity>
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0a1f44',
-    padding: 20,
+    backgroundColor: '#1a1d29',
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingTop: spacing.xl * 1.5,
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.lg,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#2a3142',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  addButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#2a3142',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   title: {
-    fontSize: 24,
-    color: '#e6f2ff',
-    fontWeight: 'bold',
-    marginBottom: 20,
-  },
-  empty: {
-    color: '#aaa',
-    fontSize: 16,
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#FFFFFF',
     textAlign: 'center',
-    marginTop: 50,
+  },
+  list: {
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.lg,
   },
   card: {
-    backgroundColor: '#1e2a38',
-    padding: 15,
-    borderRadius: 10,
-    marginBottom: 12,
-  },
-  cardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 6,
+    backgroundColor: '#2a3142',
+    borderRadius: 12,
+    padding: spacing.md,
+    marginBottom: spacing.md,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  cardIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(74, 144, 226, 0.15)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: spacing.md,
+  },
+  cardContent: {
+    flex: 1,
   },
   nome: {
-    color: '#e6f2ff',
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginLeft: 8,
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
+    marginBottom: 4,
   },
-  info: {
-    color: '#ccc',
-    fontSize: 14,
+  exameContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
   exame: {
-    color: '#00e6e6',
-    fontSize: 14,
-    marginTop: 4,
+    fontSize: 13,
+    color: '#999',
   },
-  homeButton: {
-    flexDirection: 'row',
-    backgroundColor: '#2c3e50',
-    padding: 12,
-    borderRadius: 10,
-    alignItems: 'center',
+  emptyContainer: {
+    flex: 1,
     justifyContent: 'center',
-    marginTop: 20,
+    alignItems: 'center',
+    paddingHorizontal: spacing.xl,
   },
-  buttonText: {
-    color: '#e6f2ff',
+  emptyText: {
+    fontSize: 18,
+    color: '#FFFFFF',
+    marginTop: spacing.lg,
+    fontWeight: '600',
+  },
+  emptySubtext: {
+    fontSize: 14,
+    color: '#999',
+    marginTop: spacing.sm,
+    marginBottom: spacing.xl,
+    textAlign: 'center',
+  },
+  emptyButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#4A90E2',
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    borderRadius: 25,
+    gap: spacing.sm,
+  },
+  emptyButtonText: {
     fontSize: 16,
-    marginLeft: 10,
-  },
-  icon: {
-    marginRight: 5,
+    fontWeight: '600',
+    color: '#FFFFFF',
   },
 });
-
-export default ListaScreen;
