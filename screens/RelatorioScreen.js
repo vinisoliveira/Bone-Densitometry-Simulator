@@ -7,12 +7,107 @@ import { colors, spacing, typography } from '../src/styles/theme';
 import { FontAwesome5 } from '@expo/vector-icons';
 import DensitometryChart from '../src/components/DensitometryChart';
 
+// Helper functions
+const calculateTScore = (idade, sexo, examType = 'Coluna Lombar') => {
+  // Simulação de T-Score baseado na idade e tipo de exame
+  let baseTScore = 0;
+  
+  // Fator de multiplicação baseado no tipo de exame
+  // Fêmur tende a ter declínio mais acentuado
+  // Punho tende a ter declínio mais gradual
+  let examFactor = 1.0;
+  if (examType === 'Fêmur') {
+    examFactor = 1.15; // 15% mais declínio
+  } else if (examType === 'Punho') {
+    examFactor = 0.90; // 10% menos declínio
+  }
+  
+  if (idade < 30) {
+    baseTScore = 0.5;
+  } else if (idade < 40) {
+    baseTScore = 0.2;
+  } else if (idade < 50) {
+    baseTScore = -0.3;
+  } else if (idade < 60) {
+    baseTScore = -0.8;
+  } else if (idade < 70) {
+    baseTScore = -1.4;
+  } else if (idade < 80) {
+    baseTScore = -2.1;
+  } else {
+    baseTScore = -2.7;
+  }
+
+  // Aplicar fator do tipo de exame
+  if (baseTScore < 0) {
+    baseTScore *= examFactor;
+  }
+
+  // Ajuste para sexo (mulheres geralmente têm valores um pouco menores após menopausa)
+  if (sexo === 'Feminino' && idade >= 50) {
+    baseTScore -= 0.3;
+  }
+
+  // Adiciona variação aleatória pequena
+  const variation = (Math.random() - 0.5) * 0.4;
+  return baseTScore + variation;
+};
+
+const calculateBMD = (tScore) => {
+  // BMD de referência para adulto jovem (pico de massa óssea)
+  const referenceBMD = 1.071;
+  const sdBMD = 0.120; // Desvio padrão
+  
+  return referenceBMD + (tScore * sdBMD);
+};
+
+const getClassification = (tScore) => {
+  if (tScore > -1.0) {
+    return { 
+      name: 'Normal', 
+      class: 'classification-normal',
+      color: '#4CAF50'
+    };
+  } else if (tScore >= -2.5) {
+    return { 
+      name: 'Osteopenia', 
+      class: 'classification-osteopenia',
+      color: '#FFD54F'
+    };
+  } else {
+    return { 
+      name: 'Osteoporose', 
+      class: 'classification-osteoporose',
+      color: '#FF6B6B'
+    };
+  }
+};
+
 export default function RelatorioScreen({ route, navigation }) {
   const { nome, idade, sexo, etnia, exame, vertebraSelecionada } = route.params;
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
+
+  // Calcular T-Score no início para usar em toda a tela
+  const idadeNum = parseInt(idade) || 30;
+  const tScore = calculateTScore(idadeNum, sexo, exame);
+  const classification = getClassification(tScore);
+  const bmd = calculateBMD(tScore);
+
+  // Função para obter a imagem correta baseada no tipo de exame
+  const getExamImage = () => {
+    // Mapeamento direto dos tipos de exame para suas imagens
+    const examImages = {
+      'Coluna Lombar': require('../assets/coluna-lombar.jpeg'),
+      'Fêmur': require('../assets/femur.jpeg'),
+      'Punho': require('../assets/punho.jpg'),
+    };
+
+    // Retorna a imagem correspondente ou a imagem padrão da coluna lombar
+    return examImages[exame] || require('../assets/coluna-lombar.jpeg');
+  };
 
   useEffect(() => {
     Animated.parallel([
@@ -37,7 +132,7 @@ export default function RelatorioScreen({ route, navigation }) {
     const pesoNum = 65 + (Math.random() - 0.5) * 20; // Simulação de peso
     const alturaNum = 165 + (Math.random() - 0.5) * 20; // Simulação de altura
     
-    const tScore = calculateTScore(idadeNum, sexo);
+    const tScore = calculateTScore(idadeNum, sexo, exame);
     const classification = getClassification(tScore);
     const bmd = calculateBMD(tScore);
     const zScore = tScore + 0.5 + (Math.random() - 0.5) * 0.3;
@@ -917,66 +1012,6 @@ export default function RelatorioScreen({ route, navigation }) {
     return Math.max(0, Math.min(100, position));
   };
 
-  const calculateTScore = (idade, sexo) => {
-    // Simulação de T-Score baseado na idade
-    let baseTScore = 0;
-    
-    if (idade < 30) {
-      baseTScore = 0.5;
-    } else if (idade < 40) {
-      baseTScore = 0.2;
-    } else if (idade < 50) {
-      baseTScore = -0.3;
-    } else if (idade < 60) {
-      baseTScore = -0.8;
-    } else if (idade < 70) {
-      baseTScore = -1.4;
-    } else if (idade < 80) {
-      baseTScore = -2.1;
-    } else {
-      baseTScore = -2.7;
-    }
-
-    // Ajuste para sexo (mulheres geralmente têm valores um pouco menores após menopausa)
-    if (sexo === 'Feminino' && idade >= 50) {
-      baseTScore -= 0.3;
-    }
-
-    // Adiciona variação aleatória pequena
-    const variation = (Math.random() - 0.5) * 0.4;
-    return baseTScore + variation;
-  };
-
-  const calculateBMD = (tScore) => {
-    // BMD de referência para adulto jovem (pico de massa óssea)
-    const referenceBMD = 1.071;
-    const sdBMD = 0.120; // Desvio padrão
-    
-    return referenceBMD + (tScore * sdBMD);
-  };
-
-  const getClassification = (tScore) => {
-    if (tScore > -1.0) {
-      return { 
-        name: 'Normal', 
-        class: 'classification-normal',
-        color: '#4CAF50'
-      };
-    } else if (tScore >= -2.5) {
-      return { 
-        name: 'Osteopenia', 
-        class: 'classification-osteopenia',
-        color: '#FFD54F'
-      };
-    } else {
-      return { 
-        name: 'Osteoporose', 
-        class: 'classification-osteoporose',
-        color: '#FF6B6B'
-      };
-    }
-  };
-
   const getRecommendations = (classification) => {
     const recommendations = {
       'Normal': `
@@ -1069,7 +1104,7 @@ export default function RelatorioScreen({ route, navigation }) {
             </View>
             <View style={styles.imageContainer}>
               <Image 
-                source={require('../assets/coluna-lombar.jpeg')} 
+                source={getExamImage()} 
                 style={styles.image}
                 resizeMode="contain"
               />
@@ -1084,8 +1119,9 @@ export default function RelatorioScreen({ route, navigation }) {
             </View>
             <View style={styles.chartContent}>
               <DensitometryChart 
-                tScore={-1.5} // Exemplo de T-Score - pode ser calculado do exame
-                age={idade ? parseInt(idade) : null}
+                tScore={tScore}
+                age={idadeNum}
+                examType={exame}
               />
             </View>
           </View>

@@ -1,31 +1,76 @@
 import React from 'react';
 import { View, Text, StyleSheet, Dimensions } from 'react-native';
-import Svg, { Rect, Line, Text as SvgText, Path, Defs, LinearGradient, Stop } from 'react-native-svg';
+import Svg, { Rect, Line, Text as SvgText, Path, Circle } from 'react-native-svg';
 
 const { width: screenWidth } = Dimensions.get('window');
 const CHART_WIDTH = screenWidth - 80;
-const CHART_HEIGHT = 280;
-const PADDING = { top: 20, right: 40, bottom: 40, left: 60 };
+const CHART_HEIGHT = 260;
+const PADDING = { top: 20, right: 20, bottom: 50, left: 20 };
 
-export default function DensitometryChart({ tScore, age }) {
-  // Referência de densitometria L1-L4 baseada em padrões clínicos
-  const BMD_MAX = 1.440;
-  const BMD_MIN = 0.576;
-  
+export default function DensitometryChart({ tScore, age, examType }) {
   // Zonas de classificação baseadas em T-Score
   const zones = [
-    { name: 'Normal', color: '#4CAF50', minBMD: 1.071, maxBMD: BMD_MAX, tScoreRange: '> -1' },
-    { name: 'Osteopenia', color: '#FFD54F', minBMD: 0.847, maxBMD: 1.071, tScoreRange: '-1 a -2.5' },
-    { name: 'Osteoporose', color: '#FF6B6B', minBMD: BMD_MIN, maxBMD: 0.847, tScoreRange: '< -2.5' },
+    { name: 'Normal', color: '#4CAF50', tScoreMin: -1, tScoreMax: 3, label: 'T-Score: > -1' },
+    { name: 'Osteopenia', color: '#D4A853', tScoreMin: -2.5, tScoreMax: -1, label: 'T-Score: -1 a -2.5' },
+    { name: 'Osteoporose', color: '#C85252', tScoreMin: -5, tScoreMax: -2.5, label: 'T-Score: < -2.5' },
   ];
 
-  // Eixo X: Idade (20 a 100 anos)
-  const ageRange = { min: 20, max: 100 };
-  const ages = [20, 30, 40, 50, 60, 70, 80, 90, 100];
+  // Eixo X: Idade (30 a 90 anos)
+  const ageRange = { min: 30, max: 90 };
+  const ageMarkers = [30, 40, 50, 60, 70, 80, 90];
   
-  // Eixo Y: BMD (g/cm²)
-  const bmdValues = [0.576, 0.699, 0.820, 0.947, 1.071, 1.195, 1.319, 1.440];
+  // Curvas de referência específicas para cada tipo de exame
+  const getReferenceCurve = () => {
+    // Fêmur (colo do fêmur) - declínio mais acentuado, especialmente após 50 anos
+    if (examType === 'Fêmur') {
+      return [
+        { age: 30, tScore: 0.6 },
+        { age: 40, tScore: 0.3 },
+        { age: 50, tScore: -0.3 },
+        { age: 60, tScore: -1.0 },
+        { age: 70, tScore: -1.9 },
+        { age: 80, tScore: -2.6 },
+        { age: 90, tScore: -3.2 },
+      ];
+    }
+    // Coluna Lombar (L1-L4) - declínio moderado
+    else if (examType === 'Coluna Lombar') {
+      return [
+        { age: 30, tScore: 0.5 },
+        { age: 40, tScore: 0.2 },
+        { age: 50, tScore: -0.5 },
+        { age: 60, tScore: -1.2 },
+        { age: 70, tScore: -1.8 },
+        { age: 80, tScore: -2.3 },
+        { age: 90, tScore: -2.7 },
+      ];
+    }
+    // Punho (rádio distal) - declínio mais gradual
+    else if (examType === 'Punho') {
+      return [
+        { age: 30, tScore: 0.4 },
+        { age: 40, tScore: 0.1 },
+        { age: 50, tScore: -0.4 },
+        { age: 60, tScore: -1.0 },
+        { age: 70, tScore: -1.6 },
+        { age: 80, tScore: -2.1 },
+        { age: 90, tScore: -2.5 },
+      ];
+    }
+    // Default (Coluna Lombar)
+    return [
+      { age: 30, tScore: 0.5 },
+      { age: 40, tScore: 0.2 },
+      { age: 50, tScore: -0.5 },
+      { age: 60, tScore: -1.2 },
+      { age: 70, tScore: -1.8 },
+      { age: 80, tScore: -2.3 },
+      { age: 90, tScore: -2.7 },
+    ];
+  };
 
+  const referenceCurve = getReferenceCurve();
+  
   // Função para converter valores para coordenadas do gráfico
   const getX = (age) => {
     const chartWidth = CHART_WIDTH - PADDING.left - PADDING.right;
@@ -33,47 +78,38 @@ export default function DensitometryChart({ tScore, age }) {
     return PADDING.left + (ratio * chartWidth);
   };
 
-  const getY = (bmd) => {
-    const chartHeight = CHART_HEIGHT - PADDING.top - PADDING.bottom;
-    const ratio = (bmd - BMD_MIN) / (BMD_MAX - BMD_MIN);
-    return PADDING.top + chartHeight - (ratio * chartHeight);
+  const getYForZone = (zoneIndex) => {
+    const zoneHeight = (CHART_HEIGHT - PADDING.top - PADDING.bottom) / zones.length;
+    return PADDING.top + (zoneIndex * zoneHeight);
   };
 
-  // Curva de referência (pico de densidade óssea aos 30 anos, declínio gradual)
-  const referenceCurve = [
-    { age: 20, bmd: 1.280 },
-    { age: 25, bmd: 1.320 },
-    { age: 30, bmd: 1.340 },
-    { age: 35, bmd: 1.330 },
-    { age: 40, bmd: 1.300 },
-    { age: 50, bmd: 1.200 },
-    { age: 60, bmd: 1.050 },
-    { age: 70, bmd: 0.920 },
-    { age: 80, bmd: 0.810 },
-    { age: 90, bmd: 0.720 },
-    { age: 100, bmd: 0.650 },
-  ];
+  const getZoneHeight = () => {
+    return (CHART_HEIGHT - PADDING.top - PADDING.bottom) / zones.length;
+  };
+
+  // Converter T-Score para posição Y no gráfico
+  const getTScoreY = (tScore) => {
+    // Normalizar T-Score para um valor entre 0 e 1 dentro do range total
+    const totalRange = zones[0].tScoreMax - zones[zones.length - 1].tScoreMin;
+    const normalizedScore = (zones[0].tScoreMax - tScore) / totalRange;
+    const chartHeight = CHART_HEIGHT - PADDING.top - PADDING.bottom;
+    return PADDING.top + (normalizedScore * chartHeight);
+  };
 
   // Criar path da curva de referência
   const curvePath = referenceCurve.map((point, index) => {
     const x = getX(point.age);
-    const y = getY(point.bmd);
+    const y = getTScoreY(point.tScore);
     return index === 0 ? `M ${x} ${y}` : `L ${x} ${y}`;
   }).join(' ');
 
-  // Calcular posição do indicador de T-Score (se fornecido)
+  // Calcular posição do indicador do paciente
   const getPatientPosition = () => {
     if (!age || tScore === undefined) return null;
     
-    // Converter T-Score para BMD aproximado (baseado em média de referência)
-    // Fórmula aproximada: BMD = referência_bmd + (tScore * 0.1)
-    const referenceBMD = 1.071; // Média para adulto jovem
-    const patientBMD = referenceBMD + (tScore * 0.120);
-    
     return {
-      x: getX(age),
-      y: getY(patientBMD),
-      bmd: patientBMD,
+      x: getX(Math.min(Math.max(age, ageRange.min), ageRange.max)),
+      y: getTScoreY(tScore),
     };
   };
 
@@ -83,54 +119,43 @@ export default function DensitometryChart({ tScore, age }) {
     <View style={styles.container}>
       <View style={styles.chartContainer}>
         <Svg width={CHART_WIDTH} height={CHART_HEIGHT}>
-          <Defs>
-            {/* Gradientes para as zonas */}
-            <LinearGradient id="normalGrad" x1="0" y1="0" x2="0" y2="1">
-              <Stop offset="0" stopColor="#4CAF50" stopOpacity="0.7" />
-              <Stop offset="1" stopColor="#4CAF50" stopOpacity="0.3" />
-            </LinearGradient>
-            <LinearGradient id="osteopeniaGrad" x1="0" y1="0" x2="0" y2="1">
-              <Stop offset="0" stopColor="#FFD54F" stopOpacity="0.7" />
-              <Stop offset="1" stopColor="#FFD54F" stopOpacity="0.3" />
-            </LinearGradient>
-            <LinearGradient id="osteoporoseGrad" x1="0" y1="0" x2="0" y2="1">
-              <Stop offset="0" stopColor="#FF6B6B" stopOpacity="0.7" />
-              <Stop offset="1" stopColor="#FF6B6B" stopOpacity="0.3" />
-            </LinearGradient>
-          </Defs>
-
-          {/* Zonas coloridas de fundo */}
+          {/* Zonas coloridas horizontais */}
           {zones.map((zone, index) => {
-            const gradId = zone.name === 'Normal' ? 'normalGrad' : 
-                          zone.name === 'Osteopenia' ? 'osteopeniaGrad' : 'osteoporoseGrad';
+            const y = getYForZone(index);
+            const height = getZoneHeight();
             return (
               <Rect
                 key={index}
                 x={PADDING.left}
-                y={getY(zone.maxBMD)}
+                y={y}
                 width={CHART_WIDTH - PADDING.left - PADDING.right}
-                height={getY(zone.minBMD) - getY(zone.maxBMD)}
-                fill={`url(#${gradId})`}
+                height={height}
+                fill={zone.color}
+                opacity={0.6}
               />
             );
           })}
 
-          {/* Grid horizontal (linhas de BMD) */}
-          {bmdValues.map((bmd, index) => (
-            <Line
-              key={`h-grid-${index}`}
-              x1={PADDING.left}
-              y1={getY(bmd)}
-              x2={CHART_WIDTH - PADDING.right}
-              y2={getY(bmd)}
-              stroke="#3a3f52"
-              strokeWidth="1"
-              strokeDasharray="4,4"
-            />
-          ))}
+          {/* Linhas de separação entre zonas */}
+          {zones.map((zone, index) => {
+            if (index === zones.length - 1) return null;
+            const y = getYForZone(index + 1);
+            return (
+              <Line
+                key={`separator-${index}`}
+                x1={PADDING.left}
+                y1={y}
+                x2={CHART_WIDTH - PADDING.right}
+                y2={y}
+                stroke="#2a3142"
+                strokeWidth="2"
+                strokeDasharray="5,5"
+              />
+            );
+          })}
 
-          {/* Grid vertical (linhas de idade) */}
-          {ages.map((age, index) => (
+          {/* Linhas verticais de grade para idade */}
+          {ageMarkers.map((age, index) => (
             <Line
               key={`v-grid-${index}`}
               x1={getX(age)}
@@ -139,7 +164,8 @@ export default function DensitometryChart({ tScore, age }) {
               y2={CHART_HEIGHT - PADDING.bottom}
               stroke="#3a3f52"
               strokeWidth="1"
-              strokeDasharray="4,4"
+              strokeDasharray="3,3"
+              opacity={0.5}
             />
           ))}
 
@@ -152,6 +178,21 @@ export default function DensitometryChart({ tScore, age }) {
             strokeLinecap="round"
           />
 
+          {/* Pontos na curva de referência */}
+          {referenceCurve.map((point, index) => {
+            const x = getX(point.age);
+            const y = getTScoreY(point.tScore);
+            return (
+              <Circle
+                key={`curve-point-${index}`}
+                cx={x}
+                cy={y}
+                r="3"
+                fill="#4A90E2"
+              />
+            );
+          })}
+
           {/* Eixos */}
           <Line
             x1={PADDING.left}
@@ -161,63 +202,29 @@ export default function DensitometryChart({ tScore, age }) {
             stroke="#FFFFFF"
             strokeWidth="2"
           />
-          <Line
-            x1={PADDING.left}
-            y1={PADDING.top}
-            x2={PADDING.left}
-            y2={CHART_HEIGHT - PADDING.bottom}
-            stroke="#FFFFFF"
-            strokeWidth="2"
-          />
-
-          {/* Labels do eixo Y (BMD) */}
-          {bmdValues.map((bmd, index) => (
-            <SvgText
-              key={`y-label-${index}`}
-              x={PADDING.left - 10}
-              y={getY(bmd) + 4}
-              fill="#FFFFFF"
-              fontSize="10"
-              textAnchor="end"
-            >
-              {bmd.toFixed(3)}
-            </SvgText>
-          ))}
 
           {/* Labels do eixo X (Idade) */}
-          {ages.map((age, index) => (
+          {ageMarkers.map((age, index) => (
             <SvgText
               key={`x-label-${index}`}
               x={getX(age)}
               y={CHART_HEIGHT - PADDING.bottom + 20}
               fill="#FFFFFF"
-              fontSize="10"
+              fontSize="12"
+              fontWeight="600"
               textAnchor="middle"
             >
               {age}
             </SvgText>
           ))}
 
-          {/* Título do eixo Y */}
-          <SvgText
-            x={15}
-            y={CHART_HEIGHT / 2}
-            fill="#FFFFFF"
-            fontSize="11"
-            fontWeight="600"
-            textAnchor="middle"
-            transform={`rotate(-90, 15, ${CHART_HEIGHT / 2})`}
-          >
-            BMD (g/cm²)
-          </SvgText>
-
           {/* Título do eixo X */}
           <SvgText
             x={CHART_WIDTH / 2}
-            y={CHART_HEIGHT - 5}
+            y={CHART_HEIGHT - 10}
             fill="#FFFFFF"
-            fontSize="11"
-            fontWeight="600"
+            fontSize="13"
+            fontWeight="700"
             textAnchor="middle"
           >
             Idade (anos)
@@ -233,73 +240,58 @@ export default function DensitometryChart({ tScore, age }) {
                 x2={patientPos.x}
                 y2={CHART_HEIGHT - PADDING.bottom}
                 stroke="#FF4081"
-                strokeWidth="2"
-                strokeDasharray="6,3"
+                strokeWidth="2.5"
+                strokeDasharray="6,4"
+                opacity={0.8}
               />
               
               {/* Ponto do paciente */}
-              <circle
+              <Circle
                 cx={patientPos.x}
                 cy={patientPos.y}
-                r="6"
+                r="7"
                 fill="#FF4081"
                 stroke="#FFFFFF"
-                strokeWidth="2"
+                strokeWidth="2.5"
               />
               
               {/* Label do paciente */}
               <Rect
-                x={patientPos.x - 35}
-                y={patientPos.y - 30}
-                width="70"
-                height="20"
-                rx="4"
+                x={patientPos.x - 50}
+                y={patientPos.y - 35}
+                width="100"
+                height="24"
+                rx="6"
                 fill="#FF4081"
-                opacity="0.9"
+                opacity="0.95"
               />
               <SvgText
                 x={patientPos.x}
-                y={patientPos.y - 16}
+                y={patientPos.y - 18}
                 fill="#FFFFFF"
-                fontSize="10"
+                fontSize="11"
                 fontWeight="bold"
                 textAnchor="middle"
               >
-                Você: {patientPos.bmd.toFixed(3)}
+                Você: T-Score {tScore.toFixed(1)}
               </SvgText>
             </>
           )}
-
-          {/* Labels de T-Score nas zonas */}
-          {zones.map((zone, index) => {
-            const midY = (getY(zone.minBMD) + getY(zone.maxBMD)) / 2;
-            return (
-              <SvgText
-                key={`zone-label-${index}`}
-                x={CHART_WIDTH - PADDING.right + 5}
-                y={midY}
-                fill={zone.color}
-                fontSize="9"
-                fontWeight="600"
-                textAnchor="start"
-              >
-                {zone.tScoreRange}
-              </SvgText>
-            );
-          })}
         </Svg>
       </View>
 
       {/* Legenda */}
       <View style={styles.legend}>
-        <Text style={styles.legendTitle}>Classificação de Densitometria L1-L4</Text>
+        <Text style={styles.legendTitle}>
+          Classificação de Densitometria - {examType || 'L1-L4'}
+        </Text>
         <View style={styles.legendItems}>
           {zones.map((zone, index) => (
             <View key={index} style={styles.legendItem}>
               <View style={[styles.legendColor, { backgroundColor: zone.color }]} />
               <View style={styles.legendInfo}>
                 <Text style={styles.legendName}>{zone.name}</Text>
-                <Text style={styles.legendScore}>T-Score: {zone.tScoreRange}</Text>
+                <Text style={styles.legendScore}>{zone.label}</Text>
               </View>
             </View>
           ))}
@@ -307,7 +299,7 @@ export default function DensitometryChart({ tScore, age }) {
             <View style={[styles.legendLine, { backgroundColor: '#4A90E2' }]} />
             <View style={styles.legendInfo}>
               <Text style={styles.legendName}>Curva de Referência</Text>
-              <Text style={styles.legendScore}>Média populacional</Text>
+              <Text style={styles.legendScore}>Declínio natural com a idade</Text>
             </View>
           </View>
         </View>
