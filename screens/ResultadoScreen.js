@@ -55,10 +55,10 @@ export default function ResultadoScreen({ route }) {
   
   const regioesPorExame = {
     'Coluna Lombar': [
-      { id: 'L1', x: imageWidth * 0.32, y: imageHeight * 0.06, width: imageWidth * 0.36, height: imageHeight * 0.17 },
-      { id: 'L2', x: imageWidth * 0.32, y: imageHeight * 0.24, width: imageWidth * 0.36, height: imageHeight * 0.17 },
-      { id: 'L3', x: imageWidth * 0.32, y: imageHeight * 0.42, width: imageWidth * 0.36, height: imageHeight * 0.17 },
-      { id: 'L4', x: imageWidth * 0.32, y: imageHeight * 0.60, width: imageWidth * 0.36, height: imageHeight * 0.16 },
+      { id: 'L1', x: imageWidth * 0.23, y: imageHeight * 0.06, width: imageWidth * 0.55, height: imageHeight * 0.18 },
+      { id: 'L2', x: imageWidth * 0.23, y: imageHeight * 0.24, width: imageWidth * 0.55, height: imageHeight * 0.18 },
+      { id: 'L3', x: imageWidth * 0.23, y: imageHeight * 0.42, width: imageWidth * 0.55, height: imageHeight * 0.18 },
+      { id: 'L4', x: imageWidth * 0.23, y: imageHeight * 0.60, width: imageWidth * 0.55, height: imageHeight * 0.16 },
     ],
     'Fêmur': [
     { 
@@ -202,11 +202,11 @@ export default function ResultadoScreen({ route }) {
                   top: r.y,
                   width: r.width,
                   height: r.height,
-                  borderWidth: selectedId === r.id ? 3 : 2,
+                  borderWidth: selectedId === r.id ? 1 : 1,
                   borderColor: selectedId === r.id ? '#4A90E2' : 'rgba(74, 144, 226, 0.5)',
                   backgroundColor: selectedId === r.id ? 'rgba(74, 144, 226, 0.2)' : 'transparent',
-                  borderRadius: 4,
-                  transform: r.transform || ['-200deg'],
+                  borderRadius: 1,
+                  transform: r.transform || [],
                 }}
                 onPress={() => setSelectedId(r.id)}
               />
