@@ -46,7 +46,7 @@ export default function ResultadoScreen({ route }) {
   const imagemExame = {
     'Coluna Lombar': require('../assets/coluna-lombar.jpeg'),
     'Fêmur': require('../assets/femur.jpeg'),
-    'Punho': require('../assets/punho.jpg'),
+    'Punho': require('../assets/punho.png'),
   };
 
   // Regiões interativas por exame (ajustadas para o novo tamanho)
@@ -79,8 +79,10 @@ export default function ResultadoScreen({ route }) {
     },
   ],
     'Punho': [
-      { id: 'Rádio', x: imageWidth * 0.27, y: imageHeight * 0.15, width: imageWidth * 0.46, height: imageHeight * 0.20 },
-      { id: 'Ulna', x: imageWidth * 0.27, y: imageHeight * 0.40, width: imageWidth * 0.46, height: imageHeight * 0.20 },
+      { id: '-', x: imageWidth * 0.25, y: imageHeight * 0.28, width: imageWidth * 0.50, height: imageHeight * 0.00001 },
+      { id: 'Rádio UD', x: imageWidth * 0.25, y: imageHeight * 0.29, width: imageWidth * 0.50, height: imageHeight * 0.09 },
+      { id: '-', x: imageWidth * 0.25, y: imageHeight * 0.38, width: imageWidth * 0.50, height: imageHeight * 0.20 },
+      { id: 'Rádio 33%', x: imageWidth * 0.25, y: imageHeight * 0.58, width: imageWidth * 0.50, height: imageHeight * 0.09 },
     ],
   };
 
