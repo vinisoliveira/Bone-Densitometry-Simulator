@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import {
   View,
   Text,
@@ -46,7 +46,6 @@ export default function ResultadoScreen({ route }) {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
   const saveSuccessAnim = useRef(new Animated.Value(0)).current;
-  const dragStartPosition = useRef({});
 
   useEffect(() => {
     Animated.parallel([
@@ -131,11 +130,11 @@ export default function ResultadoScreen({ route }) {
         id: 'femoral-neck', 
         name: 'Colo do Fêmur (Femoral Neck)',
         type: 'rectangle',
-        x: imageWidth * 0.48, 
-        y: imageHeight * 0.35, 
-        width: imageWidth * 0.30, 
-        height: imageHeight * 0.08,
-        rotation: -45,
+        x: imageWidth * 0.42, 
+        y: imageHeight * 0.42, 
+        width: imageWidth * 0.35, 
+        height: imageHeight * 0.10,
+        rotation: -35,
         color: '#4A90E2',
         description: 'ROI sobre o colo femoral - região crítica para fraturas.',
         tips: 'Posicione ao longo do eixo do colo, evitando o trocanter e a cabeça femoral.'
@@ -144,10 +143,10 @@ export default function ResultadoScreen({ route }) {
         id: 'trochanter', 
         name: 'Trocanter Maior (Greater Trochanter)',
         type: 'rectangle',
-        x: imageWidth * 0.35, 
-        y: imageHeight * 0.28, 
-        width: imageWidth * 0.18, 
-        height: imageHeight * 0.18,
+        x: imageWidth * 0.28, 
+        y: imageHeight * 0.32, 
+        width: imageWidth * 0.22, 
+        height: imageHeight * 0.22,
         color: '#FFB74D',
         description: 'ROI sobre o trocanter maior.',
         tips: 'Proeminência óssea lateral do fêmur proximal.'
@@ -155,12 +154,11 @@ export default function ResultadoScreen({ route }) {
       { 
         id: 'wards-triangle', 
         name: "Triângulo de Ward's",
-        type: 'polygon',
-        points: [
-          { x: imageWidth * 0.56, y: imageHeight * 0.36 },
-          { x: imageWidth * 0.62, y: imageHeight * 0.36 },
-          { x: imageWidth * 0.59, y: imageHeight * 0.42 },
-        ],
+        type: 'rectangle',
+        x: imageWidth * 0.48, 
+        y: imageHeight * 0.48, 
+        width: imageWidth * 0.12, 
+        height: imageHeight * 0.10,
         color: '#E57373',
         description: 'Região de baixa densidade óssea no fêmur proximal.',
         tips: 'Área triangular entre o colo femoral e o trocanter.'
@@ -169,10 +167,10 @@ export default function ResultadoScreen({ route }) {
         id: 'total-hip', 
         name: 'Quadril Total (Total Hip)',
         type: 'rectangle',
-        x: imageWidth * 0.32, 
-        y: imageHeight * 0.25, 
-        width: imageWidth * 0.40, 
-        height: imageHeight * 0.35,
+        x: imageWidth * 0.25, 
+        y: imageHeight * 0.28, 
+        width: imageWidth * 0.50, 
+        height: imageHeight * 0.40,
         color: '#81C784',
         description: 'ROI abrangente de todo o fêmur proximal.',
         tips: 'Inclui colo, trocanter e região intertrocantérica.'
@@ -183,10 +181,10 @@ export default function ResultadoScreen({ route }) {
         id: 'radius-ultra-distal', 
         name: 'Rádio Ultra-Distal (Ultra-Distal Radius)',
         type: 'rectangle',
-        x: imageWidth * 0.30, 
-        y: imageHeight * 0.70, 
-        width: imageWidth * 0.25, 
-        height: imageHeight * 0.12,
+        x: imageWidth * 0.36, 
+        y: imageHeight * 0.72, 
+        width: imageWidth * 0.20, 
+        height: imageHeight * 0.15,
         color: '#4A90E2',
         description: 'Região mais distal do rádio, rica em osso trabecular.',
         tips: 'Posicione na extremidade do rádio, próximo à articulação.'
@@ -195,10 +193,10 @@ export default function ResultadoScreen({ route }) {
         id: 'radius-33', 
         name: 'Rádio 33% (33% Radius)',
         type: 'rectangle',
-        x: imageWidth * 0.32, 
-        y: imageHeight * 0.45, 
-        width: imageWidth * 0.22, 
-        height: imageHeight * 0.15,
+        x: imageWidth * 0.38, 
+        y: imageHeight * 0.42, 
+        width: imageWidth * 0.18, 
+        height: imageHeight * 0.18,
         color: '#FFB74D',
         description: 'Região a 33% (1/3) da distância do rádio distal.',
         tips: 'Osso cortical predominante, útil para avaliar perda óssea cortical.'
@@ -207,10 +205,10 @@ export default function ResultadoScreen({ route }) {
         id: 'radius-mid', 
         name: 'Rádio Médio (Mid Radius)',
         type: 'rectangle',
-        x: imageWidth * 0.33, 
-        y: imageHeight * 0.25, 
-        width: imageWidth * 0.20, 
-        height: imageHeight * 0.15,
+        x: imageWidth * 0.39, 
+        y: imageHeight * 0.18, 
+        width: imageWidth * 0.16, 
+        height: imageHeight * 0.16,
         color: '#81C784',
         description: 'Região média da diáfise radial.',
         tips: 'Área com osso cortical espesso.'
@@ -220,9 +218,9 @@ export default function ResultadoScreen({ route }) {
         name: 'Ulna Distal (Distal Ulna)',
         type: 'rectangle',
         x: imageWidth * 0.58, 
-        y: imageHeight * 0.72, 
-        width: imageWidth * 0.15, 
-        height: imageHeight * 0.10,
+        y: imageHeight * 0.74, 
+        width: imageWidth * 0.13, 
+        height: imageHeight * 0.12,
         color: '#E57373',
         description: 'Extremidade distal da ulna.',
         tips: 'Processo estiloide da ulna.'
@@ -244,17 +242,14 @@ export default function ResultadoScreen({ route }) {
     }));
     setRois(initialROIs);
     
-    // Inicializar posições das ROIs (começam próximas mas deslocadas das posições corretas)
+    // Inicializar posições das ROIs (começam EXATAMENTE nas posições corretas)
     const initialPositions = {};
     
-    initialROIs.forEach((roi, index) => {
-      // Cada ROI começa com um deslocamento aleatório em relação à posição correta
-      const offsetX = -100 + (Math.random() * 60 - 30); // Entre -130 e -70 pixels
-      const offsetY = Math.random() * 60 - 30; // Entre -30 e +30 pixels
-      
+    initialROIs.forEach((roi) => {
+      // ROIs começam exatamente onde devem ficar (nas guias tracejadas)
       initialPositions[roi.id] = {
-        x: roi.x + offsetX,
-        y: roi.y + offsetY,
+        x: roi.x,
+        y: roi.y,
       };
     });
     setRoiPositions(initialPositions);
@@ -388,46 +383,56 @@ export default function ResultadoScreen({ route }) {
     setIsInverted(false);
   };
 
-  // Criar PanResponder para arrastar ROIs
+  // Criar PanResponder para arrastar ROIs - VERSÃO SIMPLES
   const criarPanResponder = (roiId) => {
     return PanResponder.create({
       onStartShouldSetPanResponder: () => true,
       onMoveShouldSetPanResponder: () => true,
-      onPanResponderGrant: (evt, gestureState) => {
+      
+      onPanResponderGrant: () => {
         setSelectedId(roiId);
-        // Salvar posição inicial no ref
-        const currentPos = roiPositions[roiId];
-        if (currentPos) {
-          dragStartPosition.current[roiId] = { x: currentPos.x, y: currentPos.y };
-        } else {
-          // Se não existe posição, usar a posição do template
-          const roi = regioes.find(r => r.id === roiId);
-          if (roi) {
-            dragStartPosition.current[roiId] = { x: roi.x, y: roi.y };
-          } else {
-            dragStartPosition.current[roiId] = { x: 0, y: 0 };
-          }
-        }
       },
+      
       onPanResponderMove: (evt, gestureState) => {
-        // Pegar posição inicial salva
-        const startPos = dragStartPosition.current[roiId] || { x: 0, y: 0 };
+        // Pegar posição do template
+        const roi = regioes.find(r => r.id === roiId);
+        if (!roi) return;
         
-        // Calcular nova posição
-        const newX = startPos.x + gestureState.dx;
-        const newY = startPos.y + gestureState.dy;
-        
+        // Calcular nova posição: posição original + movimento do gesto
         setRoiPositions(prev => ({
           ...prev,
           [roiId]: {
-            x: newX,
-            y: newY,
+            x: roi.x + gestureState.dx,
+            y: roi.y + gestureState.dy,
           }
         }));
       },
-      onPanResponderRelease: () => {
-        // Limpar posição inicial do drag
-        delete dragStartPosition.current[roiId];
+      
+      onPanResponderRelease: (evt, gestureState) => {
+        // Salvar posição final
+        const roi = regioes.find(r => r.id === roiId);
+        if (!roi) return;
+        
+        const finalX = roi.x + gestureState.dx;
+        const finalY = roi.y + gestureState.dy;
+        
+        // Atualizar a posição do ROI no template
+        setRois(prevRois => 
+          prevRois.map(r => 
+            r.id === roiId 
+              ? { ...r, x: finalX, y: finalY }
+              : r
+          )
+        );
+        
+        // Atualizar posição
+        setRoiPositions(prev => ({
+          ...prev,
+          [roiId]: {
+            x: finalX,
+            y: finalY,
+          }
+        }));
       },
     });
   };
@@ -660,8 +665,8 @@ export default function ResultadoScreen({ route }) {
             }
             
             if (isSelected) {
-              borderColor = '#4A90E2';
-              backgroundColor = 'rgba(74, 144, 226, 0.25)';
+              borderColor = '#FFD700'; // AMARELO quando selecionado (estilo scanner)
+              backgroundColor = 'rgba(255, 215, 0, 0.25)';
             }
 
             return (
