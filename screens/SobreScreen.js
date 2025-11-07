@@ -38,7 +38,7 @@ const SobreScreen = ({ navigation }) => {
       >
         <View style={styles.logoContainer}>
           <View style={styles.logoCircle}>
-            <FontAwesome5 name="bone" size={48} color="#4A90E2" />
+            <FontAwesome5 name="blog" size={48} color="#4A90E2" />
           </View>
           <Text style={styles.appName}>Bone Densitometry</Text>
           <Text style={styles.appVersion}>Simulator v1.0</Text>

@@ -28,7 +28,7 @@ export default function ScanScreen({ route }) {
   const imagemExame = {
     'Coluna Lombar': require('../assets/coluna-lombar.jpeg'),
     'Fêmur': require('../assets/femur.jpeg'),
-    'Punho': require('../assets/punho.jpg'),
+    'Punho': require('../assets/punho.png'),
   };
 
   useEffect(() => {

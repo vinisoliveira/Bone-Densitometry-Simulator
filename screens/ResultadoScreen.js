@@ -66,7 +66,7 @@ export default function ResultadoScreen({ route }) {
   const imagemExame = {
     'Coluna Lombar': require('../assets/coluna-lombar.jpeg'),
     'Fêmur': require('../assets/femur.jpeg'),
-    'Punho': require('../assets/punho.jpg'),
+    'Punho': require('../assets/punho.png'),
   };
 
   // Dimensões da imagem
@@ -130,100 +130,120 @@ export default function ResultadoScreen({ route }) {
         id: 'femoral-neck', 
         name: 'Colo do Fêmur (Femoral Neck)',
         type: 'rectangle',
-        x: imageWidth * 0.42, 
-        y: imageHeight * 0.42, 
+        x: imageWidth * 0.50, 
+        y: imageHeight * 0.38, 
         width: imageWidth * 0.35, 
         height: imageHeight * 0.10,
-        rotation: -35,
+        rotation: -45,
         color: '#4A90E2',
         description: 'ROI sobre o colo femoral - região crítica para fraturas.',
         tips: 'Posicione ao longo do eixo do colo, evitando o trocanter e a cabeça femoral.'
       },
       { 
         id: 'trochanter', 
-        name: 'Trocanter Maior (Greater Trochanter)',
+        name: '-',
         type: 'rectangle',
-        x: imageWidth * 0.28, 
+        x: imageWidth * 0.10, 
         y: imageHeight * 0.32, 
-        width: imageWidth * 0.22, 
-        height: imageHeight * 0.22,
+        width: imageWidth * 0.00, 
+        height: imageHeight * 0.0,
         color: '#FFB74D',
         description: 'ROI sobre o trocanter maior.',
         tips: 'Proeminência óssea lateral do fêmur proximal.'
       },
       { 
         id: 'wards-triangle', 
-        name: "Triângulo de Ward's",
-        type: 'rectangle',
-        x: imageWidth * 0.48, 
-        y: imageHeight * 0.48, 
-        width: imageWidth * 0.12, 
-        height: imageHeight * 0.10,
+        name: "CI",
+        type: 'triangle',
+        x: imageWidth * 0.68, 
+        y: imageHeight * 0.41, 
+        width: imageWidth * 0.09, 
+        height: imageHeight * 0.09,
+        rotation: -45,
         color: '#E57373',
-        description: 'Região de baixa densidade óssea no fêmur proximal.',
-        tips: 'Área triangular entre o colo femoral e o trocanter.'
+        description: 'Região triangular de baixa densidade óssea no fêmur proximal.',
+        tips: 'Área triangular entre o colo femoral e o trocanter.',
+        // vertices definidas em coordenadas relativas (0..1) para um triângulo isósceles apontando para baixo
+        vertices: [
+          { x: 0.5, y: 0 },   // topo
+          { x: 1,   y: 1 },   // canto direito
+          { x: 0,   y: 1 },   // canto esquerdo
+        ]
       },
-      { 
-        id: 'total-hip', 
-        name: 'Quadril Total (Total Hip)',
-        type: 'rectangle',
-        x: imageWidth * 0.25, 
-        y: imageHeight * 0.28, 
-        width: imageWidth * 0.50, 
-        height: imageHeight * 0.40,
-        color: '#81C784',
-        description: 'ROI abrangente de todo o fêmur proximal.',
-        tips: 'Inclui colo, trocanter e região intertrocantérica.'
-      },
+
     ],
     'Punho': [
       { 
-        id: 'radius-ultra-distal', 
-        name: 'Rádio Ultra-Distal (Ultra-Distal Radius)',
+        id: 'ulna-ud', 
+        name: 'Ulna UD',
         type: 'rectangle',
-        x: imageWidth * 0.36, 
-        y: imageHeight * 0.72, 
-        width: imageWidth * 0.20, 
-        height: imageHeight * 0.15,
+        x: imageWidth * 0.255, 
+        y: imageHeight * 0.30, 
+        width: imageWidth * 0.21, 
+        height: imageHeight * 0.08,
         color: '#4A90E2',
         description: 'Região mais distal do rádio, rica em osso trabecular.',
         tips: 'Posicione na extremidade do rádio, próximo à articulação.'
       },
       { 
-        id: 'radius-33', 
-        name: 'Rádio 33% (33% Radius)',
+        id: 'ulna-medio', 
+        name: 'Ulna Médio',
         type: 'rectangle',
-        x: imageWidth * 0.38, 
-        y: imageHeight * 0.42, 
-        width: imageWidth * 0.18, 
+        x: imageWidth * 0.255, 
+        y: imageHeight * 0.378, 
+        width: imageWidth * 0.21, 
         height: imageHeight * 0.18,
         color: '#FFB74D',
         description: 'Região a 33% (1/3) da distância do rádio distal.',
         tips: 'Osso cortical predominante, útil para avaliar perda óssea cortical.'
       },
       { 
-        id: 'radius-mid', 
-        name: 'Rádio Médio (Mid Radius)',
+        id: 'ulna-33', 
+        name: 'Ulna 33%',
         type: 'rectangle',
-        x: imageWidth * 0.39, 
-        y: imageHeight * 0.18, 
-        width: imageWidth * 0.16, 
-        height: imageHeight * 0.16,
+        x: imageWidth * 0.255, 
+        y: imageHeight * 0.555, 
+        width: imageWidth * 0.21, 
+        height: imageHeight * 0.08,
         color: '#81C784',
         description: 'Região média da diáfise radial.',
         tips: 'Área com osso cortical espesso.'
       },
       { 
-        id: 'ulna-distal', 
-        name: 'Ulna Distal (Distal Ulna)',
+        id: 'radius-ud', 
+        name: 'Rádio UD',
         type: 'rectangle',
-        x: imageWidth * 0.58, 
-        y: imageHeight * 0.74, 
-        width: imageWidth * 0.13, 
-        height: imageHeight * 0.12,
-        color: '#E57373',
-        description: 'Extremidade distal da ulna.',
-        tips: 'Processo estiloide da ulna.'
+        x: imageWidth * 0.465, 
+        y: imageHeight * 0.30, 
+        width: imageWidth * 0.21, 
+        height: imageHeight * 0.08,
+        color: '#4A90E2',
+        description: 'Região mais distal do rádio, rica em osso trabecular.',
+        tips: 'Posicione na extremidade do rádio, próximo à articulação.'
+      },
+      { 
+        id: 'radius-medium', 
+        name: 'Rádio Médio',
+        type: 'rectangle',
+        x: imageWidth * 0.465, 
+        y: imageHeight * 0.378, 
+        width: imageWidth * 0.21, 
+        height: imageHeight * 0.18,
+        color: '#FFB74D',
+        description: 'Região a 33% (1/3) da distância do rádio distal.',
+        tips: 'Osso cortical predominante, útil para avaliar perda óssea cortical.'
+      },
+      { 
+        id: 'radius-33', 
+        name: 'Rádio 33%',
+        type: 'rectangle',
+        x: imageWidth * 0.465, 
+        y: imageHeight * 0.555, 
+        width: imageWidth * 0.21, 
+        height: imageHeight * 0.08,
+        color: '#81C784',
+        description: 'Região média da diáfise radial.',
+        tips: 'Área com osso cortical espesso.'
       },
     ],
   };
@@ -231,9 +251,11 @@ export default function ResultadoScreen({ route }) {
   // Inicializar ROIs com templates
   useEffect(() => {
     const templates = templatesROI[exame] || [];
-    const initialROIs = templates.map(template => ({
+    // Garantir IDs únicos mesmo se template.id for vazio/duplicado
+    const timestamp = Date.now();
+    const initialROIs = templates.map((template, idx) => ({
       ...template,
-      id: `${template.id}-${Date.now()}`,
+      id: `${template.id && template.id.toString().trim() !== '' ? template.id : 'roi'}-${timestamp}-${idx}`,
       correctX: template.x, // Salvar posição correta
       correctY: template.y, // Salvar posição correta
       isLocked: false,
@@ -601,9 +623,7 @@ export default function ResultadoScreen({ route }) {
             </TouchableOpacity>
           </View>
           <Text style={styles.instructionsText}>{instrucoesPorExame[exame]}</Text>
-          <Text style={styles.instructionsTip}>
-            💡 Dica: Arraste cada forma para sua posição e clique em "Validar" para verificar!
-          </Text>
+    
         </Animated.View>
       )}
 
@@ -682,9 +702,9 @@ export default function ResultadoScreen({ route }) {
                     height: regiao.height,
                     borderColor,
                     backgroundColor,
-                    borderWidth: isSelected ? 3 : 2,
+                    borderWidth: isSelected ? 1 : 1,
                     borderStyle: 'solid',
-                    borderRadius: 4,
+                    borderRadius: 1,
                     transform: regiao.rotation ? [{ rotate: `${regiao.rotation}deg` }] : [],
                   }
                 ]}

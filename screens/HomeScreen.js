@@ -44,7 +44,7 @@ const HomeScreen = memo(({ navigation }) => {
 
       <View style={styles.header}>
         <View style={styles.logoContainer}>
-          <FontAwesome5 name="bone" size={48} color="#4A90E2" />
+        <FontAwesome5 name="blog" size={48} color="#4A90E2" />
         </View>
         <Text style={styles.title}>Bone Densitometry</Text>
         <Text style={styles.description}>
