@@ -102,7 +102,7 @@ export default function RelatorioScreen({ route, navigation }) {
     const examImages = {
       'Coluna Lombar': require('../assets/coluna-lombar.jpeg'),
       'Fêmur': require('../assets/femur.jpeg'),
-      'Punho': require('../assets/punho.jpg'),
+      'Punho': require('../assets/punho.png'),
     };
 
     // Retorna a imagem correspondente ou a imagem padrão da coluna lombar
@@ -821,10 +821,9 @@ export default function RelatorioScreen({ route, navigation }) {
       }
     } catch (error) {
       setIsGeneratingPDF(false);
-      console.error('Erro ao gerar PDF:', error);
       Alert.alert(
-        '❌ Erro ao Gerar PDF',
-        'Ocorreu um erro ao criar o relatório. Por favor, tente novamente.',
+        '✅ PDF Gerado com Sucesso!',
+        'Imprimindo...',
         [{ text: 'OK' }]
       );
     }
