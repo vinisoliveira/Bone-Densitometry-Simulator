@@ -53,11 +53,22 @@ export default function ListaScreen({ navigation }) {
           id: item.id,
           nome: item.nome, 
           idade: item.idade,
+          dataNascimento: item.dataNascimento,
+          peso: item.peso,
+          altura: item.altura,
           sexo: item.sexo,
           etnia: item.etnia,
           exame: item.exame,
+          operador: item.operador,
+          imagemCustomizada: item.imagemCustomizada,
+          imagemHash: item.imagemHash,
           vertebraSelecionada: item.vertebraSelecionada,
           dataCriacao: item.dataCriacao,
+          brightness: item.brightness || 100,
+          contrast: item.contrast || 100,
+          roiData: item.roiData || null,
+          roiPositions: item.roiPositions || {},
+          roiScale: item.roiScale || 1,
         })}
         activeOpacity={0.7}
       >
@@ -89,7 +100,7 @@ export default function ListaScreen({ navigation }) {
       >
         <TouchableOpacity 
           style={styles.backButton}
-          onPress={() => navigation.goBack()}
+          onPress={() => navigation.navigate('Home')}
         >
           <FontAwesome5 name="arrow-left" size={20} color="#4A90E2" />
         </TouchableOpacity>

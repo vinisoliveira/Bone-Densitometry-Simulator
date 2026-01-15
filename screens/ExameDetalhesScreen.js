@@ -8,24 +8,39 @@ import {
   Image,
   ScrollView,
   Alert,
+  Platform,
 } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { deletarPaciente } from '../utils/storage';
 
 const ExameDetalheScreen = ({ route, navigation }) => {
-  const { id, nome, idade, sexo, etnia, exame, vertebraSelecionada, dataCriacao } = route.params;
+  const { 
+    id, 
+    nome, 
+    idade,
+    dataNascimento,
+    peso,
+    altura, 
+    sexo, 
+    etnia, 
+    exame, 
+    vertebraSelecionada, 
+    dataCriacao, 
+    brightness = 100, 
+    contrast = 100, 
+    roiData,
+    roiPositions = {},
+    roiScale = 1,
+    operador,
+    imagemCustomizada,
+    imagemHash,
+  } = route.params;
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
 
   // Memoizar dados computados para evitar recálculos
   const dadosExame = useMemo(() => {
-    const imagemExame = {
-      'Coluna Lombar': require('../assets/coluna-lombar.jpeg'),
-      'Fêmur': require('../assets/femur.jpeg'),
-      'Punho': require('../assets/punho.jpg'),
-    };
-
     const dataFormatada = dataCriacao
       ? new Date(dataCriacao).toLocaleDateString('pt-BR', {
           day: '2-digit',
@@ -36,8 +51,13 @@ const ExameDetalheScreen = ({ route, navigation }) => {
         })
       : 'Data não disponível';
 
-    return { imagemExame: imagemExame[exame], dataFormatada };
-  }, [exame, dataCriacao]);
+    // Usa imagem customizada se existir
+    const imagemDoExame = imagemCustomizada 
+      ? { uri: imagemCustomizada } 
+      : null;
+
+    return { imagemExame: imagemDoExame, dataFormatada };
+  }, [dataCriacao, imagemCustomizada]);
 
   useEffect(() => {
     Animated.parallel([
@@ -132,46 +152,115 @@ const ExameDetalheScreen = ({ route, navigation }) => {
             <View style={styles.cardContent}>
               <InfoRow icon="user" label="Paciente" value={nome} />
               <InfoRow icon="birthday-cake" label="Idade" value={`${idade} anos`} />
+              {dataNascimento && <InfoRow icon="calendar-alt" label="Data Nasc." value={dataNascimento} />}
               <InfoRow icon="venus-mars" label="Sexo" value={sexo} />
               <InfoRow icon="globe-americas" label="Etnia" value={etnia} />
+              {peso && <InfoRow icon="weight" label="Peso" value={`${peso} kg`} />}
+              {altura && <InfoRow icon="ruler-vertical" label="Altura" value={`${altura} cm`} />}
+              {peso && altura && (
+                <InfoRow 
+                  icon="calculator" 
+                  label="IMC" 
+                  value={`${(parseFloat(peso) / Math.pow(parseFloat(altura)/100, 2)).toFixed(1)} kg/m²`} 
+                />
+              )}
             </View>
           </View>
 
-          {/* Exam Info Card */}
-          <View style={styles.card}>
-            <View style={styles.cardHeader}>
-              <FontAwesome5 name="x-ray" size={24} color="#4A90E2" />
-              <Text style={styles.cardTitle}>Informações do Exame</Text>
+          {/* Exam Info Card + Image Side by Side */}
+          <View style={styles.examInfoRow}>
+            {/* Exam Info */}
+            <View style={[styles.card, styles.examInfoCard]}>
+              <View style={styles.cardHeader}>
+                <FontAwesome5 name="x-ray" size={24} color="#4A90E2" />
+                <Text style={styles.cardTitle}>Informações do Exame</Text>
+              </View>
+              <View style={styles.cardContent}>
+                <InfoRow icon="file-medical-alt" label="Tipo de Exame" value={exame} />
+                <InfoRow
+                  icon="map-marker-alt"
+                  label="Região"
+                  value={vertebraSelecionada || 'Não selecionada'}
+                />
+                <InfoRow icon="calendar" label="Data do Exame" value={dadosExame.dataFormatada} />
+                {operador && <InfoRow icon="user-md" label="Operador" value={operador} />}
+              </View>
             </View>
-            <View style={styles.cardContent}>
-              <InfoRow icon="file-medical-alt" label="Tipo de Exame" value={exame} />
-              <InfoRow
-                icon="map-marker-alt"
-                label="Região"
-                value={vertebraSelecionada || 'Não selecionada'}
-              />
-              <InfoRow icon="calendar" label="Data do Exame" value={dadosExame.dataFormatada} />
-            </View>
-          </View>
 
-          {/* Exam Image */}
-          {dadosExame.imagemExame && (
-            <View style={styles.card}>
+            {/* Exam Image */}
+            <View style={[styles.card, styles.imageCard]}>
               <View style={styles.cardHeader}>
                 <FontAwesome5 name="image" size={24} color="#4A90E2" />
                 <Text style={styles.cardTitle}>Imagem do Exame</Text>
+                {dadosExame.imagemExame && (
+                  <TouchableOpacity
+                    style={styles.editImageButton}
+                    onPress={() => {
+                      // Determina a tela de resultado baseada no tipo de exame
+                      let resultadoScreen = 'ResultadoColuna';
+                      if (exame === 'Fêmur (Proximal)') {
+                        resultadoScreen = 'ResultadoFemur';
+                      } else if (exame === 'Punho (Antebraço)') {
+                        resultadoScreen = 'ResultadoPunho';
+                      } else if (exame === 'Corpo Total (Full Body)') {
+                        resultadoScreen = 'ResultadoCorpoTotal';
+                      }
+                      navigation.navigate(resultadoScreen, {
+                        id,
+                        nome,
+                        idade,
+                        dataNascimento,
+                        peso,
+                        altura,
+                        sexo,
+                        etnia,
+                        exame,
+                        operador,
+                        imagemCustomizada,
+                        imagemHash,
+                        vertebraSelecionada,
+                        brightness,
+                        contrast,
+                        roiData,
+                        roiPositions,
+                        roiScale,
+                        dataCriacao,
+                      });
+                    }}
+                    activeOpacity={0.7}
+                  >
+                    <FontAwesome5 name="pencil-alt" size={14} color="#FFFFFF" />
+                  </TouchableOpacity>
+                )}
               </View>
               <View style={styles.imageContainer}>
-                <Image
-                  source={dadosExame.imagemExame}
-                  style={styles.image}
-                  resizeMode="contain"
-                  progressiveRenderingEnabled={true}
-                  fadeDuration={200}
-                />
+                {dadosExame.imagemExame ? (
+                  <View style={styles.squareImageWrapper}>
+                    <Image
+                      source={dadosExame.imagemExame}
+                      style={[
+                        styles.squareImage,
+                        Platform.OS === 'web' && {
+                          filter: `brightness(${brightness / 100}) contrast(${contrast / 100})`,
+                        },
+                        Platform.OS !== 'web' && {
+                          opacity: brightness / 100,
+                        },
+                      ]}
+                      resizeMode="cover"
+                      progressiveRenderingEnabled={true}
+                      fadeDuration={200}
+                    />
+                  </View>
+                ) : (
+                  <View style={styles.noImageContainerSmall}>
+                    <FontAwesome5 name="image" size={32} color="#4A5568" />
+                    <Text style={styles.noImageTextSmall}>Sem imagem</Text>
+                  </View>
+                )}
               </View>
             </View>
-          )}
+          </View>
 
           {/* Action Buttons */}
           <TouchableOpacity
@@ -181,10 +270,19 @@ const ExameDetalheScreen = ({ route, navigation }) => {
                 id,
                 nome,
                 idade,
+                dataNascimento,
+                peso,
+                altura,
                 sexo,
                 etnia,
                 exame,
+                operador,
+                imagemCustomizada,
+                imagemHash,
                 vertebraSelecionada,
+                brightness,
+                contrast,
+                roiData,
               })
             }
             activeOpacity={0.8}
@@ -268,9 +366,37 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#FFFFFF',
+    flex: 1,
+  },
+  editImageButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#00897B',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#00897B',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 4,
   },
   cardContent: {
     padding: 16,
+  },
+  examInfoRow: {
+    flexDirection: 'row',
+    gap: 16,
+    marginBottom: 16,
+    alignItems: 'stretch',
+  },
+  examInfoCard: {
+    flex: 1,
+    marginBottom: 0,
+  },
+  imageCard: {
+    flex: 1,
+    marginBottom: 0,
   },
   infoRow: {
     flexDirection: 'row',
@@ -301,11 +427,67 @@ const styles = StyleSheet.create({
   imageContainer: {
     padding: 16,
     alignItems: 'center',
+    justifyContent: 'center',
+    flex: 1,
+  },
+  squareImageWrapper: {
+    width: 160,
+    height: 160,
+    borderRadius: 10,
+    overflow: 'hidden',
+    backgroundColor: '#1a1a2e',
+    borderWidth: 1,
+    borderColor: '#3a3f52',
+  },
+  squareImage: {
+    width: '100%',
+    height: '100%',
   },
   image: {
     width: '100%',
     height: 250,
     borderRadius: 8,
+  },
+  noImageContainerSmall: {
+    width: 160,
+    height: 160,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#1a1a2e',
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: '#30363d',
+    borderStyle: 'dashed',
+  },
+  noImageTextSmall: {
+    color: '#8892B0',
+    fontSize: 12,
+    fontWeight: '600',
+    marginTop: 8,
+  },
+  noImageContainer: {
+    width: '100%',
+    height: 200,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#1a1a2e',
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: '#30363d',
+    borderStyle: 'dashed',
+  },
+  noImageText: {
+    color: '#8892B0',
+    fontSize: 16,
+    fontWeight: '600',
+    marginTop: 12,
+  },
+  noImageSubtext: {
+    color: '#4A5568',
+    fontSize: 12,
+    marginTop: 4,
+    textAlign: 'center',
+    paddingHorizontal: 20,
   },
   button: {
     flexDirection: 'row',

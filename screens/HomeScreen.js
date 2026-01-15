@@ -1,5 +1,5 @@
 import React, { memo } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Dimensions, Image } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { colors, spacing, typography } from '../src/styles/theme';
 
@@ -44,9 +44,12 @@ const HomeScreen = memo(({ navigation }) => {
 
       <View style={styles.header}>
         <View style={styles.logoContainer}>
-          <FontAwesome5 name="bone" size={48} color="#4A90E2" />
+          <Image 
+            source={require('../assets/5846d2bc-7a92-48a8-9468-6d4e3fde6a97.png')} 
+            style={styles.logoImage}
+          />
         </View>
-        <Text style={styles.title}>Bone Densitometry</Text>
+        <Text style={styles.title}>BoneScan</Text>
         <Text style={styles.description}>
           Simulador para análise de densitometria óssea
         </Text>
@@ -104,6 +107,14 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 8,
     elevation: 5,
+    overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: '#4A90E2',
+  },
+  logoImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
   },
   title: {
     fontSize: 28,

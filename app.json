@@ -1,14 +1,14 @@
 {
   "expo": {
-    "name": "Bone Densitometry Simulator",
+    "name": "BoneScan",
     "slug": "SpineViewer",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/5846d2bc-7a92-48a8-9468-6d4e3fde6a97.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/5846d2bc-7a92-48a8-9468-6d4e3fde6a97.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -17,14 +17,14 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/5846d2bc-7a92-48a8-9468-6d4e3fde6a97.png",
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
       "package": "com.vinisoliveira.SpBoneDensitometrySimulator"
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/5846d2bc-7a92-48a8-9468-6d4e3fde6a97.png"
     },
     "extra": {
       "eas": {

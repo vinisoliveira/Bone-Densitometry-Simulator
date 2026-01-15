@@ -12,9 +12,13 @@ import ExameScreen from './screens/ExameScreen';
 import ExameDetalhesScreen from './screens/ExameDetalhesScreen';
 import SobreScreen from './screens/SobreScreen';
 import ScanScreen from './screens/ScanScreen';
-import ResultadoScreen from './screens/ResultadoScreen';
+import ResultadoColunaScreen from './screens/ResultadoColunaScreen';
+import ResultadoFemurScreen from './screens/ResultadoFemurScreen';
+import ResultadoPunhoScreen from './screens/ResultadoPunhoScreen';
+import ResultadoCorpoTotalScreen from './screens/ResultadoCorpoTotalScreen';
 import RelatorioScreen from './screens/RelatorioScreen';
 import ConfiguracoesScreen from './screens/ConfiguracoesScreen';
+import BackupsScreen from './screens/BackupsScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -78,8 +82,12 @@ export default function App() {
         
         <Stack.Screen name="Sobre" component={SobreScreen} />
         <Stack.Screen name="Configuracoes" component={ConfiguracoesScreen} />
+        <Stack.Screen name="Backups" component={BackupsScreen} />
         <Stack.Screen name="Scan" component={ScanScreen} />
-        <Stack.Screen name="Resultado" component={ResultadoScreen} />
+        <Stack.Screen name="ResultadoColuna" component={ResultadoColunaScreen} />
+        <Stack.Screen name="ResultadoFemur" component={ResultadoFemurScreen} />
+        <Stack.Screen name="ResultadoPunho" component={ResultadoPunhoScreen} />
+        <Stack.Screen name="ResultadoCorpoTotal" component={ResultadoCorpoTotalScreen} />
         <Stack.Screen
           name="Relatorio"
           component={RelatorioScreen}

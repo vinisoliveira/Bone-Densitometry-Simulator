@@ -25,12 +25,8 @@ const ExameScreen = ({ route, navigation }) => {
         ? 'Fêmur esquerdo'
         : exame;
 
-  const imagemExame =
-    exame === 'coluna_lombar_ap.jpg'
-      ? require('../assets/coluna_lombar_ap.jpg')
-      : exame === 'femur.jpeg'
-      ? require('../assets/femur.jpeg')
-      : null;
+    // Imagem será fornecida pelo operador
+    const imagemExame = null;
 
     return { nomeExame, imagemExame };
   }, [exame]);
