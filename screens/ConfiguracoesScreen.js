@@ -1,23 +1,75 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { deletarTodosPacientes, limparCache } from '../utils/storage';
+import { 
+  deletarTodosPacientes, 
+  limparCache, 
+  criarBackup, 
+  listarBackups, 
+  restaurarBackup 
+} from '../utils/storage';
+import CustomAlert from '../src/components/CustomAlert';
+import { useCustomAlert } from '../src/hooks/useCustomAlert';
 
 const ConfiguracoesScreen = ({ navigation }) => {
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [darkModeEnabled, setDarkModeEnabled] = useState(true);
   const [autoSaveEnabled, setAutoSaveEnabled] = useState(true);
+  const { alertConfig, showAlert, hideAlert } = useCustomAlert();
+
+  const handleCriarBackup = async () => {
+    try {
+      const novoBackup = await criarBackup();
+      showAlert({
+        title: 'Backup Criado',
+        message: `Backup "${novoBackup.nome}" criado com sucesso!\n\n• ${novoBackup.totalPacientes} pacientes salvos\n• ${novoBackup.totalImagens} imagens salvas\n• Data: ${novoBackup.dataFormatada}`,
+        type: 'success',
+        buttons: [{ text: 'OK' }],
+      });
+    } catch (error) {
+      showAlert({
+        title: 'Erro',
+        message: 'Não foi possível criar o backup.',
+        type: 'error',
+        buttons: [{ text: 'OK' }],
+      });
+    }
+  };
+
+  const handleRestaurarBackup = async () => {
+    try {
+      const backups = await listarBackups();
+      
+      if (backups.length === 0) {
+        showAlert({
+          title: 'Nenhum Backup',
+          message: 'Você ainda não tem backups salvos.\nCrie um backup primeiro.',
+          type: 'info',
+          buttons: [{ text: 'OK' }],
+        });
+        return;
+      }
+      
+      // Navegar para a tela de backups para selecionar
+      navigation.navigate('Backups');
+    } catch (error) {
+      showAlert({
+        title: 'Erro',
+        message: 'Não foi possível carregar os backups.',
+        type: 'error',
+        buttons: [{ text: 'OK' }],
+      });
+    }
+  };
 
   const handleClearData = () => {
-    Alert.alert(
-      'Limpar Dados',
-      'Tem certeza que deseja excluir todos os dados? Esta ação não pode ser desfeita.',
-      [
-        {
-          text: 'Cancelar',
-          style: 'cancel',
-        },
+    showAlert({
+      title: 'Limpar Dados',
+      message: 'Tem certeza que deseja excluir todos os dados da lista de exames?\n\n⚠️ ATENÇÃO: Os backups NÃO serão afetados e continuarão salvos.',
+      type: 'warning',
+      buttons: [
+        { text: 'Cancelar', style: 'cancel' },
         {
           text: 'Confirmar',
           style: 'destructive',
@@ -25,14 +77,30 @@ const ConfiguracoesScreen = ({ navigation }) => {
             try {
               await deletarTodosPacientes();
               await limparCache();
-              Alert.alert('Sucesso', 'Todos os dados foram removidos.');
+              hideAlert();
+              setTimeout(() => {
+                showAlert({
+                  title: 'Sucesso',
+                  message: 'Todos os dados da lista de exames foram removidos.\n\nSeus backups continuam salvos.',
+                  type: 'success',
+                  buttons: [{ text: 'OK' }],
+                });
+              }, 300);
             } catch (error) {
-              Alert.alert('Erro', 'Não foi possível limpar os dados.');
+              hideAlert();
+              setTimeout(() => {
+                showAlert({
+                  title: 'Erro',
+                  message: 'Não foi possível limpar os dados.',
+                  type: 'error',
+                  buttons: [{ text: 'OK' }],
+                });
+              }, 300);
             }
           },
         },
-      ]
-    );
+      ],
+    });
   };
 
   const SettingItem = ({ icon, title, subtitle, type, value, onValueChange }) => (
@@ -115,20 +183,29 @@ const ConfiguracoesScreen = ({ navigation }) => {
         </SettingSection>
 
         <SettingSection title="DADOS">
-          <TouchableOpacity activeOpacity={0.7}>
+          <TouchableOpacity activeOpacity={0.7} onPress={handleCriarBackup}>
             <SettingItem
               icon="cloud-upload-alt"
-              title="Backup"
-              subtitle="Fazer backup dos dados"
+              title="Criar Backup"
+              subtitle="Salvar dados e imagens atuais"
               type="arrow"
             />
           </TouchableOpacity>
           <View style={styles.divider} />
-          <TouchableOpacity activeOpacity={0.7}>
+          <TouchableOpacity activeOpacity={0.7} onPress={handleRestaurarBackup}>
             <SettingItem
               icon="download"
-              title="Restaurar"
-              subtitle="Restaurar dados do backup"
+              title="Restaurar Backup"
+              subtitle="Restaurar dados de um backup"
+              type="arrow"
+            />
+          </TouchableOpacity>
+          <View style={styles.divider} />
+          <TouchableOpacity activeOpacity={0.7} onPress={() => navigation.navigate('Backups')}>
+            <SettingItem
+              icon="archive"
+              title="Gerenciar Backups"
+              subtitle="Ver, restaurar ou excluir backups"
               type="arrow"
             />
           </TouchableOpacity>
@@ -137,7 +214,7 @@ const ConfiguracoesScreen = ({ navigation }) => {
             <SettingItem
               icon="trash-alt"
               title="Limpar Dados"
-              subtitle="Excluir todos os dados locais"
+              subtitle="Excluir exames (não afeta backups)"
               type="arrow"
             />
           </TouchableOpacity>
@@ -179,6 +256,16 @@ const ConfiguracoesScreen = ({ navigation }) => {
           <Text style={styles.versionText}>Versão 1.0.0</Text>
         </View>
       </ScrollView>
+
+      {/* Alert Customizado */}
+      <CustomAlert
+        visible={alertConfig.visible}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        type={alertConfig.type}
+        buttons={alertConfig.buttons}
+        onClose={hideAlert}
+      />
     </View>
   );
 };

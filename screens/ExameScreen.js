@@ -18,13 +18,15 @@ const ExameScreen = ({ route, navigation }) => {
 
   // Memoizar dados computados para evitar recálculos
   const dadosExame = useMemo(() => {
-    const nomeExame = exame;
+    const nomeExame =
+      exame === 'coluna_lombar_ap.jpg'
+        ? 'Coluna lombar AP'
+        : exame === 'femur_esquerdo.jpg'
+        ? 'Fêmur esquerdo'
+        : exame;
 
-    const imagemExame = {
-      'Coluna Lombar': require('../assets/coluna-lombar.jpeg'),
-      'Fêmur': require('../assets/femur.jpeg'),
-      'Punho': require('../assets/punho.png'),
-    };
+    // Imagem será fornecida pelo operador
+    const imagemExame = null;
 
     return { nomeExame, imagemExame: imagemExame[exame] };
   }, [exame]);

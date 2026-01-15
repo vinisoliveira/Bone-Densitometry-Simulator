@@ -8,7 +8,6 @@ import {
   Image,
   Easing,
 } from 'react-native';
-import MaskedView from '@react-native-masked-view/masked-view';
 import { useNavigation } from '@react-navigation/native';
 import { FontAwesome5 } from '@expo/vector-icons';
 
@@ -16,20 +15,22 @@ const { height, width } = Dimensions.get('window');
 
 export default function ScanScreen({ route }) {
   const navigation = useNavigation();
-  const scanAnim = useRef(new Animated.Value(height)).current;
+  // Animação do scanner - começa do topo (0) e vai até o final (1)
+  const scanProgress = useRef(new Animated.Value(0)).current;
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const glowAnim = useRef(new Animated.Value(0)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const [progress, setProgress] = useState(0);
 
-  const { id, nome, idade, sexo, etnia, exame } = route.params;
+  const { id, nome, idade, dataNascimento, peso, altura, sexo, etnia, exame, operador, imagemCustomizada, imagemHash } = route.params;
 
-  // Mapeia o exame para a imagem correspondente
-  const imagemExame = {
-    'Coluna Lombar': require('../assets/coluna-lombar.jpeg'),
-    'Fêmur': require('../assets/femur.jpeg'),
-    'Punho': require('../assets/punho.png'),
-  };
+  // Usa imagem customizada se existir
+  const imagemExame = imagemCustomizada 
+    ? { uri: imagemCustomizada } 
+    : null;
+
+  // Altura da área da imagem
+  const IMAGE_HEIGHT = height * 0.45;
 
   useEffect(() => {
     // Animação de fade inicial
@@ -39,11 +40,12 @@ export default function ScanScreen({ route }) {
       useNativeDriver: true,
     }).start();
 
-    // Animação de scan
-    Animated.timing(scanAnim, {
-      toValue: 0,
-      duration: 5000,
-      useNativeDriver: true,
+    // Animação do scanner - revela de cima para baixo
+    Animated.timing(scanProgress, {
+      toValue: 1,
+      duration: 4000,
+      easing: Easing.linear,
+      useNativeDriver: false, // Precisamos de false para animar height
     }).start();
 
     // Animação de pulso
@@ -64,18 +66,18 @@ export default function ScanScreen({ route }) {
       ])
     ).start();
 
-    // Animação de brilho
+    // Animação de brilho da linha de scan
     Animated.loop(
       Animated.sequence([
         Animated.timing(glowAnim, {
           toValue: 1,
-          duration: 1500,
+          duration: 300,
           easing: Easing.inOut(Easing.ease),
           useNativeDriver: true,
         }),
         Animated.timing(glowAnim, {
-          toValue: 0,
-          duration: 1500,
+          toValue: 0.4,
+          duration: 300,
           easing: Easing.inOut(Easing.ease),
           useNativeDriver: true,
         }),
@@ -91,13 +93,30 @@ export default function ScanScreen({ route }) {
     }, 80);
 
     const timer = setTimeout(() => {
-      navigation.replace('Resultado', {
+      // Determina a tela de resultado baseada no tipo de exame
+      let resultadoScreen = 'ResultadoColuna'; // Coluna Lombar é o padrão
+      
+      if (exame === 'Fêmur (Proximal)') {
+        resultadoScreen = 'ResultadoFemur';
+      } else if (exame === 'Punho (Antebraço)') {
+        resultadoScreen = 'ResultadoPunho';
+      } else if (exame === 'Corpo Total (Full Body)') {
+        resultadoScreen = 'ResultadoCorpoTotal';
+      }
+      
+      navigation.replace(resultadoScreen, {
         id,
         nome,
         idade,
+        dataNascimento,
+        peso,
+        altura,
         sexo,
         etnia,
         exame,
+        operador,
+        imagemCustomizada,
+        imagemHash,
       });
     }, 5000);
 
@@ -106,6 +125,18 @@ export default function ScanScreen({ route }) {
       clearInterval(progressInterval);
     };
   }, []);
+
+  // Calcula a posição da linha de scan
+  const scanLinePosition = scanProgress.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, IMAGE_HEIGHT],
+  });
+
+  // Calcula a altura da área revelada (clip)
+  const revealHeight = scanProgress.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, IMAGE_HEIGHT],
+  });
 
   return (
     <View style={styles.container}>
@@ -120,40 +151,56 @@ export default function ScanScreen({ route }) {
         </View>
       </Animated.View>
 
-      {/* Linha de scan com brilho */}
-      <Animated.View
-        style={[
-          styles.scanLine,
-          {
-            opacity: glowAnim.interpolate({
-              inputRange: [0, 1],
-              outputRange: [0.4, 1],
-            }),
-            transform: [{ translateY: scanAnim }],
-          },
-        ]}
-      />
+      {/* Image with scan reveal effect */}
+      <Animated.View style={[styles.imageWrapper, { opacity: fadeAnim, height: IMAGE_HEIGHT }]}>
+        {imagemExame ? (
+          <>
+            {/* Imagem completa por baixo (silhueta escura) */}
+            <View style={styles.imageBackground}>
+              <Image
+                source={imagemExame}
+                style={[styles.image, { opacity: 0.15 }]}
+              />
+            </View>
 
-      {/* Image with scan effect */}
-      <Animated.View style={[styles.imageWrapper, { opacity: fadeAnim }]}>
-        <MaskedView
-          style={styles.maskedView}
-          maskElement={
-            <Animated.View
+            {/* Área revelada pelo scanner (de cima para baixo) */}
+            <Animated.View 
               style={[
-                styles.mask,
-                {
-                  transform: [{ translateY: scanAnim }],
-                },
+                styles.revealContainer, 
+                { 
+                  height: revealHeight,
+                  overflow: 'hidden',
+                }
               ]}
-            />
-          }
+            >
+              <Image
+                source={imagemExame}
+                style={[styles.image, { height: IMAGE_HEIGHT }]}
+              />
+            </Animated.View>
+          </>
+        ) : (
+          <View style={styles.noImageContainer}>
+            <FontAwesome5 name="image" size={48} color="#4A5568" />
+            <Text style={styles.noImageText}>Imagem indisponível</Text>
+            <Text style={styles.noImageSubtext}>Nenhuma imagem foi adicionada</Text>
+          </View>
+        )}
+
+        {/* Linha de scan com brilho */}
+        <Animated.View
+          style={[
+            styles.scanLine,
+            {
+              opacity: glowAnim,
+              transform: [{ translateY: scanLinePosition }],
+            },
+          ]}
         >
-          <Image
-            source={imagemExame[exame]}
-            style={styles.image}
-          />
-        </MaskedView>
+          {/* Efeito de glow na linha */}
+          <View style={styles.scanLineGlow} />
+          <View style={styles.scanLineCore} />
+        </Animated.View>
         
         {/* Frame corners */}
         <View style={[styles.corner, styles.topLeft]} />
@@ -258,35 +305,76 @@ const styles = StyleSheet.create({
   },
   imageWrapper: {
     width: '80%',
-    height: '50%',
     position: 'relative',
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    marginBottom: 40,
+  },
+  imageBackground: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  revealContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    overflow: 'hidden',
   },
   scanLine: {
     position: 'absolute',
-    width: width * 0.8,
-    height: 2,
+    left: 0,
+    right: 0,
+    height: 6,
+    zIndex: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  scanLineGlow: {
+    position: 'absolute',
+    width: '100%',
+    height: 30,
+    backgroundColor: 'rgba(74, 144, 226, 0.3)',
+    shadowColor: '#4A90E2',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 1,
+    shadowRadius: 20,
+  },
+  scanLineCore: {
+    width: '100%',
+    height: 3,
     backgroundColor: '#4A90E2',
     shadowColor: '#4A90E2',
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 1,
-    shadowRadius: 15,
+    shadowRadius: 10,
     elevation: 10,
-    zIndex: 10,
-  },
-  maskedView: {
-    width: '100%',
-    height: '100%',
-    overflow: 'hidden',
   },
   image: {
     width: '100%',
-    height: '100%',
     resizeMode: 'contain',
   },
-  mask: {
+  noImageContainer: {
     width: '100%',
     height: '100%',
-    backgroundColor: '#fff',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#1a1a2e',
+    borderRadius: 8,
+  },
+  noImageText: {
+    color: '#8892B0',
+    fontSize: 16,
+    fontWeight: '600',
+    marginTop: 12,
+  },
+  noImageSubtext: {
+    color: '#4A5568',
+    fontSize: 12,
+    marginTop: 4,
   },
   corner: {
     position: 'absolute',

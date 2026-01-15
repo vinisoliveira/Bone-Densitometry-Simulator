@@ -1,91 +1,32 @@
-import React, { useRef, useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, Animated, Alert, Platform } from 'react-native';
-import * as Print from 'expo-print';
-import * as Sharing from 'expo-sharing';
-import * as FileSystem from 'expo-file-system';
+import React, { useRef, useEffect } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, Animated, Platform, Dimensions } from 'react-native';
+import { Print } from 'expo-print';
 import { colors, spacing, typography } from '../src/styles/theme';
 import { FontAwesome5 } from '@expo/vector-icons';
-import DensitometryChart from '../src/components/DensitometryChart';
 
-// Helper functions
-const calculateTScore = (idade, sexo, examType = 'Coluna Lombar') => {
-  // Simulação de T-Score baseado na idade e tipo de exame
-  let baseTScore = 0;
-  
-  // Fator de multiplicação baseado no tipo de exame
-  // Fêmur tende a ter declínio mais acentuado
-  // Punho tende a ter declínio mais gradual
-  let examFactor = 1.0;
-  if (examType === 'Fêmur') {
-    examFactor = 1.15; // 15% mais declínio
-  } else if (examType === 'Punho') {
-    examFactor = 0.90; // 10% menos declínio
-  }
-  
-  if (idade < 30) {
-    baseTScore = 0.5;
-  } else if (idade < 40) {
-    baseTScore = 0.2;
-  } else if (idade < 50) {
-    baseTScore = -0.3;
-  } else if (idade < 60) {
-    baseTScore = -0.8;
-  } else if (idade < 70) {
-    baseTScore = -1.4;
-  } else if (idade < 80) {
-    baseTScore = -2.1;
-  } else {
-    baseTScore = -2.7;
-  }
-
-  // Aplicar fator do tipo de exame
-  if (baseTScore < 0) {
-    baseTScore *= examFactor;
-  }
-
-  // Ajuste para sexo (mulheres geralmente têm valores um pouco menores após menopausa)
-  if (sexo === 'Feminino' && idade >= 50) {
-    baseTScore -= 0.3;
-  }
-
-  // Adiciona variação aleatória pequena
-  const variation = (Math.random() - 0.5) * 0.4;
-  return baseTScore + variation;
-};
-
-const calculateBMD = (tScore) => {
-  // BMD de referência para adulto jovem (pico de massa óssea)
-  const referenceBMD = 1.071;
-  const sdBMD = 0.120; // Desvio padrão
-  
-  return referenceBMD + (tScore * sdBMD);
-};
-
-const getClassification = (tScore) => {
-  if (tScore > -1.0) {
-    return { 
-      name: 'Normal', 
-      class: 'classification-normal',
-      color: '#4CAF50'
-    };
-  } else if (tScore >= -2.5) {
-    return { 
-      name: 'Osteopenia', 
-      class: 'classification-osteopenia',
-      color: '#FFD54F'
-    };
-  } else {
-    return { 
-      name: 'Osteoporose', 
-      class: 'classification-osteoporose',
-      color: '#FF6B6B'
-    };
-  }
-};
+const { width } = Dimensions.get('window');
 
 export default function RelatorioScreen({ route, navigation }) {
-  const { nome, idade, sexo, etnia, exame, vertebraSelecionada } = route.params;
-  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  const { 
+    nome, 
+    idade,
+    dataNascimento,
+    peso,
+    altura, 
+    sexo, 
+    etnia, 
+    exame,
+    operador, 
+    imagemCustomizada,
+    imagemHash,
+    vertebraSelecionada, 
+    brightness = 100, 
+    contrast = 100, 
+    roiData 
+  } = route.params;
+
+  // Calcular IMC
+  const imc = peso && altura ? (parseFloat(peso) / Math.pow(parseFloat(altura)/100, 2)).toFixed(1) : null;
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
@@ -155,357 +96,11 @@ export default function RelatorioScreen({ route, navigation }) {
       <!DOCTYPE html>
       <html lang="pt-BR">
         <head>
-          <meta charset="UTF-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>Relatório de Densitometria Óssea</title>
           <style>
-          <style>
-            * {
-              margin: 0;
-              padding: 0;
-              box-sizing: border-box;
-            }
-            
-            body {
-              font-family: Arial, sans-serif;
-              padding: 30px;
-              background: #ffffff;
-              color: #000;
-              font-size: 11px;
-              line-height: 1.4;
-            }
-
-            .header {
-              text-align: center;
-              margin-bottom: 25px;
-              padding-bottom: 15px;
-              border-bottom: 2px solid #1a1d29;
-            }
-
-            .clinic-name {
-              font-size: 16px;
-              font-weight: bold;
-              color: #000;
-              margin-bottom: 3px;
-            }
-
-            .clinic-address {
-              font-size: 10px;
-              color: #333;
-            }
-
-            .patient-info {
-              background: #f0f0f0;
-              padding: 10px 15px;
-              margin-bottom: 15px;
-              border: 1px solid #ccc;
-              display: grid;
-              grid-template-columns: 2fr 1fr 1fr;
-              gap: 15px;
-            }
-
-            .patient-info-item {
-              display: flex;
-              gap: 5px;
-            }
-
-            .patient-info-label {
-              font-weight: bold;
-              color: #000;
-            }
-
-            .exam-info {
-              margin-bottom: 15px;
-            }
-
-            .exam-info-title {
-              font-weight: bold;
-              font-size: 12px;
-              margin-bottom: 8px;
-              color: #000;
-            }
-
-            .exam-details {
-              display: grid;
-              grid-template-columns: 1fr 1fr;
-              gap: 5px;
-              font-size: 10px;
-            }
-
-            .section-title {
-              font-size: 12px;
-              font-weight: bold;
-              color: #000;
-              margin: 20px 0 10px 0;
-              padding-bottom: 3px;
-              border-bottom: 1px solid #333;
-            }
-
-            .results-table {
-              width: 100%;
-              border-collapse: collapse;
-              margin-bottom: 15px;
-              font-size: 9px;
-            }
-
-            .results-table th {
-              background: #2a3142;
-              color: #fff;
-              padding: 8px 5px;
-              text-align: center;
-              font-weight: bold;
-              border: 1px solid #000;
-            }
-
-            .results-table td {
-              padding: 6px 5px;
-              text-align: center;
-              border: 1px solid #999;
-            }
-
-            .results-table tr:nth-child(even) {
-              background: #f9f9f9;
-            }
-
-            .results-table tr.subtotal {
-              background: #e8e8e8;
-              font-weight: bold;
-            }
-
-            .results-table tr.total {
-              background: #d0d0d0;
-              font-weight: bold;
-              font-size: 10px;
-            }
-
-            .chart-container {
-              margin: 20px 0;
-              padding: 15px;
-              background: #f5f5f5;
-              border: 1px solid #ccc;
-              border-radius: 5px;
-            }
-
-            .chart-title {
-              font-size: 11px;
-              font-weight: bold;
-              margin-bottom: 10px;
-              text-align: center;
-            }
-
-            .chart-visual {
-              position: relative;
-              height: 180px;
-              background: linear-gradient(to bottom, 
-                #4CAF50 0%, 
-                #4CAF50 35%, 
-                #FFD54F 35%, 
-                #FFD54F 70%, 
-                #FF6B6B 70%, 
-                #FF6B6B 100%);
-              border-radius: 5px;
-              display: flex;
-              flex-direction: column;
-              justify-content: space-between;
-              padding: 10px;
-            }
-
-            .chart-line {
-              display: flex;
-              justify-content: space-between;
-              align-items: center;
-              color: #fff;
-              font-weight: bold;
-              text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
-            }
-
-            .chart-marker {
-              position: absolute;
-              left: 50%;
-              transform: translateX(-50%);
-              width: 90%;
-              height: 3px;
-              background: #000;
-              border: 2px solid #fff;
-            }
-
-            .chart-marker-label {
-              position: absolute;
-              top: -20px;
-              left: 50%;
-              transform: translateX(-50%);
-              background: #000;
-              color: #fff;
-              padding: 3px 10px;
-              border-radius: 3px;
-              font-size: 9px;
-              font-weight: bold;
-              white-space: nowrap;
-            }
-
-            .legend {
-              display: grid;
-              grid-template-columns: repeat(3, 1fr);
-              gap: 10px;
-              margin-top: 15px;
-            }
-
-            .legend-item {
-              display: flex;
-              align-items: center;
-              gap: 8px;
-              font-size: 9px;
-            }
-
-            .legend-color {
-              width: 25px;
-              height: 15px;
-              border-radius: 2px;
-              border: 1px solid #333;
-            }
-
-            .legend-normal { background: #4CAF50; }
-            .legend-osteopenia { background: #FFD54F; }
-            .legend-osteoporose { background: #FF6B6B; }
-
-            .info-box {
-              background: #e3f2fd;
-              border-left: 4px solid #4A90E2;
-              padding: 12px;
-              margin: 15px 0;
-              font-size: 10px;
-            }
-
-            .info-box-title {
-              font-weight: bold;
-              color: #1976D2;
-              margin-bottom: 8px;
-            }
-
-            .warning-box {
-              background: #fff3cd;
-              border-left: 4px solid #ffc107;
-              padding: 12px;
-              margin: 15px 0;
-              font-size: 9px;
-              color: #856404;
-            }
-
-            .footer {
-              margin-top: 25px;
-              padding-top: 15px;
-              border-top: 1px solid #ccc;
-              text-align: center;
-              font-size: 8px;
-              color: #666;
-            }
-
-            .calibration-note {
-              margin-top: 10px;
-              font-size: 8px;
-              color: #666;
-              font-style: italic;
-            }
-
-            .page-break {
-              page-break-after: always;
-            }
-
-            .two-columns {
-              display: grid;
-              grid-template-columns: 1fr 1fr;
-              gap: 20px;
-              margin: 15px 0;
-            }
-
-            .body-composition {
-              background: #f9f9f9;
-              padding: 12px;
-              border: 1px solid #ddd;
-              border-radius: 5px;
-            }
-
-            .composition-item {
-              display: flex;
-              justify-content: space-between;
-              padding: 5px 0;
-              border-bottom: 1px solid #eee;
-            }
-
-            .composition-label {
-              font-weight: bold;
-            }
-
-            .risk-table {
-              width: 100%;
-              margin-top: 10px;
-              font-size: 9px;
-            }
-
-            .risk-bar {
-              height: 20px;
-              display: flex;
-              margin: 10px 0;
-              border: 1px solid #333;
-            }
-
-            .risk-low {
-              background: #4CAF50;
-              flex: 1;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              color: #fff;
-              font-size: 8px;
-              font-weight: bold;
-            }
-
-            .risk-normal {
-              background: #8BC34A;
-              flex: 1;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              color: #fff;
-              font-size: 8px;
-              font-weight: bold;
-            }
-
-            .risk-increased {
-              background: #FFD54F;
-              flex: 1;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              color: #333;
-              font-size: 8px;
-              font-weight: bold;
-            }
-
-            .risk-high {
-              background: #FF6B6B;
-              flex: 2;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              color: #fff;
-              font-size: 8px;
-              font-weight: bold;
-            }
-
-            .marker-position {
-              position: relative;
-              margin-top: -15px;
-            }
-
-            .marker-arrow {
-              width: 0;
-              height: 0;
-              border-left: 8px solid transparent;
-              border-right: 8px solid transparent;
-              border-top: 12px solid #000;
-              margin: 0 auto;
-            }
+            body { font-family: Arial, sans-serif; padding: 20px; }
+            h1 { color: #4A90E2; }
+            .info { margin: 10px 0; }
+            strong { color: #333; }
           </style>
         </head>
         <body>
@@ -1086,14 +681,167 @@ export default function RelatorioScreen({ route, navigation }) {
               <Text style={styles.cardTitle}>Dados do Paciente</Text>
             </View>
             <View style={styles.cardContent}>
-              <InfoRow icon="user" label="Paciente" value={nome} />
-              <InfoRow icon="birthday-cake" label="Idade" value={`${idade} anos`} />
-              <InfoRow icon="venus-mars" label="Sexo" value={sexo} />
-              <InfoRow icon="globe-americas" label="Etnia" value={etnia} />
-              <InfoRow icon="x-ray" label="Exame" value={exame} />
-              <InfoRow icon="map-marker-alt" label="Região" value={vertebraSelecionada || 'Não selecionada'} />
+              {/* Info Grid */}
+              <View style={styles.infoGrid}>
+                <View style={styles.infoGridItem}>
+                  <FontAwesome5 name="user" size={16} color="#4A90E2" />
+                  <Text style={styles.infoGridLabel}>Paciente</Text>
+                  <Text style={styles.infoGridValue}>{nome || '-'}</Text>
+                </View>
+                <View style={styles.infoGridItem}>
+                  <FontAwesome5 name="birthday-cake" size={16} color="#4A90E2" />
+                  <Text style={styles.infoGridLabel}>Idade</Text>
+                  <Text style={styles.infoGridValue}>{idade ? `${idade} anos` : '-'}</Text>
+                </View>
+                <View style={styles.infoGridItem}>
+                  <FontAwesome5 name="venus-mars" size={16} color="#4A90E2" />
+                  <Text style={styles.infoGridLabel}>Sexo</Text>
+                  <Text style={styles.infoGridValue}>{sexo || '-'}</Text>
+                </View>
+                <View style={styles.infoGridItem}>
+                  <FontAwesome5 name="globe-americas" size={16} color="#4A90E2" />
+                  <Text style={styles.infoGridLabel}>Etnia</Text>
+                  <Text style={styles.infoGridValue}>{etnia || '-'}</Text>
+                </View>
+              </View>
+
+              {/* Physical Data - if available */}
+              {(peso || altura) && (
+                <>
+                  <View style={styles.divider} />
+                  <View style={styles.infoGrid}>
+                    {peso && (
+                      <View style={styles.infoGridItem}>
+                        <FontAwesome5 name="weight" size={16} color="#4A90E2" />
+                        <Text style={styles.infoGridLabel}>Peso</Text>
+                        <Text style={styles.infoGridValue}>{peso} kg</Text>
+                      </View>
+                    )}
+                    {altura && (
+                      <View style={styles.infoGridItem}>
+                        <FontAwesome5 name="ruler-vertical" size={16} color="#4A90E2" />
+                        <Text style={styles.infoGridLabel}>Altura</Text>
+                        <Text style={styles.infoGridValue}>{altura} cm</Text>
+                      </View>
+                    )}
+                    {imc && (
+                      <View style={styles.infoGridItem}>
+                        <FontAwesome5 name="calculator" size={16} color="#4A90E2" />
+                        <Text style={styles.infoGridLabel}>IMC</Text>
+                        <Text style={styles.infoGridValue}>{imc} kg/m²</Text>
+                      </View>
+                    )}
+                    {dataNascimento && (
+                      <View style={styles.infoGridItem}>
+                        <FontAwesome5 name="calendar-alt" size={16} color="#4A90E2" />
+                        <Text style={styles.infoGridLabel}>Data Nasc.</Text>
+                        <Text style={styles.infoGridValue}>{dataNascimento}</Text>
+                      </View>
+                    )}
+                  </View>
+                </>
+              )}
+              
+              <View style={styles.divider} />
+              
+              {/* Exam Info */}
+              <View style={styles.examInfoRow}>
+                <View style={styles.examInfoItem}>
+                  <View style={styles.examInfoIcon}>
+                    <FontAwesome5 name="x-ray" size={18} color="#4A90E2" />
+                  </View>
+                  <View>
+                    <Text style={styles.examInfoLabel}>Tipo de Exame</Text>
+                    <Text style={styles.examInfoValue}>{exame || '-'}</Text>
+                  </View>
+                </View>
+                <View style={styles.examInfoItem}>
+                  <View style={styles.examInfoIcon}>
+                    <FontAwesome5 name="map-marker-alt" size={18} color="#4A90E2" />
+                  </View>
+                  <View>
+                    <Text style={styles.examInfoLabel}>Região Analisada</Text>
+                    <Text style={styles.examInfoValue}>{roiData?.id || vertebraSelecionada || 'Não analisada'}</Text>
+                  </View>
+                </View>
+              </View>
+
+              {/* Operator info if available */}
+              {operador && (
+                <View style={[styles.examInfoRow, { marginTop: 10 }]}>
+                  <View style={styles.examInfoItem}>
+                    <View style={styles.examInfoIcon}>
+                      <FontAwesome5 name="user-md" size={18} color="#4A90E2" />
+                    </View>
+                    <View>
+                      <Text style={styles.examInfoLabel}>Operador/Técnico</Text>
+                      <Text style={styles.examInfoValue}>{operador}</Text>
+                    </View>
+                  </View>
+                </View>
+              )}
             </View>
           </View>
+
+          {/* DXA Results Card - Only if roiData exists */}
+          {roiData && (
+            <View style={styles.card}>
+              <View style={styles.cardHeader}>
+                <FontAwesome5 name="chart-line" size={24} color="#4A90E2" />
+                <Text style={styles.cardTitle}>Resultados da Análise DXA</Text>
+              </View>
+              <View style={styles.cardContent}>
+                {/* Metrics Row */}
+                <View style={styles.metricsContainer}>
+                  <View style={styles.metricCard}>
+                    <Text style={styles.metricLabel}>BMD</Text>
+                    <Text style={styles.metricValue}>{roiData.bmd?.toFixed(3) || '-'}</Text>
+                    <Text style={styles.metricUnit}>g/cm²</Text>
+                  </View>
+                  <View style={styles.metricCard}>
+                    <Text style={styles.metricLabel}>T-Score</Text>
+                    <Text style={[
+                      styles.metricValue, 
+                      { color: roiData.tScore >= -1 ? '#66BB6A' : roiData.tScore >= -2.5 ? '#FFCA28' : '#EF5350' }
+                    ]}>
+                      {roiData.tScore?.toFixed(1) || '-'}
+                    </Text>
+                    <Text style={styles.metricUnit}>SD</Text>
+                  </View>
+                  <View style={styles.metricCard}>
+                    <Text style={styles.metricLabel}>Z-Score</Text>
+                    <Text style={styles.metricValue}>{roiData.zScore?.toFixed(1) || '-'}</Text>
+                    <Text style={styles.metricUnit}>SD</Text>
+                  </View>
+                </View>
+                
+                {/* Diagnosis Badge */}
+                <View style={[
+                  styles.diagnosisBadge,
+                  { 
+                    backgroundColor: roiData.tScore >= -1 
+                      ? 'rgba(102, 187, 106, 0.2)' 
+                      : roiData.tScore >= -2.5 
+                        ? 'rgba(255, 202, 40, 0.2)' 
+                        : 'rgba(239, 83, 80, 0.2)',
+                    borderColor: roiData.tScore >= -1 ? '#66BB6A' : roiData.tScore >= -2.5 ? '#FFCA28' : '#EF5350'
+                  }
+                ]}>
+                  <FontAwesome5 
+                    name={roiData.tScore >= -1 ? 'check-circle' : roiData.tScore >= -2.5 ? 'exclamation-triangle' : 'times-circle'} 
+                    size={20} 
+                    color={roiData.tScore >= -1 ? '#66BB6A' : roiData.tScore >= -2.5 ? '#FFCA28' : '#EF5350'} 
+                  />
+                  <Text style={[
+                    styles.diagnosisText,
+                    { color: roiData.tScore >= -1 ? '#66BB6A' : roiData.tScore >= -2.5 ? '#FFCA28' : '#EF5350' }
+                  ]}>
+                    {roiData.tScore >= -1 ? 'Normal' : roiData.tScore >= -2.5 ? 'Osteopenia' : 'Osteoporose'}
+                  </Text>
+                </View>
+              </View>
+            </View>
+          )}
 
           {/* Scanner Image */}
           <View style={styles.card}>
@@ -1101,27 +849,178 @@ export default function RelatorioScreen({ route, navigation }) {
               <FontAwesome5 name="image" size={24} color="#4A90E2" />
               <Text style={styles.cardTitle}>Imagem do Scanner</Text>
             </View>
-            <View style={styles.imageContainer}>
-              <Image 
-                source={getExamImage()} 
-                style={styles.image}
-                resizeMode="contain"
-              />
+            <View style={styles.scannerImageContainer}>
+              {imagemCustomizada ? (
+                <Image 
+                  source={{ uri: imagemCustomizada }} 
+                  style={[
+                    styles.scannerImage,
+                    Platform.OS === 'web' && {
+                      filter: `brightness(${brightness / 100}) contrast(${contrast / 100})`,
+                    },
+                    Platform.OS !== 'web' && {
+                      opacity: brightness / 100,
+                    },
+                  ]}
+                  resizeMode="contain"
+                />
+              ) : (
+                <View style={styles.noImageContainer}>
+                  <FontAwesome5 name="image" size={48} color="#4A5568" />
+                  <Text style={styles.noImageText}>Imagem indisponível</Text>
+                  <Text style={styles.noImageSubtext}>Nenhuma imagem foi adicionada</Text>
+                </View>
+              )}
             </View>
+            {roiData && (
+              <View style={styles.roiInfo}>
+                <Text style={styles.roiInfoTitle}>Análise ROI: {roiData.id}</Text>
+                <View style={styles.roiMetricsRow}>
+                  <View style={styles.roiMetricBox}>
+                    <Text style={styles.roiMetricLabel}>BMD</Text>
+                    <Text style={styles.roiMetricValue}>{roiData.bmd?.toFixed(3) || '-'}</Text>
+                    <Text style={styles.roiMetricUnit}>g/cm²</Text>
+                  </View>
+                  <View style={styles.roiMetricBox}>
+                    <Text style={styles.roiMetricLabel}>T-Score</Text>
+                    <Text style={[styles.roiMetricValue, { color: roiData.tScore >= -1 ? '#4CAF50' : roiData.tScore >= -2.5 ? '#FFC107' : '#F44336' }]}>{roiData.tScore?.toFixed(1) || '-'}</Text>
+                    <Text style={styles.roiMetricUnit}>SD</Text>
+                  </View>
+                  <View style={styles.roiMetricBox}>
+                    <Text style={styles.roiMetricLabel}>Z-Score</Text>
+                    <Text style={styles.roiMetricValue}>{roiData.zScore?.toFixed(1) || '-'}</Text>
+                    <Text style={styles.roiMetricUnit}>SD</Text>
+                  </View>
+                </View>
+              </View>
+            )}
           </View>
 
-          {/* Reference Chart */}
+          {/* Dynamic T-Score Chart */}
           <View style={styles.card}>
             <View style={styles.cardHeader}>
-              <FontAwesome5 name="chart-bar" size={24} color="#4A90E2" />
-              <Text style={styles.cardTitle}>Referência de Densitometria</Text>
+              <FontAwesome5 name="chart-line" size={24} color="#4A90E2" />
+              <Text style={styles.cardTitle}>Gráfico de Densitometria</Text>
             </View>
-            <View style={styles.chartContent}>
-              <DensitometryChart 
-                tScore={tScore}
-                age={idadeNum}
-                examType={exame}
-              />
+            <View style={styles.chartContainer}>
+              {/* Chart Title */}
+              <Text style={styles.chartTitle}>
+                Referência de densitometria: {exame === 'Coluna Lombar' ? 'L1-L4' : exame}
+              </Text>
+              
+              {/* Y-Axis Labels and Chart Area */}
+              <View style={styles.chartWrapper}>
+                {/* Y-Axis BMD Label */}
+                <View style={styles.yAxisLabelContainer}>
+                  <Text style={styles.yAxisLabelText}>BMD (g/cm²)</Text>
+                </View>
+                
+                {/* Y-Axis BMD Values */}
+                <View style={styles.yAxisLeft}>
+                  <Text style={styles.yAxisValue}>1.443</Text>
+                  <Text style={styles.yAxisValue}>1.319</Text>
+                  <Text style={styles.yAxisValue}>1.195</Text>
+                  <Text style={styles.yAxisValue}>1.071</Text>
+                  <Text style={styles.yAxisValue}>0.947</Text>
+                  <Text style={styles.yAxisValue}>0.823</Text>
+                  <Text style={styles.yAxisValue}>0.699</Text>
+                  <Text style={styles.yAxisValue}>0.575</Text>
+                </View>
+
+                {/* Main Chart */}
+                <View style={styles.chartArea}>
+                  {/* Normal Zone (Green) */}
+                  <View style={[styles.chartZone, styles.normalZone, { height: '35%' }]}>
+                    <Text style={styles.zoneLabel}>Normal</Text>
+                  </View>
+                  
+                  {/* Osteopenia Zone (Yellow) */}
+                  <View style={[styles.chartZone, styles.osteopeniaZone, { height: '35%' }]}>
+                    <Text style={styles.zoneLabel}>Osteopenia</Text>
+                  </View>
+                  
+                  {/* Osteoporosis Zone (Red) */}
+                  <View style={[styles.chartZone, styles.osteoporosisZone, { height: '30%' }]}>
+                    <Text style={styles.zoneLabel}>Osteoporose</Text>
+                  </View>
+
+                  {/* Patient Marker */}
+                  {roiData && (
+                    <View 
+                      style={[
+                        styles.patientMarker,
+                        {
+                          // Position based on T-Score: -1 is at 35%, -2.5 is at 70%
+                          top: roiData.tScore >= -1 
+                            ? `${Math.max(5, 35 - ((roiData.tScore + 1) * 15))}%`
+                            : roiData.tScore >= -2.5 
+                              ? `${35 + ((Math.abs(roiData.tScore) - 1) * (35 / 1.5))}%`
+                              : `${70 + ((Math.abs(roiData.tScore) - 2.5) * 10)}%`,
+                          // Position based on age
+                          left: `${Math.min(90, Math.max(10, ((parseInt(idade) - 20) / 80) * 100))}%`,
+                        }
+                      ]}
+                    >
+                      <View style={styles.markerDot} />
+                      <View style={styles.markerLine} />
+                    </View>
+                  )}
+                </View>
+
+                {/* Y-Axis T-Score Values */}
+                <View style={styles.yAxisRight}>
+                  <Text style={styles.yAxisValue}>+2</Text>
+                  <Text style={styles.yAxisValue}>+1</Text>
+                  <Text style={styles.yAxisValue}>0</Text>
+                  <Text style={styles.yAxisValue}>-1</Text>
+                  <Text style={styles.yAxisValue}>-2</Text>
+                  <Text style={styles.yAxisValue}>-3</Text>
+                  <Text style={styles.yAxisValue}>-4</Text>
+                  <Text style={styles.yAxisValue}>-5</Text>
+                </View>
+                
+                {/* Y-Axis T-Score Label */}
+                <View style={styles.yAxisLabelContainer}>
+                  <Text style={styles.yAxisLabelText}>T-Score</Text>
+                </View>
+              </View>
+
+              {/* X-Axis */}
+              <View style={styles.xAxis}>
+                <Text style={styles.xAxisLabel}>Idade (anos)</Text>
+                <View style={styles.xAxisValues}>
+                  <Text style={styles.xAxisValue}>20</Text>
+                  <Text style={styles.xAxisValue}>30</Text>
+                  <Text style={styles.xAxisValue}>40</Text>
+                  <Text style={styles.xAxisValue}>50</Text>
+                  <Text style={styles.xAxisValue}>60</Text>
+                  <Text style={styles.xAxisValue}>70</Text>
+                  <Text style={styles.xAxisValue}>80</Text>
+                  <Text style={styles.xAxisValue}>90</Text>
+                  <Text style={styles.xAxisValue}>100</Text>
+                </View>
+              </View>
+
+              {/* Patient Info on Chart */}
+              {roiData && (
+                <View style={styles.chartPatientInfo}>
+                  <View style={styles.chartPatientRow}>
+                    <View style={styles.chartPatientDot} />
+                    <Text style={styles.chartPatientText}>
+                      Paciente: {nome} ({idade} anos)
+                    </Text>
+                  </View>
+                  <Text style={styles.chartPatientResult}>
+                    BMD: {roiData.bmd?.toFixed(3)} g/cm² | T-Score: {roiData.tScore?.toFixed(1)} | 
+                    <Text style={{ 
+                      color: roiData.tScore >= -1 ? '#66BB6A' : roiData.tScore >= -2.5 ? '#FFCA28' : '#EF5350',
+                      fontWeight: '700'
+                    }}>
+                      {' '}{roiData.tScore >= -1 ? 'Normal' : roiData.tScore >= -2.5 ? 'Osteopenia' : 'Osteoporose'}
+                    </Text>
+                  </Text>
+                </View>
+              )}
             </View>
           </View>
 
@@ -1159,13 +1058,13 @@ export default function RelatorioScreen({ route, navigation }) {
   );
 }
 
-const InfoRow = ({ icon, label, value }) => (
+const InfoRow = ({ icon, label, value, valueColor }) => (
   <View style={styles.infoRow}>
     <View style={styles.infoIcon}>
       <FontAwesome5 name={icon} size={14} color="#4A90E2" />
     </View>
     <Text style={styles.infoLabel}>{label}:</Text>
-    <Text style={styles.infoValue}>{value}</Text>
+    <Text style={[styles.infoValue, valueColor && { color: valueColor, fontWeight: '700' }]}>{value}</Text>
   </View>
 );
 
@@ -1227,11 +1126,126 @@ const styles = StyleSheet.create({
   cardContent: {
     padding: 16,
   },
+  // Info Grid - 2x2 layout for patient data
+  infoGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  infoGridItem: {
+    width: '47%',
+    backgroundColor: '#1a1d29',
+    padding: 12,
+    borderRadius: 10,
+    alignItems: 'center',
+    gap: 6,
+  },
+  infoGridLabel: {
+    fontSize: 11,
+    color: '#999',
+    fontWeight: '500',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  infoGridValue: {
+    fontSize: 15,
+    color: '#FFFFFF',
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  // Exam Info Row
+  examInfoRow: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  examInfoItem: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#1a1d29',
+    padding: 12,
+    borderRadius: 10,
+    gap: 10,
+  },
+  examInfoIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(74, 144, 226, 0.15)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  examInfoLabel: {
+    fontSize: 10,
+    color: '#999',
+    fontWeight: '500',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  examInfoValue: {
+    fontSize: 13,
+    color: '#FFFFFF',
+    fontWeight: '600',
+    marginTop: 2,
+  },
+  // Metrics Container - for DXA results
+  metricsContainer: {
+    flexDirection: 'row',
+    gap: 10,
+    marginBottom: 16,
+  },
+  metricCard: {
+    flex: 1,
+    backgroundColor: '#1a1d29',
+    padding: 16,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  metricLabel: {
+    fontSize: 11,
+    color: '#999',
+    fontWeight: '500',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 6,
+  },
+  metricValue: {
+    fontSize: 22,
+    color: '#FFFFFF',
+    fontWeight: '700',
+  },
+  metricUnit: {
+    fontSize: 10,
+    color: '#666',
+    marginTop: 4,
+  },
+  // Diagnosis Badge
+  diagnosisBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 14,
+    borderRadius: 10,
+    borderWidth: 1,
+    gap: 10,
+  },
+  diagnosisText: {
+    fontSize: 16,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+  },
+  // Legacy styles (kept for compatibility)
   infoRow: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 12,
     gap: 8,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: '#3a3f52',
+    marginVertical: 16,
   },
   infoIcon: {
     width: 28,
@@ -1264,6 +1278,252 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 200,
     borderRadius: 8,
+  },
+  // Scanner Image - Larger & Responsive
+  scannerImageContainer: {
+    padding: 16,
+    alignItems: 'center',
+    backgroundColor: '#000',
+    marginHorizontal: 12,
+    marginVertical: 12,
+    borderRadius: 8,
+  },
+  scannerImage: {
+    width: '100%',
+    height: 350,
+    borderRadius: 8,
+    maxWidth: 500,
+  },
+  noImageContainer: {
+    width: '100%',
+    height: 250,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#1a1a2e',
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: '#30363d',
+    borderStyle: 'dashed',
+  },
+  noImageText: {
+    color: '#8892B0',
+    fontSize: 16,
+    fontWeight: '600',
+    marginTop: 12,
+  },
+  noImageSubtext: {
+    color: '#4A5568',
+    fontSize: 12,
+    marginTop: 4,
+    textAlign: 'center',
+  },
+  roiInfo: {
+    padding: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#3a3f52',
+  },
+  roiInfoTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#4A90E2',
+    marginBottom: 12,
+  },
+  roiMetricsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 10,
+  },
+  roiMetricBox: {
+    flex: 1,
+    backgroundColor: '#1a1d29',
+    padding: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  roiMetricLabel: {
+    fontSize: 10,
+    color: '#999',
+    marginBottom: 4,
+  },
+  roiMetricValue: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  roiMetricUnit: {
+    fontSize: 9,
+    color: '#666',
+    marginTop: 2,
+  },
+  // Dynamic Chart Styles
+  chartContainer: {
+    padding: 16,
+    backgroundColor: '#1a1d29',
+    margin: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#3a3f52',
+  },
+  chartTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    textAlign: 'center',
+    marginBottom: 16,
+  },
+  chartWrapper: {
+    flexDirection: 'row',
+    height: 280,
+    alignItems: 'stretch',
+  },
+  yAxisLabelContainer: {
+    width: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  yAxisLabelText: {
+    fontSize: 11,
+    color: '#4A90E2',
+    fontWeight: '700',
+    transform: [{ rotate: '-90deg' }],
+    width: 80,
+    textAlign: 'center',
+  },
+  yAxisLeft: {
+    width: 45,
+    justifyContent: 'space-between',
+    alignItems: 'flex-end',
+    paddingRight: 6,
+    paddingVertical: 8,
+  },
+  yAxisRight: {
+    width: 35,
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    paddingLeft: 6,
+    paddingVertical: 8,
+  },
+  yAxisValue: {
+    fontSize: 10,
+    color: '#CCCCCC',
+    fontWeight: '500',
+  },
+  chartArea: {
+    flex: 1,
+    backgroundColor: '#2a3142',
+    borderWidth: 2,
+    borderColor: '#4A90E2',
+    borderRadius: 4,
+    position: 'relative',
+    overflow: 'hidden',
+  },
+  chartZone: {
+    width: '100%',
+    justifyContent: 'center',
+    alignItems: 'flex-end',
+    paddingRight: 8,
+  },
+  normalZone: {
+    backgroundColor: 'rgba(76, 175, 80, 0.5)',
+    borderBottomWidth: 3,
+    borderBottomColor: '#66BB6A',
+  },
+  osteopeniaZone: {
+    backgroundColor: 'rgba(255, 193, 7, 0.5)',
+    borderBottomWidth: 3,
+    borderBottomColor: '#FFCA28',
+  },
+  osteoporosisZone: {
+    backgroundColor: 'rgba(244, 67, 54, 0.5)',
+  },
+  zoneLabel: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    textShadowColor: 'rgba(0,0,0,0.5)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
+  },
+  patientMarker: {
+    position: 'absolute',
+    alignItems: 'center',
+    zIndex: 10,
+  },
+  markerDot: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: '#4A90E2',
+    borderWidth: 3,
+    borderColor: '#FFFFFF',
+    shadowColor: '#4A90E2',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 6,
+    elevation: 8,
+  },
+  markerLine: {
+    width: 3,
+    height: 50,
+    backgroundColor: '#4A90E2',
+    opacity: 0.8,
+    borderRadius: 2,
+  },
+  xAxis: {
+    paddingTop: 12,
+    alignItems: 'center',
+  },
+  xAxisLabel: {
+    fontSize: 12,
+    color: '#4A90E2',
+    fontWeight: '700',
+    marginBottom: 6,
+  },
+  xAxisValues: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    paddingHorizontal: 60,
+  },
+  xAxisValue: {
+    fontSize: 10,
+    color: '#CCCCCC',
+    fontWeight: '500',
+  },
+  chartPatientInfo: {
+    marginTop: 16,
+    padding: 14,
+    backgroundColor: '#2a3142',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#4A90E2',
+    borderLeftWidth: 4,
+    borderLeftColor: '#4A90E2',
+  },
+  chartPatientRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 8,
+  },
+  chartPatientDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: '#4A90E2',
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
+  },
+  chartPatientText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  chartPatientResult: {
+    fontSize: 13,
+    color: '#CCCCCC',
+    marginLeft: 22,
+    lineHeight: 20,
   },
   button: {
     flexDirection: 'row',

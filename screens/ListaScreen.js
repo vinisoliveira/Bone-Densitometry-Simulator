@@ -53,11 +53,22 @@ export default function ListaScreen({ navigation }) {
           id: item.id,
           nome: item.nome, 
           idade: item.idade,
+          dataNascimento: item.dataNascimento,
+          peso: item.peso,
+          altura: item.altura,
           sexo: item.sexo,
           etnia: item.etnia,
           exame: item.exame,
+          operador: item.operador,
+          imagemCustomizada: item.imagemCustomizada,
+          imagemHash: item.imagemHash,
           vertebraSelecionada: item.vertebraSelecionada,
           dataCriacao: item.dataCriacao,
+          brightness: item.brightness || 100,
+          contrast: item.contrast || 100,
+          roiData: item.roiData || null,
+          roiPositions: item.roiPositions || {},
+          roiScale: item.roiScale || 1,
         })}
         activeOpacity={0.7}
       >
