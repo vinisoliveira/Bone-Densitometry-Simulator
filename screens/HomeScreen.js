@@ -45,7 +45,7 @@ const HomeScreen = memo(({ navigation }) => {
       <View style={styles.header}>
         <View style={styles.logoContainer}>
           <Image 
-            source={require('../assets/5846d2bc-7a92-48a8-9468-6d4e3fde6a97.png')} 
+            source={require('../assets/icons/5846d2bc-7a92-48a8-9468-6d4e3fde6a97.png')} 
             style={styles.logoImage}
           />
         </View>

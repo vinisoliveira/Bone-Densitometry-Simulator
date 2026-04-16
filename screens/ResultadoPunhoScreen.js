@@ -24,12 +24,12 @@ const EDITOR_WIDTH = Math.min(width - 40, 800);
 const EDITOR_HEIGHT = height * 0.55;
 const TOOLBAR_WIDTH = 50;
 
-// Tamanho dos ROIs para Punho/Antebraço
+// Tamanho dos ROIs para Punho/Antebraço (faixas horizontais finas, estilo DXA)
 const FOREARM_ROI_SIZES = {
-  'UD': { width: 100, height: 50 },
-  'MID': { width: 100, height: 50 },
-  '1/3': { width: 100, height: 50 },
-  'Total': { width: 110, height: 60 },
+  'UD':    { width: 175, height: 26 },
+  'MID':   { width: 175, height: 26 },
+  '1/3':   { width: 175, height: 26 },
+  'Total': { width: 185, height: 50 },
 };
 
 // Componente ROI para Punho
@@ -86,16 +86,8 @@ const ForearmROI = ({
     },
   }), [isDraggable, isSelected, containerSize, region.id, onPositionChange, scaledWidthPx, scaledHeightPx]);
 
-  // Cores específicas para cada região do antebraço
-  const getRegionColor = () => {
-    switch(region.id) {
-      case 'UD': return '#9B59B6';
-      case 'MID': return '#3498DB';
-      case '1/3': return '#1ABC9C';
-      case 'Total': return '#E67E22';
-      default: return '#00E5FF';
-    }
-  };
+  // Cor padrão ciano para todos os ROIs (igual ao software DXA Hologic)
+  const getRegionColor = () => '#00E5FF';
 
   const regionColor = getRegionColor();
 
@@ -105,10 +97,10 @@ const ForearmROI = ({
     top: `${currentPos.y * 100}%`,
     width: scaledWidthPx,
     height: scaledHeightPx,
-    borderWidth: isSelected ? 3 : 2,
+    borderWidth: isSelected ? 2 : 1,
     borderColor: isSelected ? '#FFFFFF' : regionColor,
-    backgroundColor: isSelected ? `${regionColor}40` : `${regionColor}20`,
-    borderRadius: 4,
+    backgroundColor: isSelected ? 'rgba(0,229,255,0.15)' : 'rgba(0,229,255,0.07)',
+    borderRadius: 2,
     cursor: isDraggable && isSelected ? 'move' : 'pointer',
   };
 
@@ -123,12 +115,14 @@ const ForearmROI = ({
         activeOpacity={0.8}
         disabled={isDraggable && isSelected}
       >
+        {/* Label à esquerda, estilo tag DXA */}
         <View style={[styles.regionLabel, { backgroundColor: regionColor }]}>
           <Text style={styles.regionLabelText}>{region.id}</Text>
         </View>
-        {isSelected && isDraggable && (
+        {/* Indicador '+' à direita quando selecionado */}
+        {isSelected && (
           <View style={styles.dragIndicator}>
-            <FontAwesome5 name="arrows-alt" size={12} color="#FFFFFF" />
+            <FontAwesome5 name="plus" size={10} color={regionColor} />
           </View>
         )}
       </TouchableOpacity>
@@ -221,10 +215,10 @@ export default function ResultadoPunhoScreen({ route }) {
   // Regiões anatômicas do Antebraço/Punho conforme manual Hologic
   // UD (Ultra Distal), MID (Mid-distal), 1/3 (One-Third Distal), Total Forearm
   const regioesPunho = [
-    { id: 'UD', x: 0.35, y: 0.08, bmd: 0.356, tScore: -0.9, zScore: 0.1, area: 2.45, descricao: 'Ultra Distal' },
-    { id: 'MID', x: 0.35, y: 0.28, bmd: 0.478, tScore: -0.7, zScore: 0.3, area: 3.12, descricao: 'Mid-Distal' },
-    { id: '1/3', x: 0.35, y: 0.48, bmd: 0.689, tScore: -0.5, zScore: 0.5, area: 4.56, descricao: '1/3 Distal (33%)' },
-    { id: 'Total', x: 0.35, y: 0.70, bmd: 0.534, tScore: -0.7, zScore: 0.3, area: 10.13, descricao: 'Total Forearm' },
+    { id: 'UD',    x: 0.22, y: 0.27, bmd: 0.326, tScore: -1.1, zScore: 0.1, area: 2.45,  descricao: 'Ultra Distal' },
+    { id: 'MID',   x: 0.22, y: 0.43, bmd: 0.478, tScore: -0.7, zScore: 0.3, area: 3.12,  descricao: 'Mid-Distal' },
+    { id: '1/3',   x: 0.22, y: 0.56, bmd: 0.689, tScore: -0.5, zScore: 0.5, area: 4.56,  descricao: '1/3 Distal (33%)' },
+    { id: 'Total', x: 0.22, y: 0.67, bmd: 0.534, tScore: -0.7, zScore: 0.3, area: 10.13, descricao: 'Total Forearm' },
   ];
   
   const calcularScoresPorPosicao = (x, y, baseRegion) => {
@@ -402,8 +396,8 @@ export default function ResultadoPunhoScreen({ route }) {
           <FontAwesome5 name="arrow-left" size={18} color="#9B59B6" />
         </TouchableOpacity>
         <View style={styles.headerTitleContainer}>
-          <Text style={styles.headerSubtitle}>FOREARM DXA SCAN</Text>
-          <Text style={styles.title}>Punho / Antebraço</Text>
+          <Text style={styles.headerSubtitle}>DXA ANALYSIS</Text>
+          <Text style={styles.title}>Punho</Text>
         </View>
         <View style={styles.headerRight}>
           <View style={styles.statusIndicator}>
@@ -431,8 +425,8 @@ export default function ResultadoPunhoScreen({ route }) {
         </View>
         <View style={styles.patientDivider} />
         <View style={styles.patientInfo}>
-          <FontAwesome5 name="hand-paper" size={12} color="#9B59B6" />
-          <Text style={styles.patientText}>Forearm</Text>
+          <FontAwesome5 name="globe" size={12} color="#9B59B6" />
+          <Text style={styles.patientText}>{etnia || 'Forearm'}</Text>
         </View>
       </Animated.View>
 
@@ -542,6 +536,7 @@ export default function ResultadoPunhoScreen({ route }) {
             <Text style={styles.canvasInfoText}>
               <FontAwesome5 name="adjust" size={10} color="#9B59B6" /> Contraste: {contrast}%
             </Text>
+            <Text style={styles.canvasInfoText}>+ Arraste o ROI para reposicionar</Text>
           </View>
         </View>
 
@@ -599,7 +594,7 @@ export default function ResultadoPunhoScreen({ route }) {
           {(showROIPanel || regiaoSelecionada) && (
             <View style={styles.roiPanel}>
               <Text style={styles.panelTitle}>
-                <FontAwesome5 name="chart-bar" size={12} color="#9B59B6" /> Análise Forearm DXA
+                <FontAwesome5 name="chart-bar" size={12} color="#9B59B6" /> ANÁLISE DE ROI
               </Text>
               
               {regiaoSelecionada ? (
@@ -684,7 +679,7 @@ export default function ResultadoPunhoScreen({ route }) {
 
           <View style={styles.regionsPanel}>
             <Text style={styles.panelTitle}>
-              <FontAwesome5 name="hand-paper" size={12} color="#9B59B6" /> Regiões do Antebraço
+              <FontAwesome5 name="chart-bar" size={12} color="#9B59B6" /> REGIÕES
             </Text>
             
             <View style={styles.roiSizeControl}>
@@ -739,7 +734,7 @@ export default function ResultadoPunhoScreen({ route }) {
       <Animated.View style={[styles.controls, { opacity: fadeAnim }]}>
         <TouchableOpacity style={[styles.button, styles.buttonFullWidth]} onPress={handleSave} activeOpacity={0.8}>
           <FontAwesome5 name="save" size={18} color="#FFFFFF" />
-          <Text style={styles.buttonText}>Salvar Exame do Punho</Text>
+          <Text style={styles.buttonText}>Salvar Exame</Text>
         </TouchableOpacity>
       </Animated.View>
 
@@ -889,22 +884,24 @@ const styles = StyleSheet.create({
     padding: 8,
     borderRadius: 20,
   },
-  regionLabel: { 
-    position: 'absolute', 
-    top: 2, 
-    left: 2, 
-    paddingHorizontal: 4, 
-    paddingVertical: 1, 
+  regionLabel: {
+    position: 'absolute',
+    top: 3,
+    bottom: 3,
+    left: 0,
+    paddingHorizontal: 5,
     borderRadius: 2,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  regionLabelText: { color: '#FFFFFF', fontSize: 8, fontWeight: '700' },
+  regionLabelText: { color: '#000000', fontSize: 8, fontWeight: '800' },
   dragIndicator: {
     position: 'absolute',
-    bottom: 2,
-    right: 2,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
-    padding: 3,
-    borderRadius: 3,
+    right: 4,
+    top: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   canvasInfoBar: {
     height: 28,

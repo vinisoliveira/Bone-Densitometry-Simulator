@@ -39,15 +39,8 @@ export default function RelatorioScreen({ route, navigation }) {
 
   // Função para obter a imagem correta baseada no tipo de exame
   const getExamImage = () => {
-    // Mapeamento direto dos tipos de exame para suas imagens
-    const examImages = {
-      'Coluna Lombar': require('../assets/coluna-lombar.jpeg'),
-      'Fêmur': require('../assets/femur.jpeg'),
-      'Punho': require('../assets/punho.png'),
-    };
-
     // Retorna a imagem correspondente ou a imagem padrão da coluna lombar
-    return examImages[exame] || require('../assets/coluna-lombar.jpeg');
+    return examImages[exame];
   };
 
   useEffect(() => {

@@ -4,11 +4,11 @@
     "slug": "SpineViewer",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/5846d2bc-7a92-48a8-9468-6d4e3fde6a97.png",
+    "icon": "./assets/icons/5846d2bc-7a92-48a8-9468-6d4e3fde6a97.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/5846d2bc-7a92-48a8-9468-6d4e3fde6a97.png",
+      "image": "./assets/icons/5846d2bc-7a92-48a8-9468-6d4e3fde6a97.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -17,14 +17,14 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/5846d2bc-7a92-48a8-9468-6d4e3fde6a97.png",
+        "foregroundImage": "./assets/icons/5846d2bc-7a92-48a8-9468-6d4e3fde6a97.png",
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
       "package": "com.vinisoliveira.SpBoneDensitometrySimulator"
     },
     "web": {
-      "favicon": "./assets/5846d2bc-7a92-48a8-9468-6d4e3fde6a97.png"
+      "favicon": "./assets/icons/5846d2bc-7a92-48a8-9468-6d4e3fde6a97.png"
     },
     "extra": {
       "eas": {

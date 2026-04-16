@@ -41,54 +41,43 @@ const dataParaString = (data) => {
   return `${dia}/${mes}/${ano}`;
 };
 
-// Função para formatar peso com máscara (ex: 72,5 - máx 3 dígitos + 1 decimal)
+// Função para formatar peso com vírgula automática da direita para esquerda
+// (ex: 5→0,5 | 55→5,5 | 555→55,5 | 5555→555,5)
 const formatarPeso = (texto) => {
-  // Remove tudo que não é número ou vírgula
-  let valor = texto.replace(/[^0-9,]/g, '');
-  
-  // Permite apenas uma vírgula
-  const partes = valor.split(',');
-  if (partes.length > 2) {
-    valor = partes[0] + ',' + partes.slice(1).join('');
-  }
-  
-  // Limita a parte inteira a 3 dígitos (máx 999 kg)
-  if (partes[0] && partes[0].length > 3) {
-    partes[0] = partes[0].substring(0, 3);
-    valor = partes.length > 1 ? partes[0] + ',' + partes[1] : partes[0];
-  }
-  
-  // Limita a parte decimal a 1 dígito
-  if (partes.length > 1 && partes[1].length > 1) {
-    valor = partes[0] + ',' + partes[1].substring(0, 1);
-  }
-  
-  return valor;
+  // Remove tudo que não é número
+  let numeros = texto.replace(/\D/g, '');
+
+  // Limita a 4 dígitos (máx 999,9 kg)
+  numeros = numeros.substring(0, 4);
+
+  if (numeros.length === 0) return '';
+
+  // Preenche com zeros à esquerda para garantir ao menos 2 dígitos
+  const padded = numeros.padStart(2, '0');
+
+  // Parte inteira = tudo exceto o último dígito; decimal = último dígito
+  const inteira = padded.substring(0, padded.length - 1);
+  const decimal = padded[padded.length - 1];
+
+  // Remove zeros à esquerda desnecessários da parte inteira
+  const inteiraLimpa = String(parseInt(inteira, 10));
+
+  return `${inteiraLimpa},${decimal}`;
 };
 
-// Função para formatar altura com máscara em metros (ex: 1,75 - máx 1 dígito + 2 decimais)
+// Função para formatar altura com vírgula automática (ex: digitar 155 → exibe 1,55)
 const formatarAltura = (texto) => {
-  // Remove tudo que não é número ou vírgula
-  let valor = texto.replace(/[^0-9,]/g, '');
-  
-  // Permite apenas uma vírgula
-  const partes = valor.split(',');
-  if (partes.length > 2) {
-    valor = partes[0] + ',' + partes.slice(1).join('');
-  }
-  
-  // Limita a parte inteira a 1 dígito (máx 9 metros)
-  if (partes[0] && partes[0].length > 1) {
-    partes[0] = partes[0].substring(0, 1);
-    valor = partes.length > 1 ? partes[0] + ',' + partes[1] : partes[0];
-  }
-  
-  // Limita a parte decimal a 2 dígitos (centímetros)
-  if (partes.length > 1 && partes[1].length > 2) {
-    valor = partes[0] + ',' + partes[1].substring(0, 2);
-  }
-  
-  return valor;
+  // Remove tudo que não é número
+  let numeros = texto.replace(/\D/g, '');
+
+  // Limita a 3 dígitos (ex: 155 = 1,55 m)
+  numeros = numeros.substring(0, 3);
+
+  // Insere a vírgula automaticamente após o primeiro dígito
+  if (numeros.length === 0) return '';
+  if (numeros.length === 1) return numeros;
+  if (numeros.length === 2) return `${numeros[0]},${numeros[1]}`;
+  return `${numeros[0]},${numeros.substring(1)}`;
 };
 
 export default function CadastroScreen({ navigation }) {
@@ -675,7 +664,7 @@ export default function CadastroScreen({ navigation }) {
                   style={styles.input}
                   placeholder="Peso (kg) *"
                   placeholderTextColor="#666"
-                  keyboardType="numeric"
+                  keyboardType="number-pad"
                   value={peso}
                   onChangeText={(texto) => setPeso(formatarPeso(texto))}
                   maxLength={5}
@@ -689,7 +678,7 @@ export default function CadastroScreen({ navigation }) {
                   style={styles.input}
                   placeholder="Altura (m) *"
                   placeholderTextColor="#666"
-                  keyboardType="numeric"
+                  keyboardType="number-pad"
                   value={altura}
                   onChangeText={(texto) => setAltura(formatarAltura(texto))}
                   maxLength={4}
