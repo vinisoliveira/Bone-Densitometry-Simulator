@@ -269,14 +269,14 @@ export default function ResultadoFemurScreen({ route }) {
     ]).start();
   }, []);
 
-  // Lock to landscape on mobile
+  // Lock to portrait on mobile (com fallback para Samsung)
   useEffect(() => {
     if (Platform.OS !== 'web') {
       ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP)
-        .catch(() => {});
+        .catch(() => ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT).catch(() => {}));
       return () => {
         ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP)
-          .catch(() => {});
+          .catch(() => ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT).catch(() => {}));
       };
     }
   }, []);
@@ -288,11 +288,11 @@ export default function ResultadoFemurScreen({ route }) {
   // Regiões anatômicas do Fêmur Proximal conforme manual Hologic
   // Neck (Colo Femoral), Troch (Trocanter), Inter (Intertrocantérica), Total Hip, Ward's Triangle
   const regioesFemur = [
-    { id: 'Neck', x: 0.35, y: 0.12, bmd: 0.856, tScore: -1.2, zScore: -0.3, area: 5.21 },
-    { id: 'Troch', x: 0.20, y: 0.35, bmd: 0.745, tScore: -1.5, zScore: -0.6, area: 12.45 },
-    { id: 'Inter', x: 0.25, y: 0.55, bmd: 1.023, tScore: -0.8, zScore: 0.1, area: 18.32 },
-    { id: 'Total', x: 0.22, y: 0.75, bmd: 0.912, tScore: -1.1, zScore: -0.2, area: 35.98 },
-    { id: 'Ward', x: 0.45, y: 0.25, bmd: 0.678, tScore: -2.1, zScore: -1.2, area: 1.15 },
+    { id: 'Neck', x: 0.35, y: 0.12, bmd: 0.856, tScore: -1.2, zScore: -0.3, area: 5.21,  bmc: parseFloat((0.856 * 5.21).toFixed(2)) },
+    { id: 'Troch', x: 0.20, y: 0.35, bmd: 0.745, tScore: -1.5, zScore: -0.6, area: 12.45, bmc: parseFloat((0.745 * 12.45).toFixed(2)) },
+    { id: 'Inter', x: 0.25, y: 0.55, bmd: 1.023, tScore: -0.8, zScore: 0.1, area: 18.32, bmc: parseFloat((1.023 * 18.32).toFixed(2)) },
+    { id: 'Total', x: 0.22, y: 0.75, bmd: 0.912, tScore: -1.1, zScore: -0.2, area: 35.98, bmc: parseFloat((0.912 * 35.98).toFixed(2)) },
+    { id: 'Ward', x: 0.45, y: 0.25, bmd: 0.678, tScore: -2.1, zScore: -1.2, area: 1.15,  bmc: parseFloat((0.678 * 1.15).toFixed(2)) },
   ];
   
   const calcularScoresPorPosicao = (x, y, baseRegion) => {
@@ -309,6 +309,7 @@ export default function ResultadoFemurScreen({ route }) {
       bmd: parseFloat(novoBmd),
       tScore: parseFloat(novoTScore),
       zScore: parseFloat(novoZScore),
+      bmc: parseFloat((parseFloat(novoBmd) * (baseRegion.area || 1)).toFixed(2)),
     };
   };
   

@@ -1,5 +1,5 @@
-import React, { useState, useRef } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, Animated, Easing, Image, Modal, Dimensions, useWindowDimensions } from 'react-native';
+import React, { useState, useRef, useMemo, useCallback } from 'react';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, Animated, Easing, Image, Modal, Dimensions, useWindowDimensions, FlatList } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
@@ -81,6 +81,13 @@ const formatarAltura = (texto) => {
   if (numeros.length === 2) return `${numeros[0]},${numeros[1]}`;
   return `${numeros[0]},${numeros.substring(1)}`;
 };
+
+const NOMES_MESES = [
+  'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+  'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+];
+
+const ANOS_DISPONIVEIS = Array.from({ length: 100 }, (_, i) => new Date().getFullYear() - i);
 
 export default function CadastroScreen({ navigation }) {
   const { width: windowWidth } = useWindowDimensions();
@@ -166,8 +173,8 @@ export default function CadastroScreen({ navigation }) {
     }
   };
 
-  // Gerar dias do mês
-  const gerarDiasDoMes = () => {
+  // Gerar dias do mês (memoizado para evitar recálculos)
+  const diasDoMes = useMemo(() => {
     const primeiroDia = new Date(calendarYear, calendarMonth, 1).getDay();
     const diasNoMes = new Date(calendarYear, calendarMonth + 1, 0).getDate();
     const dias = [];
@@ -183,12 +190,7 @@ export default function CadastroScreen({ navigation }) {
     }
     
     return dias;
-  };
-
-  const nomesMeses = [
-    'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
-    'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
-  ];
+  }, [calendarYear, calendarMonth]);
 
   // Handler para mudança de data no DatePicker
   const onDateChange = (event, selectedDate) => {
@@ -526,7 +528,7 @@ export default function CadastroScreen({ navigation }) {
                             }}
                           >
                             <Text style={[styles.calendarMonthText, isSmallScreen && { fontSize: 13 }]}>
-                              {nomesMeses[calendarMonth]}
+                              {NOMES_MESES[calendarMonth]}
                             </Text>
                             <FontAwesome5 name="caret-down" size={10} color="#4A90E2" style={{ marginLeft: 4 }} />
                           </TouchableOpacity>
@@ -534,8 +536,14 @@ export default function CadastroScreen({ navigation }) {
                           {/* Dropdown de Meses - Posição Absoluta */}
                           {showMonthPicker && (
                             <View style={styles.calendarDropdownMonth}>
-                              <ScrollView style={{ maxHeight: 200 }} nestedScrollEnabled showsVerticalScrollIndicator>
-                                {nomesMeses.map((mes, index) => (
+                              <FlatList
+                                data={NOMES_MESES}
+                                keyExtractor={(_, index) => String(index)}
+                                style={{ maxHeight: 200 }}
+                                nestedScrollEnabled
+                                showsVerticalScrollIndicator
+                                keyboardShouldPersistTaps="handled"
+                                renderItem={({ item: mes, index }) => (
                                   <TouchableOpacity
                                     key={index}
                                     style={[
@@ -554,8 +562,8 @@ export default function CadastroScreen({ navigation }) {
                                       {mes}
                                     </Text>
                                   </TouchableOpacity>
-                                ))}
-                              </ScrollView>
+                                )}
+                              />
                             </View>
                           )}
                         </View>
@@ -578,8 +586,16 @@ export default function CadastroScreen({ navigation }) {
                           {/* Dropdown de Anos - Posição Absoluta */}
                           {showYearPicker && (
                             <View style={styles.calendarDropdownYear}>
-                              <ScrollView style={{ maxHeight: 200 }} nestedScrollEnabled showsVerticalScrollIndicator>
-                                {Array.from({ length: 100 }, (_, i) => new Date().getFullYear() - i).map((ano) => (
+                              <FlatList
+                                data={ANOS_DISPONIVEIS}
+                                keyExtractor={(item) => String(item)}
+                                style={{ maxHeight: 200 }}
+                                nestedScrollEnabled
+                                showsVerticalScrollIndicator
+                                keyboardShouldPersistTaps="handled"
+                                initialScrollIndex={Math.max(0, new Date().getFullYear() - calendarYear)}
+                                getItemLayout={(_, index) => ({ length: 37, offset: 37 * index, index })}
+                                renderItem={({ item: ano }) => (
                                   <TouchableOpacity
                                     key={ano}
                                     style={[
@@ -598,8 +614,8 @@ export default function CadastroScreen({ navigation }) {
                                       {ano}
                                     </Text>
                                   </TouchableOpacity>
-                                ))}
-                              </ScrollView>
+                                )}
+                              />
                             </View>
                           )}
                         </View>
@@ -619,7 +635,7 @@ export default function CadastroScreen({ navigation }) {
 
                     {/* Grid de Dias */}
                     <View style={[styles.calendarDaysGrid, { zIndex: 1 }]}>
-                      {gerarDiasDoMes().map((dia, index) => {
+                      {diasDoMes.map((dia, index) => {
                         const hoje = new Date();
                         const dataAtual = dia ? new Date(calendarYear, calendarMonth, dia) : null;
                         const isFuturo = dataAtual && dataAtual > hoje;

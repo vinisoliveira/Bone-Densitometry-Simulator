@@ -260,14 +260,14 @@ export default function ResultadoPunhoScreen({ route }) {
     ]).start();
   }, []);
 
-  // Lock to landscape on mobile
+  // Lock to portrait on mobile (com fallback para Samsung)
   useEffect(() => {
     if (Platform.OS !== 'web') {
       ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP)
-        .catch(() => {});
+        .catch(() => ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT).catch(() => {}));
       return () => {
         ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP)
-          .catch(() => {});
+          .catch(() => ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT).catch(() => {}));
       };
     }
   }, []);
@@ -279,10 +279,10 @@ export default function ResultadoPunhoScreen({ route }) {
   // Regiões anatômicas do Antebraço/Punho conforme manual Hologic
   // UD (Ultra Distal), MID (Mid-distal), 1/3 (One-Third Distal), Total Forearm
   const regioesPunho = [
-    { id: 'UD',    x: 0.22, y: 0.27, bmd: 0.326, tScore: -1.1, zScore: 0.1, area: 2.45,  descricao: 'Ultra Distal' },
-    { id: 'MID',   x: 0.22, y: 0.43, bmd: 0.478, tScore: -0.7, zScore: 0.3, area: 3.12,  descricao: 'Mid-Distal' },
-    { id: '1/3',   x: 0.22, y: 0.56, bmd: 0.689, tScore: -0.5, zScore: 0.5, area: 4.56,  descricao: '1/3 Distal (33%)' },
-    { id: 'Total', x: 0.22, y: 0.67, bmd: 0.534, tScore: -0.7, zScore: 0.3, area: 10.13, descricao: 'Total Forearm' },
+    { id: 'UD',    x: 0.22, y: 0.27, bmd: 0.326, tScore: -1.1, zScore: 0.1, area: 2.45,  bmc: parseFloat((0.326 * 2.45).toFixed(2)),  descricao: 'Ultra Distal' },
+    { id: 'MID',   x: 0.22, y: 0.43, bmd: 0.478, tScore: -0.7, zScore: 0.3, area: 3.12,  bmc: parseFloat((0.478 * 3.12).toFixed(2)),  descricao: 'Mid-Distal' },
+    { id: '1/3',   x: 0.22, y: 0.56, bmd: 0.689, tScore: -0.5, zScore: 0.5, area: 4.56,  bmc: parseFloat((0.689 * 4.56).toFixed(2)),  descricao: '1/3 Distal (33%)' },
+    { id: 'Total', x: 0.22, y: 0.67, bmd: 0.534, tScore: -0.7, zScore: 0.3, area: 10.13, bmc: parseFloat((0.534 * 10.13).toFixed(2)), descricao: 'Total Forearm' },
   ];
   
   const calcularScoresPorPosicao = (x, y, baseRegion) => {
@@ -299,6 +299,7 @@ export default function ResultadoPunhoScreen({ route }) {
       bmd: parseFloat(novoBmd),
       tScore: parseFloat(novoTScore),
       zScore: parseFloat(novoZScore),
+      bmc: parseFloat((parseFloat(novoBmd) * (baseRegion.area || 1)).toFixed(2)),
     };
   };
   

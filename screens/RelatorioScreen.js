@@ -474,15 +474,20 @@ export default function RelatorioScreen({ route, navigation }) {
 
   // Use real ROI data from operator placement when available, otherwise fall back to simulated
   const regions = (allRoiData && allRoiData.length > 0)
-    ? allRoiData.map(r => ({
-        name: r.id || r.name || r.descricao,
-        bmd: (r.bmd != null ? r.bmd : calculateBMD(r.tScore || tScore)).toFixed(3),
-        tScore: (r.tScore != null ? r.tScore : tScore).toFixed(1),
-        zScore: r.zScore != null ? r.zScore.toFixed(1) : calculateZScore(r.tScore || tScore, idade).toFixed(1),
-        area: r.area != null ? r.area.toFixed(2) : '-',
-        bmc: r.bmc != null ? r.bmc.toFixed(2) : undefined,
-        isTotal: (r.id || r.name || '').toLowerCase().includes('total') || (r.id || r.name || '').includes('L1-L4'),
-      }))
+    ? allRoiData.map(r => {
+        const areaN = r.area != null ? parseFloat(r.area) : null;
+        const bmdN = r.bmd != null ? parseFloat(r.bmd) : calculateBMD(r.tScore || tScore);
+        const bmcN = r.bmc != null ? parseFloat(r.bmc) : (areaN != null ? parseFloat((bmdN * areaN).toFixed(2)) : null);
+        return {
+          name: r.id || r.name || r.descricao,
+          bmd: bmdN.toFixed(3),
+          tScore: (r.tScore != null ? parseFloat(r.tScore) : tScore).toFixed(1),
+          zScore: r.zScore != null ? parseFloat(r.zScore).toFixed(1) : calculateZScore(r.tScore || tScore, idade).toFixed(1),
+          area: areaN != null ? areaN.toFixed(2) : '-',
+          bmc: bmcN != null ? bmcN.toFixed(2) : undefined,
+          isTotal: (r.id || r.name || '').toLowerCase().includes('total') || (r.id || r.name || '').includes('L1-L4'),
+        };
+      })
     : getExamRegions(exame, tScore, bmd);
 
   useEffect(() => {
@@ -588,10 +593,11 @@ export default function RelatorioScreen({ route, navigation }) {
           <View style={[styles.card, { backgroundColor: theme.surface }]}>
             <View style={[styles.cardH, { borderBottomColor: theme.border }]}><FontAwesome5 name="table" size={20} color="#4A90E2" /><Text style={[styles.cardT, { color: theme.text }]}>Regiões</Text></View>
             <View style={styles.cardC}>
-              <View style={[styles.tHead, { backgroundColor: theme.background }]}><Text style={[styles.tHT,{flex:2}]}>Região</Text><Text style={styles.tHT}>Área</Text><Text style={styles.tHT}>BMD</Text><Text style={styles.tHT}>T-Score</Text><Text style={styles.tHT}>Z-Score</Text></View>
+              <View style={[styles.tHead, { backgroundColor: theme.background }]}><Text style={[styles.tHT,{flex:2}]}>Região</Text><Text style={styles.tHT}>Área</Text><Text style={styles.tHT}>BMC</Text><Text style={styles.tHT}>BMD</Text><Text style={styles.tHT}>T-Score</Text><Text style={styles.tHT}>Z-Score</Text></View>
               {regions.map((r,i)=><View key={i} style={[styles.tRow,{ borderBottomColor: theme.border },r.isTotal&&styles.tRowT]}>
                 <Text style={[styles.tCell,{ color: theme.textSecondary },{flex:2,fontWeight:r.isTotal?'700':'400'}]}>{r.name}</Text>
                 <Text style={[styles.tCell, { color: theme.textSecondary }]}>{r.area}</Text>
+                <Text style={[styles.tCell, { color: theme.textSecondary }]}>{r.bmc != null ? r.bmc : (parseFloat(r.bmd) * parseFloat(r.area || 0)).toFixed(2)}</Text>
                 <Text style={[styles.tCell, { color: theme.textSecondary }]}>{r.bmd}</Text>
                 <Text style={[styles.tCell,{color:parseFloat(r.tScore)>=-1?'#66BB6A':parseFloat(r.tScore)>=-2.5?'#FFCA28':'#EF5350',fontWeight:'600'}]}>{r.tScore}</Text>
                 <Text style={styles.tCell}>{r.zScore != null ? (typeof r.zScore === 'number' ? r.zScore.toFixed(1) : r.zScore) : calculateZScore(parseFloat(r.tScore), idade).toFixed(1)}</Text>

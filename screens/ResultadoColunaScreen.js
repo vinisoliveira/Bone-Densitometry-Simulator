@@ -261,14 +261,14 @@ export default function ResultadoScreen({ route }) {
     ]).start();
   }, []);
 
-  // Lock to landscape on mobile
+  // Lock to portrait on mobile (com fallback para Samsung)
   useEffect(() => {
     if (Platform.OS !== 'web') {
       ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP)
-        .catch(() => {});
+        .catch(() => ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT).catch(() => {}));
       return () => {
         ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP)
-          .catch(() => {});
+          .catch(() => ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT).catch(() => {}));
       };
     }
   }, []);
@@ -332,6 +332,7 @@ export default function ResultadoScreen({ route }) {
       bmd: parseFloat(novoBmd),
       tScore: parseFloat(novoTScore),
       zScore: parseFloat(novoZScore),
+      bmc: parseFloat((parseFloat(novoBmd) * (baseRegion.area || 1)).toFixed(2)),
     };
   };
   

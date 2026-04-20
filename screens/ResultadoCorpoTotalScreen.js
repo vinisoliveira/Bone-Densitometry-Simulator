@@ -275,14 +275,14 @@ export default function ResultadoCorpoTotalScreen({ route }) {
     ]).start();
   }, []);
 
-  // Lock to landscape on mobile
+  // Lock to portrait on mobile (com fallback para Samsung)
   useEffect(() => {
     if (Platform.OS !== 'web') {
       ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP)
-        .catch(() => {});
+        .catch(() => ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT).catch(() => {}));
       return () => {
         ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP)
-          .catch(() => {});
+          .catch(() => ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT).catch(() => {}));
       };
     }
   }, []);
@@ -307,14 +307,14 @@ export default function ResultadoCorpoTotalScreen({ route }) {
 
   // Regiões anatômicas do Corpo Total conforme manual Hologic
   const regioesCorpoTotal = [
-    { id: 'Head', x: 0.40, y: 0.02, bmd: 2.198, tScore: 0.5, zScore: 0.8, area: 185.2, descricao: 'Cabeça' },
-    { id: 'Arms', x: 0.15, y: 0.18, bmd: 0.756, tScore: -0.3, zScore: 0.2, area: 312.5, descricao: 'Braços' },
-    { id: 'Trunk', x: 0.35, y: 0.22, bmd: 0.889, tScore: -0.5, zScore: 0.1, area: 485.3, descricao: 'Tronco' },
-    { id: 'Ribs', x: 0.55, y: 0.25, bmd: 0.623, tScore: -0.8, zScore: -0.2, area: 198.7, descricao: 'Costelas' },
-    { id: 'Pelvis', x: 0.38, y: 0.45, bmd: 1.089, tScore: -0.2, zScore: 0.4, area: 245.8, descricao: 'Pelve' },
-    { id: 'Spine', x: 0.42, y: 0.28, bmd: 0.998, tScore: -0.6, zScore: 0.0, area: 78.5, descricao: 'Coluna' },
-    { id: 'Legs', x: 0.35, y: 0.58, bmd: 1.245, tScore: 0.1, zScore: 0.6, area: 678.4, descricao: 'Pernas' },
-    { id: 'Total', x: 0.32, y: 0.88, bmd: 1.120, tScore: -0.3, zScore: 0.3, area: 2184.4, descricao: 'Total Body' },
+    { id: 'Head',  x: 0.40, y: 0.02, bmd: 2.198, tScore:  0.5, zScore:  0.8, area:  185.2, bmc: parseFloat((2.198 *  185.2).toFixed(2)), descricao: 'Cabeça' },
+    { id: 'Arms',  x: 0.15, y: 0.18, bmd: 0.756, tScore: -0.3, zScore:  0.2, area:  312.5, bmc: parseFloat((0.756 *  312.5).toFixed(2)), descricao: 'Braços' },
+    { id: 'Trunk', x: 0.35, y: 0.22, bmd: 0.889, tScore: -0.5, zScore:  0.1, area:  485.3, bmc: parseFloat((0.889 *  485.3).toFixed(2)), descricao: 'Tronco' },
+    { id: 'Ribs',  x: 0.55, y: 0.25, bmd: 0.623, tScore: -0.8, zScore: -0.2, area:  198.7, bmc: parseFloat((0.623 *  198.7).toFixed(2)), descricao: 'Costelas' },
+    { id: 'Pelvis',x: 0.38, y: 0.45, bmd: 1.089, tScore: -0.2, zScore:  0.4, area:  245.8, bmc: parseFloat((1.089 *  245.8).toFixed(2)), descricao: 'Pelve' },
+    { id: 'Spine', x: 0.42, y: 0.28, bmd: 0.998, tScore: -0.6, zScore:  0.0, area:   78.5, bmc: parseFloat((0.998 *   78.5).toFixed(2)), descricao: 'Coluna' },
+    { id: 'Legs',  x: 0.35, y: 0.58, bmd: 1.245, tScore:  0.1, zScore:  0.6, area:  678.4, bmc: parseFloat((1.245 *  678.4).toFixed(2)), descricao: 'Pernas' },
+    { id: 'Total', x: 0.32, y: 0.88, bmd: 1.120, tScore: -0.3, zScore:  0.3, area: 2184.4, bmc: parseFloat((1.120 * 2184.4).toFixed(2)), descricao: 'Total Body' },
   ];
   
   const calcularScoresPorPosicao = (x, y, baseRegion) => {
@@ -331,6 +331,7 @@ export default function ResultadoCorpoTotalScreen({ route }) {
       bmd: parseFloat(novoBmd),
       tScore: parseFloat(novoTScore),
       zScore: parseFloat(novoZScore),
+      bmc: parseFloat((parseFloat(novoBmd) * (baseRegion.area || 1)).toFixed(2)),
     };
   };
   

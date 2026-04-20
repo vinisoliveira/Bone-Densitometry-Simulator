@@ -3,7 +3,8 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import * as Font from 'expo-font';
 import { FontAwesome5 } from '@expo/vector-icons';
-import { View, ActivityIndicator } from 'react-native';
+import { View, ActivityIndicator, Platform } from 'react-native';
+import * as ScreenOrientation from 'expo-screen-orientation';
 
 import HomeScreen from './screens/HomeScreen';
 import CadastroScreen from './screens/CadastroScreen';
@@ -38,6 +39,14 @@ export default function App() {
       setFontsLoaded(true);
     }
     loadFonts();
+
+    // Travar orientação em retrato para todos os dispositivos (Samsung, iPhone, etc.)
+    if (Platform.OS !== 'web') {
+      ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP).catch(() => {
+        // Fallback: tenta PORTRAIT genérico caso PORTRAIT_UP não funcione (alguns Samsung)
+        ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT).catch(() => {});
+      });
+    }
   }, []);
 
   if (!fontsLoaded) {

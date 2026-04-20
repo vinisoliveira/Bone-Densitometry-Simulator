@@ -47,7 +47,7 @@ export default function ScanScreen({ route }) {
       toValue: 1,
       duration: 4000,
       easing: Easing.linear,
-      useNativeDriver: false, // Precisamos de false para animar height
+      useNativeDriver: true, // Usando transform ao invés de height
     }).start();
 
     // Animação de pulso
@@ -134,8 +134,8 @@ export default function ScanScreen({ route }) {
     outputRange: [0, IMAGE_HEIGHT],
   });
 
-  // Calcula a altura da área revelada (clip)
-  const revealHeight = scanProgress.interpolate({
+  // Calcula a posição da máscara que cobre a imagem (desliza para baixo revelando)
+  const maskTranslateY = scanProgress.interpolate({
     inputRange: [0, 1],
     outputRange: [0, IMAGE_HEIGHT],
   });
@@ -165,21 +165,25 @@ export default function ScanScreen({ route }) {
               />
             </View>
 
-            {/* Área revelada pelo scanner (de cima para baixo) */}
-            <Animated.View 
-              style={[
-                styles.revealContainer, 
-                { 
-                  height: revealHeight,
-                  overflow: 'hidden',
-                }
-              ]}
-            >
+            {/* Imagem completa brilhante (revelada pelo scanner) */}
+            <View style={[styles.revealContainer, { height: IMAGE_HEIGHT, overflow: 'hidden' }]}>
               <Image
                 source={imagemExame}
                 style={[styles.image, { height: IMAGE_HEIGHT }]}
               />
-            </Animated.View>
+              {/* Máscara opaca que desliza para baixo, revelando a imagem de cima para baixo */}
+              <Animated.View 
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  height: IMAGE_HEIGHT,
+                  backgroundColor: theme.background || '#0a0d14',
+                  transform: [{ translateY: maskTranslateY }],
+                }}
+              />
+            </View>
           </>
         ) : (
           <View style={styles.noImageContainer}>
@@ -228,7 +232,7 @@ export default function ScanScreen({ route }) {
               <Text style={styles.progressPercentage}>{progress}%</Text>
             </View>
             <View style={styles.progressBar}>
-              <Animated.View 
+              <View 
                 style={[
                   styles.progressFill,
                   { width: `${progress}%` }
