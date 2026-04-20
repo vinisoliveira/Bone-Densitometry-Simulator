@@ -3,9 +3,11 @@ import { View, Text, FlatList, StyleSheet, TouchableOpacity, Animated } from 're
 import { FontAwesome5 } from '@expo/vector-icons';
 import { carregarPacientes } from '../utils/storage';
 import { colors, spacing, typography } from '../src/styles/theme';
+import { useTheme } from '../src/contexts/ThemeContext';
 
 export default function ListaScreen({ navigation }) {
   const [pacientes, setPacientes] = useState([]);
+  const { theme } = useTheme();
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
 
@@ -48,7 +50,7 @@ export default function ListaScreen({ navigation }) {
   const renderItem = ({ item, index }) => {
     return (
       <TouchableOpacity
-        style={styles.card}
+        style={[styles.card, { backgroundColor: theme.surface }]}
         onPress={() => navigation.navigate('ExameDetalhe', { 
           id: item.id,
           nome: item.nome, 
@@ -67,8 +69,11 @@ export default function ListaScreen({ navigation }) {
           brightness: item.brightness || 100,
           contrast: item.contrast || 100,
           roiData: item.roiData || null,
+          allRoiData: item.allRoiData || null,
           roiPositions: item.roiPositions || {},
           roiScale: item.roiScale || 1,
+          roiSizes: item.roiSizes || {},
+          bodyComposition: item.bodyComposition || null,
         })}
         activeOpacity={0.7}
       >
@@ -76,19 +81,19 @@ export default function ListaScreen({ navigation }) {
           <FontAwesome5 name="user-circle" size={32} color="#4A90E2" />
         </View>
         <View style={styles.cardContent}>
-          <Text style={styles.nome}>{item.nome}</Text>
+          <Text style={[styles.nome, { color: theme.text }]}>{item.nome}</Text>
           <View style={styles.exameContainer}>
-            <FontAwesome5 name="file-medical-alt" size={12} color="#999" />
-            <Text style={styles.exame}>{item.exame}</Text>
+            <FontAwesome5 name="file-medical-alt" size={12} color={theme.textMuted} />
+            <Text style={[styles.exame, { color: theme.textMuted }]}>{item.exame}</Text>
           </View>
         </View>
-        <FontAwesome5 name="chevron-right" size={16} color="#666" />
+        <FontAwesome5 name="chevron-right" size={16} color={theme.textMuted} />
       </TouchableOpacity>
     );
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
       <Animated.View 
         style={[
           styles.header,
@@ -99,14 +104,14 @@ export default function ListaScreen({ navigation }) {
         ]}
       >
         <TouchableOpacity 
-          style={styles.backButton}
+          style={[styles.backButton, { backgroundColor: theme.surface }]}
           onPress={() => navigation.navigate('Home')}
         >
           <FontAwesome5 name="arrow-left" size={20} color="#4A90E2" />
         </TouchableOpacity>
-        <Text style={styles.title}>Lista de Exames</Text>
+        <Text style={[styles.title, { color: theme.text }]}>Lista de Exames</Text>
         <TouchableOpacity 
-          style={styles.addButton}
+          style={[styles.addButton, { backgroundColor: theme.surface }]}
           onPress={() => navigation.navigate('Cadastro')}
         >
           <FontAwesome5 name="plus" size={20} color="#4A90E2" />
@@ -121,8 +126,8 @@ export default function ListaScreen({ navigation }) {
           ]}
         >
           <FontAwesome5 name="folder-open" size={64} color="#4A90E2" />
-          <Text style={styles.emptyText}>Nenhum exame cadastrado</Text>
-          <Text style={styles.emptySubtext}>
+          <Text style={[styles.emptyText, { color: theme.text }]}>Nenhum exame cadastrado</Text>
+          <Text style={[styles.emptySubtext, { color: theme.textMuted }]}>
             Adicione um novo exame para começar
           </Text>
           <TouchableOpacity 

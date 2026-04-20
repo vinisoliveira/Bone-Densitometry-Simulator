@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useMemo } from 'react';
+import React, { useEffect, useRef, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -11,9 +11,11 @@ import {
   Platform,
 } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
-import { deletarPaciente } from '../utils/storage';
+import { deletarPaciente, buscarImagemPorHash, carregarPacientes } from '../utils/storage';
+import { useTheme } from '../src/contexts/ThemeContext';
 
 const ExameDetalheScreen = ({ route, navigation }) => {
+  const { theme } = useTheme();
   const { 
     id, 
     nome, 
@@ -29,8 +31,11 @@ const ExameDetalheScreen = ({ route, navigation }) => {
     brightness = 100, 
     contrast = 100, 
     roiData,
+    allRoiData,
     roiPositions = {},
     roiScale = 1,
+    roiSizes = {},
+    bodyComposition,
     operador,
     imagemCustomizada,
     imagemHash,
@@ -38,6 +43,49 @@ const ExameDetalheScreen = ({ route, navigation }) => {
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
+  // Only use imagemCustomizada as initial value if it is a persistent data URI
+  const [resolvedImageUri, setResolvedImageUri] = useState(
+    imagemCustomizada?.startsWith('data:') ? imagemCustomizada : null
+  );
+
+  // Resolve image with multiple fallbacks
+  useEffect(() => {
+    const resolveImage = async () => {
+      // 1. Prefer data URI from params (already set as initial state)
+      if (imagemCustomizada?.startsWith('data:')) {
+        setResolvedImageUri(imagemCustomizada);
+        return;
+      }
+      // 2. Try IMAGENS_KEY by hash (only accept data URIs, not stale blob/file URIs)
+      if (imagemHash) {
+        try {
+          const imgData = await buscarImagemPorHash(imagemHash);
+          if (imgData?.uri?.startsWith('data:')) {
+            setResolvedImageUri(imgData.uri);
+            return;
+          }
+        } catch (err) {
+          console.warn('Could not resolve image from hash:', err);
+        }
+      }
+      // 3. Load fresh patient record from storage (might have updated base64)
+      if (id) {
+        try {
+          const lista = await carregarPacientes();
+          const paciente = lista.find(p => p.id === id);
+          if (paciente?.imagemCustomizada?.startsWith('data:')) {
+            setResolvedImageUri(paciente.imagemCustomizada);
+            return;
+          }
+        } catch (err) {
+          console.warn('Could not load patient from storage:', err);
+        }
+      }
+      // 4. All methods failed — show no-image placeholder
+      setResolvedImageUri(null);
+    };
+    resolveImage();
+  }, [imagemCustomizada, imagemHash, id]);
 
   // Memoizar dados computados para evitar recálculos
   const dadosExame = useMemo(() => {
@@ -52,12 +100,12 @@ const ExameDetalheScreen = ({ route, navigation }) => {
       : 'Data não disponível';
 
     // Usa imagem customizada se existir
-    const imagemDoExame = imagemCustomizada 
-      ? { uri: imagemCustomizada } 
+    const imagemDoExame = resolvedImageUri 
+      ? { uri: resolvedImageUri } 
       : null;
 
     return { imagemExame: imagemDoExame, dataFormatada };
-  }, [dataCriacao, imagemCustomizada]);
+  }, [dataCriacao, resolvedImageUri]);
 
   useEffect(() => {
     Animated.parallel([
@@ -108,13 +156,13 @@ const ExameDetalheScreen = ({ route, navigation }) => {
       <View style={styles.infoIcon}>
         <FontAwesome5 name={icon} size={14} color="#4A90E2" />
       </View>
-      <Text style={styles.infoLabel}>{label}:</Text>
-      <Text style={styles.infoValue}>{value}</Text>
+      <Text style={[styles.infoLabel, { color: theme.textMuted }]}>{label}:</Text>
+      <Text style={[styles.infoValue, { color: theme.text }]}>{value}</Text>
     </View>
   );
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
       {/* Header */}
       <Animated.View
         style={[
@@ -125,10 +173,10 @@ const ExameDetalheScreen = ({ route, navigation }) => {
           },
         ]}
       >
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+        <TouchableOpacity style={[styles.backButton, { backgroundColor: theme.surface }]} onPress={() => navigation.goBack()}>
           <FontAwesome5 name="arrow-left" size={20} color="#4A90E2" />
         </TouchableOpacity>
-        <Text style={styles.title}>Detalhes do Exame</Text>
+        <Text style={[styles.title, { color: theme.text }]}>Detalhes do Exame</Text>
         <TouchableOpacity 
           style={styles.deleteHeaderButton} 
           onPress={handleDelete}
@@ -144,10 +192,10 @@ const ExameDetalheScreen = ({ route, navigation }) => {
       >
         <Animated.View style={{ opacity: fadeAnim }}>
           {/* Patient Info Card */}
-          <View style={styles.card}>
-            <View style={styles.cardHeader}>
+          <View style={[styles.card, { backgroundColor: theme.surface }]}>
+            <View style={[styles.cardHeader, { borderBottomColor: theme.border }]}>
               <FontAwesome5 name="user-circle" size={24} color="#4A90E2" />
-              <Text style={styles.cardTitle}>Informações do Paciente</Text>
+              <Text style={[styles.cardTitle, { color: theme.text }]}>Informações do Paciente</Text>
             </View>
             <View style={styles.cardContent}>
               <InfoRow icon="user" label="Paciente" value={nome} />
@@ -161,7 +209,14 @@ const ExameDetalheScreen = ({ route, navigation }) => {
                 <InfoRow 
                   icon="calculator" 
                   label="IMC" 
-                  value={`${(parseFloat(peso) / Math.pow(parseFloat(altura)/100, 2)).toFixed(1)} kg/m²`} 
+                  value={(() => {
+                    const p = parseFloat(String(peso).replace(',', '.'));
+                    const h = parseFloat(String(altura).replace(',', '.'));
+                    if (!p || !h) return 'N/D';
+                    const hMetros = h > 10 ? h / 100 : h; // accept cm (>10) or m
+                    const imc = p / (hMetros * hMetros);
+                    return `${imc.toFixed(1)} kg/m²`;
+                  })()}
                 />
               )}
             </View>
@@ -170,10 +225,10 @@ const ExameDetalheScreen = ({ route, navigation }) => {
           {/* Exam Info Card + Image Side by Side */}
           <View style={styles.examInfoRow}>
             {/* Exam Info */}
-            <View style={[styles.card, styles.examInfoCard]}>
-              <View style={styles.cardHeader}>
+            <View style={[styles.card, styles.examInfoCard, { backgroundColor: theme.surface }]}>
+              <View style={[styles.cardHeader, { borderBottomColor: theme.border }]}>
                 <FontAwesome5 name="x-ray" size={24} color="#4A90E2" />
-                <Text style={styles.cardTitle}>Informações do Exame</Text>
+                <Text style={[styles.cardTitle, { color: theme.text }]}>Informações do Exame</Text>
               </View>
               <View style={styles.cardContent}>
                 <InfoRow icon="file-medical-alt" label="Tipo de Exame" value={exame} />
@@ -188,10 +243,10 @@ const ExameDetalheScreen = ({ route, navigation }) => {
             </View>
 
             {/* Exam Image */}
-            <View style={[styles.card, styles.imageCard]}>
-              <View style={styles.cardHeader}>
+            <View style={[styles.card, styles.imageCard, { backgroundColor: theme.surface }]}>
+              <View style={[styles.cardHeader, { borderBottomColor: theme.border }]}>
                 <FontAwesome5 name="image" size={24} color="#4A90E2" />
-                <Text style={styles.cardTitle}>Imagem do Exame</Text>
+                <Text style={[styles.cardTitle, { color: theme.text }]}>Imagem do Exame</Text>
                 {dadosExame.imagemExame && (
                   <TouchableOpacity
                     style={styles.editImageButton}
@@ -222,8 +277,11 @@ const ExameDetalheScreen = ({ route, navigation }) => {
                         brightness,
                         contrast,
                         roiData,
+                        allRoiData,
                         roiPositions,
                         roiScale,
+                        roiSizes,
+                        bodyComposition,
                         dataCriacao,
                       });
                     }}
@@ -277,12 +335,13 @@ const ExameDetalheScreen = ({ route, navigation }) => {
                 etnia,
                 exame,
                 operador,
-                imagemCustomizada,
+                imagemCustomizada: resolvedImageUri || imagemCustomizada,
                 imagemHash,
                 vertebraSelecionada,
                 brightness,
                 contrast,
                 roiData,
+                allRoiData,
               })
             }
             activeOpacity={0.8}

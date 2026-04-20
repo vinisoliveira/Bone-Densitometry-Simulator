@@ -2,11 +2,13 @@ import React, { useState, useRef } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, Animated, Easing, Image, Modal, Dimensions, useWindowDimensions } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
+import * as FileSystem from 'expo-file-system';
 import { colors, spacing, typography } from '../src/styles/theme';
 import { salvarImagemExame } from '../utils/storage';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import CustomAlert from '../src/components/CustomAlert';
 import { useCustomAlert } from '../src/hooks/useCustomAlert';
+import { useTheme } from '../src/contexts/ThemeContext';
 
 // Função para formatar data com máscara DD/MM/AAAA
 const formatarData = (texto) => {
@@ -87,6 +89,7 @@ export default function CadastroScreen({ navigation }) {
   const daySize = (calendarWidth - 40) / 7; // 40 = padding total
   
   const { alertConfig, showAlert, hideAlert } = useCustomAlert();
+  const { theme } = useTheme();
   
   const [paciente, setPaciente] = useState('');
   const [idade, setIdade] = useState('');
@@ -260,12 +263,32 @@ export default function CadastroScreen({ navigation }) {
     if (!result.canceled && result.assets && result.assets.length > 0) {
       const uri = result.assets[0].uri;
       
+      // Convert to base64 data URI for persistence across sessions and platforms
+      let persistentUri = uri;
+      try {
+        if (Platform.OS === 'web') {
+          const response = await fetch(uri);
+          const blob = await response.blob();
+          persistentUri = await new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result);
+            reader.readAsDataURL(blob);
+          });
+        } else if (FileSystem) {
+          const base64 = await FileSystem.readAsStringAsync(uri, { encoding: FileSystem.EncodingType.Base64 });
+          const mimeType = uri.toLowerCase().includes('.png') ? 'image/png' : 'image/jpeg';
+          persistentUri = `data:${mimeType};base64,${base64}`;
+        }
+      } catch (convErr) {
+        console.warn('Could not convert to base64, using original URI:', convErr);
+      }
+      
       // Salvar imagem no storage com hash
-      const dadosImagem = await salvarImagemExame(uri, tipoExame);
+      const dadosImagem = await salvarImagemExame(persistentUri, tipoExame);
       
       if (dadosImagem) {
         setExame(tipoExame);
-        setImagemExame(uri);
+        setImagemExame(persistentUri);
         setImagemHash(dadosImagem.hash);
       } else {
         showAlert({
@@ -394,15 +417,15 @@ export default function CadastroScreen({ navigation }) {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
+      <View style={[styles.header, { backgroundColor: theme.surface }]}>
         <TouchableOpacity 
-          style={styles.backButton}
+          style={[styles.backButton, { backgroundColor: theme.surface }]}
           onPress={() => navigation.goBack()}
         >
           <FontAwesome5 name="arrow-left" size={20} color="#4A90E2" />
         </TouchableOpacity>
-        <Text style={styles.title}>Novo Exame</Text>
+        <Text style={[styles.title, { color: theme.text }]}>Novo Exame</Text>
         <View style={styles.placeholder} />
       </View>
 
@@ -415,21 +438,21 @@ export default function CadastroScreen({ navigation }) {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
-          <View style={styles.formCard}>
+          <View style={[styles.formCard, { backgroundColor: theme.surface }]}>
             {/* Seção: Dados Pessoais */}
             <View style={styles.formSectionTitle}>
               <FontAwesome5 name="user-circle" size={16} color="#4A90E2" />
-              <Text style={styles.formSectionTitleText}>Dados Pessoais</Text>
+              <Text style={[styles.formSectionTitleText, { borderBottomColor: theme.border }]}>Dados Pessoais</Text>
             </View>
 
-            <View style={styles.inputGroup}>
+            <View style={[styles.inputGroup, { backgroundColor: theme.background, borderColor: theme.border }]}>
               <View style={styles.inputIcon}>
                 <FontAwesome5 name="user" size={16} color="#4A90E2" />
               </View>
               <TextInput
-                style={styles.input}
+                style={[styles.input, { color: theme.text }]}
                 placeholder="Nome do paciente *"
-                placeholderTextColor="#666"
+                placeholderTextColor={theme.textMuted}
                 value={paciente}
                 onChangeText={setPaciente}
               />
@@ -438,27 +461,27 @@ export default function CadastroScreen({ navigation }) {
             <View style={styles.inputRow}>
               {/* Data de Nascimento primeiro */}
               <TouchableOpacity 
-                style={[styles.inputGroup, styles.inputHalf]}
+                style={[styles.inputGroup, styles.inputHalf, { backgroundColor: theme.background, borderColor: theme.border }]}
                 onPress={abrirCalendario}
                 activeOpacity={0.7}
               >
                 <View style={styles.inputIcon}>
                   <FontAwesome5 name="calendar-alt" size={16} color="#4A90E2" />
                 </View>
-                <Text style={[styles.datePickerText, !dataNascimento && styles.datePickerPlaceholder]}>
+                <Text style={[styles.datePickerText, { color: theme.text }, !dataNascimento && { color: theme.textMuted }]}>
                   {dataNascimento || 'Data Nasc. *'}
                 </Text>
               </TouchableOpacity>
 
               {/* Idade depois */}
-              <View style={[styles.inputGroup, styles.inputHalf]}>
+              <View style={[styles.inputGroup, styles.inputHalf, { backgroundColor: theme.background, borderColor: theme.border }]}>
                 <View style={styles.inputIcon}>
                   <FontAwesome5 name="birthday-cake" size={16} color="#4A90E2" />
                 </View>
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, { color: theme.text }]}
                   placeholder="Idade *"
-                  placeholderTextColor="#666"
+                  placeholderTextColor={theme.textMuted}
                   keyboardType="numeric"
                   value={idade}
                   onChangeText={setIdade}
@@ -476,13 +499,13 @@ export default function CadastroScreen({ navigation }) {
               >
                 <View style={styles.calendarOverlay}>
                   <View 
-                    style={[styles.calendarContainer, { width: calendarWidth }]} 
+                    style={[styles.calendarContainer, { width: calendarWidth, backgroundColor: theme.surface, borderColor: theme.border }]} 
                   >
                     {/* Header do Calendário */}
-                    <View style={styles.calendarHeader}>
-                      <Text style={[styles.calendarTitle, isSmallScreen && { fontSize: 14 }]}>Data de Nascimento</Text>
+                    <View style={[styles.calendarHeader, { borderBottomColor: theme.border }]}>
+                      <Text style={[styles.calendarTitle, { color: theme.text }, isSmallScreen && { fontSize: 14 }]}>Data de Nascimento</Text>
                       <TouchableOpacity onPress={() => setShowDatePicker(false)}>
-                        <FontAwesome5 name="times" size={isSmallScreen ? 16 : 18} color="#999" />
+                        <FontAwesome5 name="times" size={isSmallScreen ? 16 : 18} color={theme.textMuted} />
                       </TouchableOpacity>
                     </View>
 
@@ -496,7 +519,7 @@ export default function CadastroScreen({ navigation }) {
                         {/* Seletor de Mês */}
                         <View style={{ position: 'relative', zIndex: 101 }}>
                           <TouchableOpacity 
-                            style={styles.calendarMonthSelector}
+                            style={[styles.calendarMonthSelector, { backgroundColor: theme.background, borderColor: theme.border }]}
                             onPress={() => {
                               setShowMonthPicker(!showMonthPicker);
                               setShowYearPicker(false);
@@ -540,7 +563,7 @@ export default function CadastroScreen({ navigation }) {
                         {/* Seletor de Ano */}
                         <View style={{ position: 'relative', zIndex: 101 }}>
                           <TouchableOpacity 
-                            style={styles.calendarYearSelector}
+                            style={[styles.calendarYearSelector, { backgroundColor: theme.background, borderColor: theme.border }]}
                             onPress={() => {
                               setShowYearPicker(!showYearPicker);
                               setShowMonthPicker(false);
@@ -588,9 +611,9 @@ export default function CadastroScreen({ navigation }) {
                     </View>
 
                     {/* Dias da Semana */}
-                    <View style={[styles.calendarWeekDays, { zIndex: 1 }]}>
+                    <View style={[styles.calendarWeekDays, { zIndex: 1, borderBottomColor: theme.border }]}>
                       {['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map((dia) => (
-                        <Text key={dia} style={[styles.calendarWeekDay, { width: daySize, fontSize: isSmallScreen ? 10 : 12 }]}>{dia}</Text>
+                        <Text key={dia} style={[styles.calendarWeekDay, { width: daySize, fontSize: isSmallScreen ? 10 : 12, color: theme.textMuted }]}>{dia}</Text>
                       ))}
                     </View>
 
@@ -621,7 +644,7 @@ export default function CadastroScreen({ navigation }) {
                             {dia && (
                               <Text style={[
                                 styles.calendarDayText,
-                                { fontSize: isSmallScreen ? 12 : 14 },
+                                { fontSize: isSmallScreen ? 12 : 14, color: theme.text },
                                 isSelecionado && styles.calendarDayTextSelected,
                                 isFuturo && styles.calendarDayTextDisabled,
                               ]}>
@@ -635,7 +658,7 @@ export default function CadastroScreen({ navigation }) {
 
                     {/* Botão Limpar */}
                     <TouchableOpacity 
-                      style={styles.calendarClearButton}
+                      style={[styles.calendarClearButton, { borderTopColor: theme.border }]}
                       onPress={() => {
                         setDataNascimento('');
                         setIdade('');
@@ -650,34 +673,34 @@ export default function CadastroScreen({ navigation }) {
             )}
 
             {/* Seção: Dados Físicos */}
-            <View style={styles.formSectionTitle}>
+            <View style={[styles.formSectionTitle, { borderBottomColor: theme.border }]}>
               <FontAwesome5 name="ruler-vertical" size={16} color="#4A90E2" />
               <Text style={styles.formSectionTitleText}>Dados Físicos</Text>
             </View>
 
             <View style={styles.inputRow}>
-              <View style={[styles.inputGroup, styles.inputHalf]}>
+              <View style={[styles.inputGroup, styles.inputHalf, { backgroundColor: theme.background, borderColor: theme.border }]}>
                 <View style={styles.inputIcon}>
                   <FontAwesome5 name="weight" size={16} color="#4A90E2" />
                 </View>
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, { color: theme.text }]}
                   placeholder="Peso (kg) *"
-                  placeholderTextColor="#666"
+                  placeholderTextColor={theme.textMuted}
                   keyboardType="number-pad"
                   value={peso}
                   onChangeText={(texto) => setPeso(formatarPeso(texto))}
                   maxLength={5}
                 />
               </View>
-              <View style={[styles.inputGroup, styles.inputHalf]}>
+              <View style={[styles.inputGroup, styles.inputHalf, { backgroundColor: theme.background, borderColor: theme.border }]}>
                 <View style={styles.inputIcon}>
                   <FontAwesome5 name="ruler-vertical" size={16} color="#4A90E2" />
                 </View>
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, { color: theme.text }]}
                   placeholder="Altura (m) *"
-                  placeholderTextColor="#666"
+                  placeholderTextColor={theme.textMuted}
                   keyboardType="number-pad"
                   value={altura}
                   onChangeText={(texto) => setAltura(formatarAltura(texto))}
@@ -689,7 +712,7 @@ export default function CadastroScreen({ navigation }) {
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
                 <FontAwesome5 name="venus-mars" size={14} color="#4A90E2" />
-                <Text style={styles.label}>Sexo *</Text>
+                <Text style={[styles.label, { color: theme.text }]}>Sexo *</Text>
               </View>
               <View style={styles.optionRow}>
                 {['Masculino', 'Feminino', 'Outro'].map((opcao) => (
@@ -697,6 +720,7 @@ export default function CadastroScreen({ navigation }) {
                     key={opcao}
                     style={[
                       styles.optionButton,
+                      { backgroundColor: theme.background, borderColor: theme.border },
                       sexo === opcao && styles.optionSelected,
                     ]}
                     onPress={() => setSexo(opcao)}
@@ -704,6 +728,7 @@ export default function CadastroScreen({ navigation }) {
                   >
                     <Text style={[
                       styles.optionText,
+                      { color: theme.textMuted },
                       sexo === opcao && styles.optionTextSelected
                     ]}>
                       {opcao}
@@ -716,7 +741,7 @@ export default function CadastroScreen({ navigation }) {
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
                 <FontAwesome5 name="globe-americas" size={14} color="#4A90E2" />
-                <Text style={styles.label}>Etnia *</Text>
+                <Text style={[styles.label, { color: theme.text }]}>Etnia *</Text>
               </View>
               <View style={styles.optionRow}>
                 {['Branca', 'Parda', 'Preta', 'Amarela', 'Indígena'].map((opcao) => (
@@ -724,6 +749,7 @@ export default function CadastroScreen({ navigation }) {
                     key={opcao}
                     style={[
                       styles.optionButton,
+                      { backgroundColor: theme.background, borderColor: theme.border },
                       etnia === opcao && styles.optionSelected,
                     ]}
                     onPress={() => setEtnia(opcao)}
@@ -731,6 +757,7 @@ export default function CadastroScreen({ navigation }) {
                   >
                     <Text style={[
                       styles.optionText,
+                      { color: theme.textMuted },
                       etnia === opcao && styles.optionTextSelected
                     ]}>
                       {opcao}
@@ -741,12 +768,12 @@ export default function CadastroScreen({ navigation }) {
             </View>
 
             {/* Seção: Exame */}
-            <View style={styles.formSectionTitle}>
+            <View style={[styles.formSectionTitle, { borderBottomColor: theme.border }]}>
               <FontAwesome5 name="x-ray" size={16} color="#4A90E2" />
               <Text style={styles.formSectionTitleText}>Tipo de Exame *</Text>
             </View>
 
-            <Text style={styles.examInstructions}>
+            <Text style={[styles.examInstructions, { color: theme.textMuted }]}>
               Clique em um tipo de exame para selecionar a imagem da galeria
             </Text>
 
@@ -766,6 +793,7 @@ export default function CadastroScreen({ navigation }) {
                       key={opcao.nome}
                       style={[
                         styles.examCard,
+                        { backgroundColor: theme.background, borderColor: theme.border },
                         isSelected && styles.examCardSelected,
                         isDisabled && styles.examCardDisabled,
                       ]}
@@ -775,6 +803,7 @@ export default function CadastroScreen({ navigation }) {
                     >
                       <Text style={[
                         styles.examText,
+                        { color: theme.textMuted },
                         isSelected && styles.examTextSelected,
                         isDisabled && styles.examTextDisabled,
                       ]}>
@@ -782,6 +811,7 @@ export default function CadastroScreen({ navigation }) {
                       </Text>
                       <Text style={[
                         styles.examDesc,
+                        { color: theme.textFaint || theme.textMuted },
                         isSelected && styles.examDescSelected,
                         isDisabled && styles.examDescDisabled,
                       ]}>
@@ -800,7 +830,7 @@ export default function CadastroScreen({ navigation }) {
 
             {/* Preview da Imagem Selecionada */}
             {imagemExame && (
-              <View style={styles.imagePreviewContainer}>
+              <View style={[styles.imagePreviewContainer, { backgroundColor: theme.background, borderColor: '#4A90E2' }]}>
                 <View style={styles.imagePreviewHeader}>
                   <Text style={styles.imagePreviewTitle}>Imagem Selecionada</Text>
                   <TouchableOpacity 
@@ -819,7 +849,7 @@ export default function CadastroScreen({ navigation }) {
                     resizeMode="contain"
                   />
                 </View>
-                <Text style={styles.imagePreviewExamType}>
+                <Text style={[styles.imagePreviewExamType, { color: theme.textMuted }]}>
                   Tipo: {exame}
                 </Text>
                 {imagemHash && (
@@ -831,25 +861,25 @@ export default function CadastroScreen({ navigation }) {
             )}
 
             {/* Seção: Informações Adicionais */}
-            <View style={styles.formSectionTitle}>
+            <View style={[styles.formSectionTitle, { borderBottomColor: theme.border }]}>
               <FontAwesome5 name="clipboard-list" size={16} color="#4A90E2" />
               <Text style={styles.formSectionTitleText}>Informações Adicionais</Text>
             </View>
 
-            <View style={styles.inputGroup}>
+            <View style={[styles.inputGroup, { backgroundColor: theme.background, borderColor: theme.border }]}>
               <View style={styles.inputIcon}>
                 <FontAwesome5 name="user-md" size={16} color="#4A90E2" />
               </View>
               <TextInput
-                style={styles.input}
+                style={[styles.input, { color: theme.text }]}
                 placeholder="Nome do operador/técnico"
-                placeholderTextColor="#666"
+                placeholderTextColor={theme.textMuted}
                 value={operador}
                 onChangeText={setOperador}
               />
             </View>
 
-            <Text style={styles.requiredNote}>* Campos obrigatórios</Text>
+            <Text style={[styles.requiredNote, { color: theme.textMuted }]}>* Campos obrigatórios</Text>
           </View>
 
           <TouchableOpacity 

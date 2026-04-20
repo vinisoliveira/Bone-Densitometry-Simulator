@@ -10,11 +10,13 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { FontAwesome5 } from '@expo/vector-icons';
+import { useTheme } from '../src/contexts/ThemeContext';
 
 const { height, width } = Dimensions.get('window');
 
 export default function ScanScreen({ route }) {
   const navigation = useNavigation();
+  const { theme } = useTheme();
   // Animação do scanner - começa do topo (0) e vai até o final (1)
   const scanProgress = useRef(new Animated.Value(0)).current;
   const pulseAnim = useRef(new Animated.Value(1)).current;
@@ -139,7 +141,7 @@ export default function ScanScreen({ route }) {
   });
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
       {/* Background gradient effect */}
       <View style={styles.gradientOverlay} />
 
@@ -211,18 +213,18 @@ export default function ScanScreen({ route }) {
 
       {/* Status e informações */}
       <Animated.View style={[styles.infoContainer, { opacity: fadeAnim }]}>
-        <View style={styles.infoCard}>
+        <View style={[styles.infoCard, { backgroundColor: theme.surface }]}>
           <View style={styles.cardRow}>
             <Animated.View style={[styles.iconContainer, { transform: [{ scale: pulseAnim }] }]}>
               <FontAwesome5 name="wave-square" size={24} color="#4A90E2" />
             </Animated.View>
-            <Text style={styles.scanText}>Escaneando {exame}...</Text>
+            <Text style={[styles.scanText, { color: theme.text }]}>Escaneando {exame}...</Text>
           </View>
           
           {/* Barra de progresso */}
           <View style={styles.progressContainer}>
             <View style={styles.progressHeader}>
-              <Text style={styles.progressLabel}>Progresso</Text>
+              <Text style={[styles.progressLabel, { color: theme.textMuted }]}>Progresso</Text>
               <Text style={styles.progressPercentage}>{progress}%</Text>
             </View>
             <View style={styles.progressBar}>
@@ -239,18 +241,18 @@ export default function ScanScreen({ route }) {
           <View style={styles.patientInfo}>
             <View style={styles.patientRow}>
               <FontAwesome5 name="user" size={14} color="#4A90E2" />
-              <Text style={styles.patientLabel}>Paciente:</Text>
-              <Text style={styles.patientValue}>{nome}</Text>
+              <Text style={[styles.patientLabel, { color: theme.textMuted }]}>Paciente:</Text>
+              <Text style={[styles.patientValue, { color: theme.text }]}>{nome}</Text>
             </View>
             <View style={styles.patientRow}>
               <FontAwesome5 name="birthday-cake" size={14} color="#4A90E2" />
-              <Text style={styles.patientLabel}>Idade:</Text>
-              <Text style={styles.patientValue}>{idade} anos</Text>
+              <Text style={[styles.patientLabel, { color: theme.textMuted }]}>Idade:</Text>
+              <Text style={[styles.patientValue, { color: theme.text }]}>{idade} anos</Text>
             </View>
             <View style={styles.patientRow}>
               <FontAwesome5 name="venus-mars" size={14} color="#4A90E2" />
-              <Text style={styles.patientLabel}>Sexo:</Text>
-              <Text style={styles.patientValue}>{sexo}</Text>
+              <Text style={[styles.patientLabel, { color: theme.textMuted }]}>Sexo:</Text>
+              <Text style={[styles.patientValue, { color: theme.text }]}>{sexo}</Text>
             </View>
           </View>
         </View>

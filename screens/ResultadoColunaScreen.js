@@ -10,12 +10,15 @@ import {
   ScrollView,
   Platform,
   PanResponder,
+  useWindowDimensions,
 } from 'react-native';
 import Slider from '@react-native-community/slider';
 import { colors, spacing, typography } from '../src/styles/theme';
 import { useNavigation } from '@react-navigation/native';
 import { salvarPaciente, atualizarPaciente } from '../utils/storage';
 import { FontAwesome5 } from '@expo/vector-icons';
+import { useTheme } from '../src/contexts/ThemeContext';
+import * as ScreenOrientation from 'expo-screen-orientation';
 
 const { width, height } = Dimensions.get('window');
 
@@ -24,28 +27,30 @@ const EDITOR_WIDTH = Math.min(width - 40, 800);
 const EDITOR_HEIGHT = height * 0.55;
 const TOOLBAR_WIDTH = 50;
 
-// Tamanho padrão dos ROIs (igual para todos)
-// Tamanho fixo dos ROIs em pixels (não responsivo)
-const DEFAULT_ROI_WIDTH_PX = 340;
-const DEFAULT_ROI_HEIGHT_PX = 55;
+// Tamanho padrão dos ROIs (formato quadrado)
+const DEFAULT_ROI_SIZE_PX = 80;
 
-// Componente ROI simples (posicionado relativamente à imagem) - Apenas Arrastável
+// Componente ROI simples (posicionado relativamente à imagem) - Arrastável e Redimensionável
 const SimpleROI = ({ 
   region, 
   isSelected, 
   onSelect,
   isDraggable,
+  isResizable,
   onPositionChange,
+  onSizeChange,
+  onInteractionStart,
+  onInteractionEnd,
   containerSize,
-  roiScale, // Escala global dos ROIs (1 = tamanho padrão)
+  customSize, // { width, height } in px, per-ROI
 }) => {
   const startPosRef = useRef({ x: region.x, y: region.y });
   const currentPosRef = useRef({ x: region.x, y: region.y });
   const [currentPos, setCurrentPos] = useState({ x: region.x, y: region.y });
   
-  // Tamanho fixo em pixels baseado na escala global
-  const scaledWidthPx = DEFAULT_ROI_WIDTH_PX * roiScale;
-  const scaledHeightPx = DEFAULT_ROI_HEIGHT_PX * roiScale;
+  // Per-ROI size in pixels
+  const roiWidth = customSize?.width || DEFAULT_ROI_SIZE_PX;
+  const roiHeight = customSize?.height || DEFAULT_ROI_SIZE_PX;
   
   // Atualiza posição quando region muda externamente (reset)
   useEffect(() => {
@@ -55,12 +60,19 @@ const SimpleROI = ({
   }, [region.x, region.y]);
   
   // PanResponder para mover o ROI
+  const onSelectRef = useRef(onSelect);
+  onSelectRef.current = onSelect;
+  // Stable ref for current size — avoids recreating resizePanResponder on every size update
+  const roiSizeRef = useRef({ w: roiWidth, h: roiHeight });
+  roiSizeRef.current = { w: roiWidth, h: roiHeight };
   const panResponder = useMemo(() => PanResponder.create({
-    onStartShouldSetPanResponder: () => isDraggable && isSelected,
-    onMoveShouldSetPanResponder: () => isDraggable && isSelected,
+    onStartShouldSetPanResponder: () => isDraggable,
+    onMoveShouldSetPanResponder: () => isDraggable,
     onStartShouldSetPanResponderCapture: () => false,
     onMoveShouldSetPanResponderCapture: () => false,
     onPanResponderGrant: () => {
+      if (onSelectRef.current) onSelectRef.current();
+      if (onInteractionStart) onInteractionStart();
       startPosRef.current = { x: currentPosRef.current.x, y: currentPosRef.current.y };
     },
     onPanResponderMove: (evt, gestureState) => {
@@ -69,8 +81,8 @@ const SimpleROI = ({
       const deltaX = gestureState.dx / containerSize.width;
       const deltaY = gestureState.dy / containerSize.height;
       
-      const scaledWidthRatio = scaledWidthPx / containerSize.width;
-      const scaledHeightRatio = scaledHeightPx / containerSize.height;
+      const scaledWidthRatio = roiSizeRef.current.w / containerSize.width;
+      const scaledHeightRatio = roiSizeRef.current.h / containerSize.height;
       
       let newX = Math.max(0, Math.min(1 - scaledWidthRatio, startPosRef.current.x + deltaX));
       let newY = Math.max(0, Math.min(1 - scaledHeightRatio, startPosRef.current.y + deltaY));
@@ -79,35 +91,60 @@ const SimpleROI = ({
       setCurrentPos({ x: newX, y: newY });
     },
     onPanResponderRelease: () => {
+      if (onInteractionEnd) onInteractionEnd();
       if (onPositionChange) {
         onPositionChange(region.id, currentPosRef.current.x, currentPosRef.current.y);
       }
     },
-  }), [isDraggable, isSelected, containerSize, region.id, onPositionChange, scaledWidthPx, scaledHeightPx]);
+  }), [isDraggable, containerSize, region.id, onPositionChange]);
+
+  // PanResponder for resizing (bottom-right corner)
+  const resizeStartRef = useRef({ w: roiWidth, h: roiHeight });
+  const resizePanResponder = useMemo(() => PanResponder.create({
+    onStartShouldSetPanResponder: () => isResizable,
+    onMoveShouldSetPanResponder: () => isResizable,
+    onStartShouldSetPanResponderCapture: () => isResizable,
+    onMoveShouldSetPanResponderCapture: () => isResizable,
+    onPanResponderGrant: () => {
+      if (onSelectRef.current) onSelectRef.current();
+      if (onInteractionStart) onInteractionStart();
+      // Snapshot current size at gesture start using ref (stable, no re-render dependency)
+      resizeStartRef.current = { w: roiSizeRef.current.w, h: roiSizeRef.current.h };
+    },
+    onPanResponderMove: (evt, gestureState) => {
+      const newW = Math.max(30, Math.min(300, resizeStartRef.current.w + gestureState.dx));
+      const newH = Math.max(30, Math.min(300, resizeStartRef.current.h + gestureState.dy));
+      if (onSizeChange) {
+        onSizeChange(region.id, newW, newH);
+      }
+    },
+    onPanResponderRelease: () => {
+      if (onInteractionEnd) onInteractionEnd();
+    },
+  }), [isResizable, region.id, onSizeChange]);
 
   const roiStyle = {
     position: 'absolute',
     left: `${currentPos.x * 100}%`,
     top: `${currentPos.y * 100}%`,
-    width: scaledWidthPx,
-    height: scaledHeightPx,
+    width: roiWidth,
+    height: roiHeight,
     borderWidth: isSelected ? 2 : 1,
     borderColor: isSelected ? '#00E5FF' : 'rgba(0, 229, 255, 0.5)',
     backgroundColor: isSelected ? 'rgba(0, 229, 255, 0.15)' : 'transparent',
     borderRadius: 2,
-    cursor: isDraggable && isSelected ? 'move' : 'pointer',
+    cursor: isDraggable ? 'move' : 'pointer',
   };
 
   return (
     <View
       style={roiStyle}
-      {...(isDraggable && isSelected ? panResponder.panHandlers : {})}
+      {...(isDraggable ? panResponder.panHandlers : {})}
     >
       <TouchableOpacity 
         style={{ flex: 1 }}
         onPress={onSelect}
         activeOpacity={0.8}
-        disabled={isDraggable && isSelected}
       >
         <View style={styles.regionLabel}>
           <Text style={styles.regionLabelText}>{region.id}</Text>
@@ -118,6 +155,14 @@ const SimpleROI = ({
           </View>
         )}
       </TouchableOpacity>
+      {isResizable && (
+        <View 
+          style={styles.resizeHandle}
+          {...resizePanResponder.panHandlers}
+        >
+          <FontAwesome5 name="expand-arrows-alt" size={12} color="#FFF" pointerEvents="none" />
+        </View>
+      )}
     </View>
   );
 };
@@ -142,7 +187,13 @@ export default function ResultadoScreen({ route }) {
     roiData: initialRoiData = null,
     roiPositions: initialRoiPositions = {},
     roiScale: initialRoiScale = 1,
+    roiSizes: initialRoiSizes = {},
   } = route.params;
+
+  const { width: screenWidth, height: screenHeight } = useWindowDimensions();
+  const isNarrow = screenWidth < 600;
+  const isMobile = Platform.OS !== 'web' || Math.min(screenWidth, screenHeight) < 500;
+  const { theme } = useTheme();
   
   const [selectedId, setSelectedId] = useState(initialVertebra);
   const [showSaveAnimation, setShowSaveAnimation] = useState(false);
@@ -160,9 +211,11 @@ export default function ResultadoScreen({ route }) {
   const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
   const panOffsetRef = useRef({ x: 0, y: 0 });
   
-  // Estado para posições customizadas dos ROIs e escala global
+  // Estado para posições customizadas dos ROIs e tamanhos individuais
   const [customRoiPositions, setCustomRoiPositions] = useState(initialRoiPositions);
-  const [roiScale, setRoiScale] = useState(initialRoiScale); // Escala global dos ROIs (0.5 a 1.5)
+  const [roiScale, setRoiScale] = useState(initialRoiScale); // Legacy global scale
+  const [customRoiSizes, setCustomRoiSizes] = useState(initialRoiSizes);
+  const [scrollEnabled, setScrollEnabled] = useState(true);
   const [imageContainerSize, setImageContainerSize] = useState({ width: 0, height: 0 });
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -208,18 +261,31 @@ export default function ResultadoScreen({ route }) {
     ]).start();
   }, []);
 
+  // Lock to landscape on mobile
+  useEffect(() => {
+    if (Platform.OS !== 'web') {
+      ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP)
+        .catch(() => {});
+      return () => {
+        ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP)
+          .catch(() => {});
+      };
+    }
+  }, []);
+
   // Usa imagem customizada se existir
   const imagemDoExame = imagemCustomizada 
     ? { uri: imagemCustomizada } 
     : null;
 
   // Regiões interativas por exame (baseadas na área da imagem)
+  // Valores de referência baseados no Hologic Discovery QDR - NHANES III
   const regioesPorExame = {
     'Coluna Lombar': [
-      { id: 'L1', x: 0.30, y: 0.08, width: 0.40, height: 0.18, bmd: 1.024, tScore: -0.8, zScore: 0.2 },
-      { id: 'L2', x: 0.30, y: 0.28, width: 0.40, height: 0.18, bmd: 1.089, tScore: -0.5, zScore: 0.5 },
-      { id: 'L3', x: 0.30, y: 0.48, width: 0.40, height: 0.18, bmd: 1.156, tScore: -0.2, zScore: 0.8 },
-      { id: 'L4', x: 0.30, y: 0.68, width: 0.40, height: 0.18, bmd: 1.078, tScore: -0.6, zScore: 0.4 },
+      { id: 'L1', x: 0.30, y: 0.08, width: 0.40, height: 0.18, bmd: 1.024, tScore: -0.8, zScore: 0.2, area: 10.89, bmc: 11.15 },
+      { id: 'L2', x: 0.30, y: 0.28, width: 0.40, height: 0.18, bmd: 1.089, tScore: -0.5, zScore: 0.5, area: 12.54, bmc: 13.66 },
+      { id: 'L3', x: 0.30, y: 0.48, width: 0.40, height: 0.18, bmd: 1.156, tScore: -0.2, zScore: 0.8, area: 13.87, bmc: 16.03 },
+      { id: 'L4', x: 0.30, y: 0.68, width: 0.40, height: 0.18, bmd: 1.078, tScore: -0.6, zScore: 0.4, area: 15.22, bmc: 16.41 },
     ],
     'Fêmur': [
       { id: 'Neck', x: 0.25, y: 0.08, width: 0.50, height: 0.18, bmd: 0.856, tScore: -1.2, zScore: -0.3 },
@@ -297,6 +363,14 @@ export default function ResultadoScreen({ route }) {
     }));
   };
 
+  // Handler para atualizar tamanho individual do ROI
+  const handleRoiSizeChange = useCallback((roiId, newWidth, newHeight) => {
+    setCustomRoiSizes(prev => ({
+      ...prev,
+      [roiId]: { width: Math.round(newWidth), height: Math.round(newHeight) },
+    }));
+  }, []);
+
   // Ferramentas disponíveis
   const tools = [
     { id: 'select', icon: 'mouse-pointer', label: 'Selecionar' },
@@ -326,6 +400,7 @@ export default function ResultadoScreen({ route }) {
       setSelectedId(null);
       setCustomRoiPositions({});
       setRoiScale(1);
+      setCustomRoiSizes({});
       setShowAdjustments(false);
       setShowROIPanel(false);
       return;
@@ -376,6 +451,7 @@ export default function ResultadoScreen({ route }) {
       roiData: regiaoSelecionada,
       roiPositions: customRoiPositions,
       roiScale: roiScale,
+      roiSizes: customRoiSizes,
       allRoiData: regioesComPosicoes,
       dataCriacao: route.params.dataCriacao || new Date().toISOString(),
     };
@@ -397,7 +473,8 @@ export default function ResultadoScreen({ route }) {
   const getStatusFromTScore = (tScore) => {
     if (tScore >= -1) return { status: 'Normal', color: '#4CAF50' };
     if (tScore >= -2.5) return { status: 'Osteopenia', color: '#FFC107' };
-    return { status: 'Osteoporose', color: '#F44336' };
+    if (tScore >= -3.5) return { status: 'Osteoporose', color: '#F44336' };
+    return { status: 'Osteoporose Severa', color: '#B71C1C' };
   };
 
   const getImageStyle = () => {
@@ -414,56 +491,58 @@ export default function ResultadoScreen({ route }) {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
+    <View style={{flex: 1, backgroundColor: theme.editorBg}}>
+    <ScrollView scrollEnabled={scrollEnabled} style={[styles.container, { backgroundColor: theme.editorBg }]} contentContainerStyle={[styles.scrollContent, (isNarrow || isMobile) && { paddingBottom: 70 }]}>
       {/* Header */}
       <Animated.View 
         style={[
           styles.header,
-          { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }
+          { backgroundColor: theme.editorSurface, opacity: fadeAnim, transform: [{ translateY: slideAnim }] }
         ]}
       >
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+        <TouchableOpacity style={[styles.backButton, { backgroundColor: theme.editorPanel }]} onPress={() => navigation.goBack()}>
           <FontAwesome5 name="arrow-left" size={18} color="#4A90E2" />
         </TouchableOpacity>
         <View style={styles.headerTitleContainer}>
-          <Text style={styles.headerSubtitle}>DXA ANALYSIS</Text>
-          <Text style={styles.title}>{exame}</Text>
+          <Text style={[styles.headerSubtitle, { color: theme.textMuted }]}>DXA ANALYSIS</Text>
+          <Text style={[styles.title, { color: theme.text }]}>{exame}</Text>
         </View>
         <View style={styles.headerRight}>
           <View style={styles.statusIndicator}>
             <View style={[styles.statusDot, { backgroundColor: '#4CAF50' }]} />
-            <Text style={styles.statusText}>Online</Text>
+            <Text style={[styles.statusText, { color: theme.textMuted }]}>Online</Text>
           </View>
         </View>
       </Animated.View>
 
       {/* Patient Info Bar */}
-      <Animated.View style={[styles.patientBar, { opacity: fadeAnim }]}>
+      <Animated.View style={[styles.patientBar, { backgroundColor: theme.editorSurface, borderColor: theme.editorBorder, opacity: fadeAnim }]}>
         <View style={styles.patientInfo}>
           <FontAwesome5 name="user" size={12} color="#4A90E2" />
-          <Text style={styles.patientText}>{nome}</Text>
+          <Text style={[styles.patientText, { color: theme.editorText }]}>{nome}</Text>
         </View>
-        <View style={styles.patientDivider} />
+        <View style={[styles.patientDivider, { backgroundColor: theme.editorBorder }]} />
         <View style={styles.patientInfo}>
           <FontAwesome5 name="birthday-cake" size={12} color="#4A90E2" />
-          <Text style={styles.patientText}>{idade} anos</Text>
+          <Text style={[styles.patientText, { color: theme.editorText }]}>{idade} anos</Text>
         </View>
-        <View style={styles.patientDivider} />
+        <View style={[styles.patientDivider, { backgroundColor: theme.editorBorder }]} />
         <View style={styles.patientInfo}>
           <FontAwesome5 name="venus-mars" size={12} color="#4A90E2" />
-          <Text style={styles.patientText}>{sexo}</Text>
+          <Text style={[styles.patientText, { color: theme.editorText }]}>{sexo}</Text>
         </View>
-        <View style={styles.patientDivider} />
+        <View style={[styles.patientDivider, { backgroundColor: theme.editorBorder }]} />
         <View style={styles.patientInfo}>
           <FontAwesome5 name="globe-americas" size={12} color="#4A90E2" />
-          <Text style={styles.patientText}>{etnia}</Text>
+          <Text style={[styles.patientText, { color: theme.editorText }]}>{etnia}</Text>
         </View>
       </Animated.View>
 
       {/* Main Editor Area */}
-      <Animated.View style={[styles.editorContainer, { opacity: fadeAnim }]}>
+      <Animated.View style={[styles.editorContainer, { backgroundColor: theme.editorSurface, opacity: fadeAnim }, isNarrow && styles.editorContainerMobile]}>
         {/* Toolbar */}
-        <View style={styles.toolbar}>
+        {!(isNarrow || isMobile) && (
+        <View style={[styles.toolbar, { backgroundColor: theme.editorPanel, borderColor: theme.editorBorder }, isNarrow && styles.toolbarMobile]}>
           {tools.map((tool) => (
             <TouchableOpacity
               key={tool.id}
@@ -474,9 +553,10 @@ export default function ResultadoScreen({ route }) {
             </TouchableOpacity>
           ))}
           <View style={styles.zoomIndicator}>
-            <Text style={styles.zoomText}>{Math.round(zoomLevel * 100)}%</Text>
+            <Text style={[styles.zoomText, { color: theme.textMuted }]}>{Math.round(zoomLevel * 100)}%</Text>
           </View>
         </View>
+        )}
 
         {/* Image Canvas */}
         <View style={styles.canvasContainer}>
@@ -541,9 +621,13 @@ export default function ResultadoScreen({ route }) {
                     isSelected={selectedId === r.id}
                     onSelect={() => setSelectedId(r.id)}
                     isDraggable={activeTool === 'select'}
+                    isResizable={activeTool === 'roi'}
                     onPositionChange={handleRoiPositionChange}
+                    onSizeChange={handleRoiSizeChange}
+                    onInteractionStart={() => setScrollEnabled(false)}
+                    onInteractionEnd={() => setScrollEnabled(true)}
                     containerSize={imageContainerSize}
-                    roiScale={roiScale}
+                    customSize={customRoiSizes[r.id] || { width: DEFAULT_ROI_SIZE_PX * roiScale, height: DEFAULT_ROI_SIZE_PX * roiScale }}
                   />
                 ))}
               </View>
@@ -589,18 +673,18 @@ export default function ResultadoScreen({ route }) {
         </View>
 
         {/* Side Panel */}
-        <View style={styles.sidePanel}>
+        <View style={[styles.sidePanel, { backgroundColor: theme.editorPanel, borderColor: theme.editorBorder }, isNarrow && styles.sidePanelMobile]}>
           {showAdjustments && (
-            <View style={styles.adjustmentPanel}>
-              <Text style={styles.panelTitle}>
+            <View style={[styles.adjustmentPanel, { backgroundColor: theme.editorPanel }]}>
+              <Text style={[styles.panelTitle, { color: theme.editorText }]}>
                 <FontAwesome5 name="sliders-h" size={12} color="#4A90E2" /> Ajustes de Imagem
               </Text>
               
               <View style={styles.sliderContainer}>
                 <View style={styles.sliderHeader}>
                   <FontAwesome5 name="sun" size={12} color="#FFD700" />
-                  <Text style={styles.sliderLabel}>Brilho</Text>
-                  <Text style={styles.sliderValue}>{brightness}%</Text>
+                  <Text style={[styles.sliderLabel, { color: theme.editorText }]}>Brilho</Text>
+                  <Text style={[styles.sliderValue, { color: theme.textMuted }]}>{brightness}%</Text>
                 </View>
                 <Slider
                   style={styles.slider}
@@ -617,8 +701,8 @@ export default function ResultadoScreen({ route }) {
               <View style={styles.sliderContainer}>
                 <View style={styles.sliderHeader}>
                   <FontAwesome5 name="adjust" size={12} color="#4A90E2" />
-                  <Text style={styles.sliderLabel}>Contraste</Text>
-                  <Text style={styles.sliderValue}>{contrast}%</Text>
+                  <Text style={[styles.sliderLabel, { color: theme.editorText }]}>Contraste</Text>
+                  <Text style={[styles.sliderValue, { color: theme.textMuted }]}>{contrast}%</Text>
                 </View>
                 <Slider
                   style={styles.slider}
@@ -640,15 +724,15 @@ export default function ResultadoScreen({ route }) {
           )}
 
           {(showROIPanel || regiaoSelecionada) && (
-            <View style={styles.roiPanel}>
-              <Text style={styles.panelTitle}>
+            <View style={[styles.roiPanel, { backgroundColor: theme.editorPanel }]}>
+              <Text style={[styles.panelTitle, { color: theme.editorText }]}>
                 <FontAwesome5 name="chart-bar" size={12} color="#4A90E2" /> Análise de ROI
               </Text>
               
               {regiaoSelecionada ? (
                 <View style={styles.roiData}>
                   <View style={styles.roiHeader}>
-                    <Text style={styles.roiRegionName}>{regiaoSelecionada.id}</Text>
+                    <Text style={[styles.roiRegionName, { color: theme.text }]}>{regiaoSelecionada.id}</Text>
                     <View style={[styles.roiStatusBadge, { backgroundColor: getStatusFromTScore(regiaoSelecionada.tScore).color }]}>
                       <Text style={styles.roiStatusText}>{getStatusFromTScore(regiaoSelecionada.tScore).status}</Text>
                     </View>
@@ -656,23 +740,43 @@ export default function ResultadoScreen({ route }) {
 
                   <View style={styles.roiMetrics}>
                     <View style={styles.roiMetricItem}>
-                      <Text style={styles.roiMetricLabel}>BMD</Text>
-                      <Text style={styles.roiMetricValue}>{regiaoSelecionada.bmd.toFixed(3)}</Text>
-                      <Text style={styles.roiMetricUnit}>g/cm²</Text>
+                      <Text style={[styles.roiMetricLabel, { color: theme.textMuted }]}>BMD</Text>
+                      <Text style={[styles.roiMetricValue, { color: theme.text }]}>{regiaoSelecionada.bmd.toFixed(3)}</Text>
+                      <Text style={[styles.roiMetricUnit, { color: theme.textMuted }]}>g/cm²</Text>
                     </View>
                     <View style={styles.roiMetricItem}>
-                      <Text style={styles.roiMetricLabel}>T-Score</Text>
+                      <Text style={[styles.roiMetricLabel, { color: theme.textMuted }]}>T-Score</Text>
                       <Text style={[styles.roiMetricValue, { color: getStatusFromTScore(regiaoSelecionada.tScore).color }]}>
                         {regiaoSelecionada.tScore.toFixed(1)}
                       </Text>
-                      <Text style={styles.roiMetricUnit}>SD</Text>
+                      <Text style={[styles.roiMetricUnit, { color: theme.textMuted }]}>SD</Text>
                     </View>
                     <View style={styles.roiMetricItem}>
-                      <Text style={styles.roiMetricLabel}>Z-Score</Text>
-                      <Text style={styles.roiMetricValue}>{regiaoSelecionada.zScore.toFixed(1)}</Text>
-                      <Text style={styles.roiMetricUnit}>SD</Text>
+                      <Text style={[styles.roiMetricLabel, { color: theme.textMuted }]}>Z-Score</Text>
+                      <Text style={[styles.roiMetricValue, { color: theme.text }]}>{regiaoSelecionada.zScore.toFixed(1)}</Text>
+                      <Text style={[styles.roiMetricUnit, { color: theme.textMuted }]}>SD</Text>
                     </View>
                   </View>
+
+                  {/* Area and BMC - Hologic QDR format */}
+                  {(regiaoSelecionada.area || regiaoSelecionada.bmc) && (
+                    <View style={styles.roiMetrics}>
+                      {regiaoSelecionada.area != null && (
+                        <View style={styles.roiMetricItem}>
+                          <Text style={styles.roiMetricLabel}>Area</Text>
+                          <Text style={styles.roiMetricValue}>{regiaoSelecionada.area.toFixed(2)}</Text>
+                          <Text style={styles.roiMetricUnit}>cm²</Text>
+                        </View>
+                      )}
+                      {regiaoSelecionada.bmc != null && (
+                        <View style={styles.roiMetricItem}>
+                          <Text style={styles.roiMetricLabel}>BMC</Text>
+                          <Text style={styles.roiMetricValue}>{regiaoSelecionada.bmc.toFixed(2)}</Text>
+                          <Text style={styles.roiMetricUnit}>g</Text>
+                        </View>
+                      )}
+                    </View>
+                  )}
 
                   <View style={styles.tScoreBar}>
                     <View style={styles.tScoreBarBg}>
@@ -692,14 +796,14 @@ export default function ResultadoScreen({ route }) {
               ) : (
                 <View style={styles.roiEmpty}>
                   <FontAwesome5 name="hand-pointer" size={24} color="#4A90E2" />
-                  <Text style={styles.roiEmptyText}>Selecione uma região na imagem</Text>
+                  <Text style={[styles.roiEmptyText, { color: theme.textMuted }]}>Selecione uma região na imagem</Text>
                 </View>
               )}
             </View>
           )}
 
-          <View style={styles.regionsPanel}>
-            <Text style={styles.panelTitle}>
+          <View style={[styles.regionsPanel, { backgroundColor: theme.editorPanel }]}>
+            <Text style={[styles.panelTitle, { color: theme.editorText }]}>
               <FontAwesome5 name="layer-group" size={12} color="#4A90E2" /> Regiões
             </Text>
             
@@ -707,8 +811,8 @@ export default function ResultadoScreen({ route }) {
             <View style={styles.roiSizeControl}>
               <View style={styles.roiSizeHeader}>
                 <FontAwesome5 name="expand" size={10} color="#8892B0" />
-                <Text style={styles.roiSizeLabel}>Tamanho ROI</Text>
-                <Text style={styles.roiSizeValue}>{Math.round(roiScale * 100)}%</Text>
+                <Text style={[styles.roiSizeLabel, { color: theme.textMuted }]}>Tamanho ROI</Text>
+                <Text style={[styles.roiSizeValue, { color: theme.textMuted }]}>{Math.round(roiScale * 100)}%</Text>
               </View>
               <View style={styles.roiSizeButtons}>
                 <TouchableOpacity 
@@ -737,8 +841,8 @@ export default function ResultadoScreen({ route }) {
                   onPress={() => setSelectedId(r.id)}
                 >
                   <View style={[styles.regionDot, { backgroundColor: getStatusFromTScore(r.tScore).color }]} />
-                  <Text style={[styles.regionItemText, selectedId === r.id && styles.regionItemTextActive]}>{r.id}</Text>
-                  <Text style={styles.regionItemValue}>{r.tScore.toFixed(1)}</Text>
+                  <Text style={[styles.regionItemText, { color: theme.editorText }, selectedId === r.id && styles.regionItemTextActive]}>{r.id}</Text>
+                  <Text style={[styles.regionItemValue, { color: theme.textMuted }]}>{r.tScore.toFixed(1)}</Text>
                 </TouchableOpacity>
               ))}
             </ScrollView>
@@ -763,12 +867,60 @@ export default function ResultadoScreen({ route }) {
         </View>
       )}
     </ScrollView>
+
+    {/* Fixed Toolbar - Mobile */}
+    {(isNarrow || isMobile) && (
+      <View style={styles.fixedToolbar}>
+        {tools.map((tool) => (
+          <TouchableOpacity
+            key={tool.id}
+            style={[styles.fixedToolBtn, activeTool === tool.id && styles.fixedToolBtnActive]}
+            onPress={() => handleToolPress(tool.id)}
+          >
+            <FontAwesome5 name={tool.icon} size={16} color={activeTool === tool.id ? '#FFFFFF' : '#8892B0'} />
+          </TouchableOpacity>
+        ))}
+        <Text style={styles.fixedZoomText}>{Math.round(zoomLevel * 100)}%</Text>
+      </View>
+    )}
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0d1117' },
   scrollContent: { paddingBottom: 40 },
+  fixedToolbar: {
+    flexDirection: 'row',
+    backgroundColor: 'rgba(22, 27, 34, 0.97)',
+    borderTopWidth: 1,
+    borderTopColor: '#30363d',
+    paddingVertical: 6,
+    paddingHorizontal: 8,
+    justifyContent: 'space-evenly',
+    alignItems: 'center',
+  },
+  fixedToolBtn: {
+    flex: 1,
+    maxWidth: 48,
+    aspectRatio: 1,
+    borderRadius: 10,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(48, 54, 61, 0.6)',
+    marginHorizontal: 2,
+  },
+  fixedToolBtnActive: {
+    backgroundColor: '#4A90E2',
+  },
+  fixedZoomText: {
+    color: '#8892B0',
+    fontSize: 11,
+    fontWeight: '600',
+    marginLeft: 4,
+    minWidth: 36,
+    textAlign: 'center',
+  },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -918,6 +1070,21 @@ const styles = StyleSheet.create({
     padding: 3,
     borderRadius: 3,
   },
+  resizeHandle: {
+    position: 'absolute',
+    bottom: -10,
+    right: -10,
+    width: 28,
+    height: 28,
+    backgroundColor: '#4A90E2',
+    borderRadius: 6,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#FFF',
+    cursor: 'nwse-resize',
+    zIndex: 10,
+  },
   canvasInfoBar: {
     height: 28,
     backgroundColor: '#21262d',
@@ -1034,4 +1201,27 @@ const styles = StyleSheet.create({
   saveOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(13, 17, 23, 0.95)', justifyContent: 'center', alignItems: 'center', zIndex: 1000 },
   saveCircle: { width: 100, height: 100, borderRadius: 50, backgroundColor: '#238636', justifyContent: 'center', alignItems: 'center' },
   saveText: { fontSize: 20, fontWeight: '700', color: '#FFFFFF', marginTop: 20 },
+  editorContainerMobile: {
+    flexDirection: 'column',
+    minHeight: 'auto',
+  },
+  toolbarMobile: {
+    flexDirection: 'row',
+    width: '100%',
+    height: TOOLBAR_WIDTH,
+    borderRightWidth: 0,
+    borderBottomWidth: 1,
+    borderBottomColor: '#30363d',
+    paddingVertical: 0,
+    paddingHorizontal: 8,
+    justifyContent: 'center',
+    flexWrap: 'wrap',
+  },
+  sidePanelMobile: {
+    width: '100%',
+    maxHeight: 400,
+    borderLeftWidth: 0,
+    borderTopWidth: 1,
+    borderTopColor: '#30363d',
+  },
 });

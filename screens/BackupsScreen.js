@@ -17,12 +17,14 @@ import {
 } from '../utils/storage';
 import CustomAlert from '../src/components/CustomAlert';
 import { useCustomAlert } from '../src/hooks/useCustomAlert';
+import { useTheme } from '../src/contexts/ThemeContext';
 
 const BackupsScreen = ({ navigation }) => {
   const [backups, setBackups] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const { alertConfig, showAlert, hideAlert } = useCustomAlert();
+  const { theme } = useTheme();
   
   // Estado para guardar ação pendente de confirmação
   const [pendingAction, setPendingAction] = useState(null);
@@ -175,6 +177,7 @@ const BackupsScreen = ({ navigation }) => {
       style={[
         styles.backupCard,
         {
+          backgroundColor: theme.surface,
           opacity: fadeAnim,
           transform: [
             {
@@ -192,19 +195,19 @@ const BackupsScreen = ({ navigation }) => {
           <FontAwesome5 name="archive" size={20} color="#4A90E2" />
         </View>
         <View style={styles.backupInfo}>
-          <Text style={styles.backupNome}>{backup.nome}</Text>
-          <Text style={styles.backupData}>{backup.dataFormatada}</Text>
+          <Text style={[styles.backupNome, { color: theme.text }]}>{backup.nome}</Text>
+          <Text style={[styles.backupData, { color: theme.textMuted }]}>{backup.dataFormatada}</Text>
         </View>
       </View>
 
       <View style={styles.backupStats}>
         <View style={styles.statItem}>
-          <FontAwesome5 name="user" size={12} color="#999" />
-          <Text style={styles.statText}>{backup.totalPacientes} pacientes</Text>
+          <FontAwesome5 name="user" size={12} color={theme.textMuted} />
+          <Text style={[styles.statText, { color: theme.textMuted }]}>{backup.totalPacientes} pacientes</Text>
         </View>
         <View style={styles.statItem}>
-          <FontAwesome5 name="image" size={12} color="#999" />
-          <Text style={styles.statText}>{backup.totalImagens} imagens</Text>
+          <FontAwesome5 name="image" size={12} color={theme.textMuted} />
+          <Text style={[styles.statText, { color: theme.textMuted }]}>{backup.totalImagens} imagens</Text>
         </View>
       </View>
 
@@ -231,17 +234,17 @@ const BackupsScreen = ({ navigation }) => {
   );
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
+      <View style={[styles.header, { backgroundColor: theme.surface }]}>
         <TouchableOpacity
-          style={styles.backButton}
+          style={[styles.backButton, { backgroundColor: theme.surfaceAlt || theme.surface }]}
           onPress={() => navigation.goBack()}
         >
           <FontAwesome5 name="arrow-left" size={20} color="#4A90E2" />
         </TouchableOpacity>
-        <Text style={styles.title}>Backups</Text>
+        <Text style={[styles.title, { color: theme.text }]}>Backups</Text>
         <TouchableOpacity
-          style={styles.addButton}
+          style={[styles.addButton, { backgroundColor: theme.surfaceAlt || theme.surface }]}
           onPress={handleCriarBackup}
         >
           <FontAwesome5 name="plus" size={18} color="#4A90E2" />
@@ -264,29 +267,29 @@ const BackupsScreen = ({ navigation }) => {
         {loading ? (
           <View style={styles.emptyContainer}>
             <FontAwesome5 name="spinner" size={40} color="#4A90E2" />
-            <Text style={styles.emptyText}>Carregando...</Text>
+            <Text style={[styles.emptyText, { color: theme.textMuted }]}>Carregando...</Text>
           </View>
         ) : backups.length === 0 ? (
           <View style={styles.emptyContainer}>
-            <View style={styles.emptyIcon}>
-              <FontAwesome5 name="archive" size={50} color="#3a3f52" />
+            <View style={[styles.emptyIcon, { backgroundColor: theme.surface }]}>
+              <FontAwesome5 name="archive" size={50} color={theme.textMuted} />
             </View>
-            <Text style={styles.emptyTitle}>Nenhum Backup</Text>
-            <Text style={styles.emptyText}>
+            <Text style={[styles.emptyTitle, { color: theme.text }]}>Nenhum Backup</Text>
+            <Text style={[styles.emptyText, { color: theme.textMuted }]}>
               Você ainda não criou nenhum backup.{'\n'}
               Clique no botão + para criar seu primeiro backup.
             </Text>
           </View>
         ) : (
           <>
-            <View style={styles.infoBox}>
+            <View style={[styles.infoBox, { backgroundColor: theme.surface, borderColor: theme.border }]}>
               <FontAwesome5 name="info-circle" size={16} color="#4A90E2" />
-              <Text style={styles.infoText}>
+              <Text style={[styles.infoText, { color: theme.textSecondary }]}>
                 Os backups são salvos localmente e incluem todos os dados dos pacientes e imagens.
               </Text>
             </View>
 
-            <Text style={styles.sectionTitle}>
+            <Text style={[styles.sectionTitle, { color: theme.textMuted }]}>
               {backups.length} backup{backups.length !== 1 ? 's' : ''} salvos
             </Text>
 
