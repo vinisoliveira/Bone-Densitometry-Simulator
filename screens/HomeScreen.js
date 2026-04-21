@@ -2,6 +2,7 @@ import React, { memo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { colors, spacing, typography } from '../src/styles/theme';
+import { useTheme } from '../src/contexts/ThemeContext';
 
 const { width } = Dimensions.get('window');
 
@@ -12,16 +13,16 @@ const HomeScreen = memo(({ navigation }) => {
     return (
       <View>
         <TouchableOpacity 
-          style={styles.menuItem}
+          style={[styles.menuItem, { backgroundColor: theme.surface }]}
           onPress={onPress}
           activeOpacity={0.7}
         >
-          <View style={styles.menuIconContainer}>
+          <View style={[styles.menuIconContainer, { backgroundColor: theme.isDark ? 'rgba(74, 144, 226, 0.15)' : 'rgba(74, 144, 226, 0.1)' }]}>
             <FontAwesome5 name={icon} size={28} color="#4A90E2" solid />
           </View>
           <View style={styles.menuTextContainer}>
-            <Text style={styles.menuLabel}>{label}</Text>
-            <Text style={styles.menuSubtitle}>{subtitle}</Text>
+            <Text style={[styles.menuLabel, { color: theme.text }]}>{label}</Text>
+            <Text style={[styles.menuSubtitle, { color: theme.textMuted }]}>{subtitle}</Text>
           </View>
           <FontAwesome5 name="chevron-right" size={18} color="#666" />
         </TouchableOpacity>
@@ -30,11 +31,11 @@ const HomeScreen = memo(({ navigation }) => {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
       {/* Botão de Configurações Flutuante */}
       <View style={styles.configButton}>
         <TouchableOpacity 
-          style={styles.configButtonInner}
+          style={[styles.configButtonInner, { backgroundColor: theme.surface }]}
           onPress={navegarPara('Configuracoes')}
           activeOpacity={0.8}
         >
@@ -44,10 +45,13 @@ const HomeScreen = memo(({ navigation }) => {
 
       <View style={styles.header}>
         <View style={styles.logoContainer}>
-          <FontAwesome5 name="bone" size={48} color="#4A90E2" />
+          <Image 
+            source={require('../assets/icons/5846d2bc-7a92-48a8-9468-6d4e3fde6a97.png')} 
+            style={styles.logoImage}
+          />
         </View>
-        <Text style={styles.title}>Bone Densitometry</Text>
-        <Text style={styles.description}>
+        <Text style={[styles.title, { color: theme.text }]}>Bone Densitometry Simulator</Text>
+        <Text style={[styles.description, { color: theme.textMuted }]}>
           Simulador para análise de densitometria óssea
         </Text>
       </View>
@@ -104,6 +108,14 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 8,
     elevation: 5,
+    overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: '#4A90E2',
+  },
+  logoImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
   },
   title: {
     fontSize: 28,

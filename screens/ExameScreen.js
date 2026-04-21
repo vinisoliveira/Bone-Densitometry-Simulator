@@ -9,9 +9,11 @@ import {
   ScrollView,
 } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
+import { useTheme } from '../src/contexts/ThemeContext';
 
 const ExameScreen = ({ route, navigation }) => {
   const { id, nome, idade, sexo, etnia, exame } = route.params;
+  const { theme } = useTheme();
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
@@ -25,14 +27,10 @@ const ExameScreen = ({ route, navigation }) => {
         ? 'Fêmur esquerdo'
         : exame;
 
-    const imagemExame =
-      exame === 'coluna_lombar_ap.jpg'
-        ? require('../assets/coluna_lombar_ap.jpg')
-        : exame === 'femur.jpeg'
-        ? require('../assets/femur.jpeg')
-        : null;
+    // Imagem será fornecida pelo operador
+    const imagemExame = null;
 
-    return { nomeExame, imagemExame };
+    return { nomeExame, imagemExame: imagemExame[exame] };
   }, [exame]);
 
   useEffect(() => {
@@ -55,13 +53,13 @@ const ExameScreen = ({ route, navigation }) => {
       <View style={styles.infoIcon}>
         <FontAwesome5 name={icon} size={14} color="#4A90E2" />
       </View>
-      <Text style={styles.infoLabel}>{label}:</Text>
-      <Text style={styles.infoValue}>{value}</Text>
+      <Text style={[styles.infoLabel, { color: theme.textMuted }]}>{label}:</Text>
+      <Text style={[styles.infoValue, { color: theme.text }]}>{value}</Text>
     </View>
   );
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
       {/* Header */}
       <Animated.View 
         style={[
@@ -73,12 +71,12 @@ const ExameScreen = ({ route, navigation }) => {
         ]}
       >
         <TouchableOpacity 
-          style={styles.backButton}
+          style={[styles.backButton, { backgroundColor: theme.surface }]}
           onPress={() => navigation.goBack()}
         >
           <FontAwesome5 name="arrow-left" size={20} color="#4A90E2" />
         </TouchableOpacity>
-        <Text style={styles.title}>Detalhes do Exame</Text>
+        <Text style={[styles.title, { color: theme.text }]}>Detalhes do Exame</Text>
         <View style={styles.placeholder} />
       </Animated.View>
 
@@ -89,10 +87,10 @@ const ExameScreen = ({ route, navigation }) => {
       >
         <Animated.View style={{ opacity: fadeAnim }}>
           {/* Patient Info Card */}
-          <View style={styles.card}>
-            <View style={styles.cardHeader}>
+          <View style={[styles.card, { backgroundColor: theme.surface }]}>
+            <View style={[styles.cardHeader, { borderBottomColor: theme.border }]}>
               <FontAwesome5 name="user-circle" size={24} color="#4A90E2" />
-              <Text style={styles.cardTitle}>Informações do Paciente</Text>
+              <Text style={[styles.cardTitle, { color: theme.text }]}>Informações do Paciente</Text>
             </View>
             <View style={styles.cardContent}>
               <InfoRow icon="user" label="Paciente" value={nome} />
@@ -106,10 +104,10 @@ const ExameScreen = ({ route, navigation }) => {
 
           {/* Exam Image */}
           {dadosExame.imagemExame && (
-            <View style={styles.card}>
-              <View style={styles.cardHeader}>
+            <View style={[styles.card, { backgroundColor: theme.surface }]}>
+              <View style={[styles.cardHeader, { borderBottomColor: theme.border }]}>
                 <FontAwesome5 name="image" size={24} color="#4A90E2" />
-                <Text style={styles.cardTitle}>Imagem do Exame</Text>
+                <Text style={[styles.cardTitle, { color: theme.text }]}>Imagem do Exame</Text>
               </View>
               <View style={styles.imageContainer}>
                 <Image 

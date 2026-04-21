@@ -3,6 +3,7 @@ import { View, Text, FlatList, StyleSheet, TouchableOpacity, Animated } from 're
 import { FontAwesome5 } from '@expo/vector-icons';
 import { carregarPacientes } from '../utils/storage';
 import { colors, spacing, typography } from '../src/styles/theme';
+import { useTheme } from '../src/contexts/ThemeContext';
 
 export default function ListaScreen({ navigation }) {
   const [pacientes, setPacientes] = useState([]);
@@ -74,7 +75,7 @@ export default function ListaScreen({ navigation }) {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
       <Animated.View 
         style={[
           styles.header,
@@ -85,14 +86,14 @@ export default function ListaScreen({ navigation }) {
         ]}
       >
         <TouchableOpacity 
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
+          style={[styles.backButton, { backgroundColor: theme.surface }]}
+          onPress={() => navigation.navigate('Home')}
         >
           <FontAwesome5 name="arrow-left" size={20} color="#4A90E2" />
         </TouchableOpacity>
-        <Text style={styles.title}>Lista de Exames</Text>
+        <Text style={[styles.title, { color: theme.text }]}>Lista de Exames</Text>
         <TouchableOpacity 
-          style={styles.addButton}
+          style={[styles.addButton, { backgroundColor: theme.surface }]}
           onPress={() => navigation.navigate('Cadastro')}
         >
           <FontAwesome5 name="plus" size={20} color="#4A90E2" />
@@ -107,8 +108,8 @@ export default function ListaScreen({ navigation }) {
           ]}
         >
           <FontAwesome5 name="folder-open" size={64} color="#4A90E2" />
-          <Text style={styles.emptyText}>Nenhum exame cadastrado</Text>
-          <Text style={styles.emptySubtext}>
+          <Text style={[styles.emptyText, { color: theme.text }]}>Nenhum exame cadastrado</Text>
+          <Text style={[styles.emptySubtext, { color: theme.textMuted }]}>
             Adicione um novo exame para começar
           </Text>
           <TouchableOpacity 

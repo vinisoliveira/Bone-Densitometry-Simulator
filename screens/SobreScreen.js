@@ -1,16 +1,18 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
+import { useTheme } from '../src/contexts/ThemeContext';
 
 
 const SobreScreen = ({ navigation }) => {
+  const { theme } = useTheme();
   const InfoCard = ({ icon, title, children }) => (
-    <View style={styles.card}>
-      <View style={styles.cardHeader}>
+    <View style={[styles.card, { backgroundColor: theme.surface }]}>
+      <View style={[styles.cardHeader, { borderBottomColor: theme.border }]}>
         <View style={styles.iconWrapper}>
           <FontAwesome5 name={icon} size={24} color="#667eea" />
         </View>
-        <Text style={styles.cardTitle}>{title}</Text>
+        <Text style={[styles.cardTitle, { color: theme.text }]}>{title}</Text>
       </View>
       <View style={styles.cardContent}>
         {children}
@@ -19,15 +21,15 @@ const SobreScreen = ({ navigation }) => {
   );
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
+      <View style={[styles.header, { backgroundColor: theme.surface }]}>
         <TouchableOpacity 
-          style={styles.backButton}
+          style={[styles.backButton, { backgroundColor: theme.surfaceAlt }]}
           onPress={() => navigation.goBack()}
         >
           <FontAwesome5 name="arrow-left" size={20} color="#4A90E2" />
         </TouchableOpacity>
-        <Text style={styles.title}>Sobre o Projeto</Text>
+        <Text style={[styles.title, { color: theme.text }]}>Sobre o Projeto</Text>
         <View style={styles.placeholder} />
       </View>
 
@@ -37,15 +39,15 @@ const SobreScreen = ({ navigation }) => {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.logoContainer}>
-          <View style={styles.logoCircle}>
-            <FontAwesome5 name="bone" size={48} color="#4A90E2" />
+          <View style={[styles.logoCircle, { backgroundColor: theme.surface }]}>
+            <FontAwesome5 name="blog" size={48} color="#4A90E2" />
           </View>
-          <Text style={styles.appName}>Bone Densitometry</Text>
-          <Text style={styles.appVersion}>Simulator v1.0</Text>
+          <Text style={[styles.appName, { color: theme.text }]}>Bone Densitometry</Text>
+          <Text style={[styles.appVersion, { color: theme.textMuted }]}>Simulator v1.0</Text>
         </View>
 
         <InfoCard icon="bullseye" title="Propósito">
-          <Text style={styles.text}>
+          <Text style={[styles.text, { color: theme.textSecondary }]}>
             Este projeto é voltado para visualização e organização de exames de imagem, 
             com foco em radiografias da coluna e membros. Ele simula o ambiente de um 
             laboratório moderno, oferecendo uma experiência imersiva e funcional.
@@ -70,35 +72,41 @@ const SobreScreen = ({ navigation }) => {
         </InfoCard>
 
         <InfoCard icon="graduation-cap" title="Turma Radiologia">
-          <Text style={styles.classText}>
+          <Text style={[styles.classText, { color: theme.textSecondary }]}>
             Projeto desenvolvido como parte do curso de Radiologia, 
             demonstrando aplicações práticas da tecnologia na área da saúde.
           </Text>
         </InfoCard>
 
         <View style={styles.footer}>
-          <Text style={styles.footerText}>© 2025 AIFP</Text>
+          <Text style={[styles.footerText, { color: theme.textMuted }]}>© 2025 AIFP</Text>
         </View>
       </ScrollView>
     </View>
   );
 };
 
-const TechItem = ({ icon, name }) => (
-  <View style={styles.techItem}>
-    <FontAwesome5 name={icon} size={16} color="#667eea" />
-    <Text style={styles.techText}>{name}</Text>
-  </View>
-);
-
-const DevItem = ({ name }) => (
-  <View style={styles.devItem}>
-    <View style={styles.devIcon}>
-      <FontAwesome5 name="user" size={16} color="#667eea" />
+const TechItem = ({ icon, name }) => {
+  const { theme } = useTheme();
+  return (
+    <View style={styles.techItem}>
+      <FontAwesome5 name={icon} size={16} color="#667eea" />
+      <Text style={[styles.techText, { color: theme.textSecondary }]}>{name}</Text>
     </View>
-    <Text style={styles.devText}>{name}</Text>
-  </View>
-);
+  );
+};
+
+const DevItem = ({ name }) => {
+  const { theme } = useTheme();
+  return (
+    <View style={styles.devItem}>
+      <View style={styles.devIcon}>
+        <FontAwesome5 name="user" size={16} color="#667eea" />
+      </View>
+      <Text style={[styles.devText, { color: theme.textSecondary }]}>{name}</Text>
+    </View>
+  );
+};
 
 const styles = StyleSheet.create({
   container: {

@@ -15,6 +15,11 @@ import ScanScreen from './screens/ScanScreen';
 import ResultadoScreen from './screens/ResultadoScreen';
 import RelatorioScreen from './screens/RelatorioScreen';
 import ConfiguracoesScreen from './screens/ConfiguracoesScreen';
+import BackupsScreen from './screens/BackupsScreen';
+import PrivacidadeScreen from './screens/PrivacidadeScreen';
+import TermosDeUsoScreen from './screens/TermosDeUsoScreen';
+import ManualScreen from './screens/ManualScreen';
+import { ThemeProvider } from './src/contexts/ThemeContext';
 
 const Stack = createNativeStackNavigator();
 
@@ -41,6 +46,7 @@ export default function App() {
   }
 
   return (
+    <ThemeProvider>
     <NavigationContainer>
       <Stack.Navigator initialRouteName="Home" screenOptions={{ headerShown: false }}>
         <Stack.Screen name="Home" component={HomeScreen} />
@@ -78,8 +84,15 @@ export default function App() {
         
         <Stack.Screen name="Sobre" component={SobreScreen} />
         <Stack.Screen name="Configuracoes" component={ConfiguracoesScreen} />
+        <Stack.Screen name="Backups" component={BackupsScreen} />
+        <Stack.Screen name="Privacidade" component={PrivacidadeScreen} />
+        <Stack.Screen name="TermosDeUso" component={TermosDeUsoScreen} />
+        <Stack.Screen name="Manual" component={ManualScreen} />
         <Stack.Screen name="Scan" component={ScanScreen} />
-        <Stack.Screen name="Resultado" component={ResultadoScreen} />
+        <Stack.Screen name="ResultadoColuna" component={ResultadoColunaScreen} />
+        <Stack.Screen name="ResultadoFemur" component={ResultadoFemurScreen} />
+        <Stack.Screen name="ResultadoPunho" component={ResultadoPunhoScreen} />
+        <Stack.Screen name="ResultadoCorpoTotal" component={ResultadoCorpoTotalScreen} />
         <Stack.Screen
           name="Relatorio"
           component={RelatorioScreen}
@@ -87,5 +100,6 @@ export default function App() {
   
       </Stack.Navigator>
     </NavigationContainer>
+    </ThemeProvider>
   );
 }
