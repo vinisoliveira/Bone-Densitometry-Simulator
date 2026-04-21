@@ -18,7 +18,7 @@ import { FontAwesome5 } from '@expo/vector-icons';
 const { width, height } = Dimensions.get('window');
 
 export default function ResultadoScreen({ route }) {
-  const { id, paciente, idade, sexo, etnia, exame } = route.params;
+  const { id, nome, idade, sexo, etnia, exame } = route.params;
   const [selectedId, setSelectedId] = useState(null);
   const [showSaveAnimation, setShowSaveAnimation] = useState(false);
   const navigation = useNavigation();
@@ -73,7 +73,7 @@ export default function ResultadoScreen({ route }) {
   const regioes = regioesPorExame[exame] || [];
   const regiaoSelecionada = regioes.find((r) => r.id === selectedId);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     setShowSaveAnimation(true);
     
     Animated.sequence([
@@ -84,20 +84,25 @@ export default function ResultadoScreen({ route }) {
       }),
     ]).start();
 
-    // NÃO salva novamente - paciente já foi salvo no CadastroScreen
+    // SALVA o paciente com o exame completo
+    const pacienteCompleto = {
+      id,
+      nome,
+      idade,
+      sexo,
+      etnia,
+      exame,
+      vertebraSelecionada: selectedId,
+      dataCriacao: new Date().toISOString(),
+    };
+
+    await salvarPaciente(pacienteCompleto);
     
     setTimeout(() => {
       saveSuccessAnim.setValue(0);
       setShowSaveAnimation(false);
-      navigation.navigate('Relatorio', {
-        id,
-        paciente,
-        idade,
-        sexo,
-        etnia,
-        exame,
-        vertebraSelecionada: selectedId,
-      });
+      // Navega para a lista de exames após salvar
+      navigation.navigate('Lista');
     }, 1500);
   };
 
@@ -137,7 +142,7 @@ export default function ResultadoScreen({ route }) {
             <FontAwesome5 name="user" size={12} color="#4A90E2" />
           </View>
           <Text style={styles.infoLabel}>Paciente:</Text>
-          <Text style={styles.infoValue}>{paciente}</Text>
+          <Text style={styles.infoValue}>{nome}</Text>
         </View>
         <View style={styles.infoRow}>
           <View style={styles.infoIcon}>
@@ -232,7 +237,7 @@ export default function ResultadoScreen({ route }) {
           onPress={() =>
             navigation.navigate('Relatorio', {
               id,
-              paciente,
+              nome,
               idade,
               sexo,
               etnia,
