@@ -6,6 +6,7 @@ import { colors, spacing, typography } from '../src/styles/theme';
 import { useTheme } from '../src/contexts/ThemeContext';
 
 export default function ListaScreen({ navigation }) {
+  const { theme } = useTheme();
   const [pacientes, setPacientes] = useState([]);
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
@@ -56,6 +57,8 @@ export default function ListaScreen({ navigation }) {
           exame: item.exame,
           vertebraSelecionada: item.vertebraSelecionada,
           dataCriacao: item.dataCriacao,
+          imagemCustomizada: item.imagemCustomizada,
+          imagemHash: item.imagemHash,
         })}
         activeOpacity={0.7}
       >

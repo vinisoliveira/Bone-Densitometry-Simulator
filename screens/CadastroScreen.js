@@ -4,6 +4,37 @@ import { FontAwesome5 } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
 import { colors, spacing, typography } from '../src/styles/theme';
+import { useTheme } from '../src/contexts/ThemeContext';
+import { useCustomAlert } from '../src/hooks/useCustomAlert';
+import CustomAlert from '../src/components/CustomAlert';
+import { salvarImagemExame } from '../utils/storage';
+
+// Utilitários de formatação (locais, evitam crashes em runtime)
+const formatarData = (texto) => {
+  const numeros = (texto || '').replace(/\D/g, '').slice(0, 8);
+  if (numeros.length <= 2) return numeros;
+  if (numeros.length <= 4) return `${numeros.slice(0, 2)}/${numeros.slice(2)}`;
+  return `${numeros.slice(0, 2)}/${numeros.slice(2, 4)}/${numeros.slice(4)}`;
+};
+
+const dataParaString = (d) => {
+  if (!d) return '';
+  const dd = String(d.getDate()).padStart(2, '0');
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const yyyy = d.getFullYear();
+  return `${dd}/${mm}/${yyyy}`;
+};
+
+const formatarPeso = (texto) => {
+  // Aceita números e separador decimal (vírgula ou ponto)
+  const limpo = (texto || '').replace(/[^0-9.,]/g, '').replace(',', '.');
+  // Só permite um separador decimal
+  const partes = limpo.split('.');
+  if (partes.length > 2) return partes[0] + '.' + partes.slice(1).join('');
+  return limpo;
+};
+
+const formatarAltura = (texto) => formatarPeso(texto);
 
 export default function CadastroScreen({ navigation }) {
   const { width: windowWidth } = useWindowDimensions();
@@ -175,12 +206,13 @@ export default function CadastroScreen({ navigation }) {
       return;
     }
 
-    // Abrir seletor de imagem
+    // Abrir seletor de imagem (API compatível Android/iOS/Web)
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 1,
+      mediaTypes: ImagePicker.MediaTypeOptions
+        ? ImagePicker.MediaTypeOptions.Images
+        : ['images'],
+      allowsEditing: Platform.OS !== 'web', // edição não suportada no web
+      quality: 0.9,
     });
 
     if (!result.canceled && result.assets && result.assets.length > 0) {
@@ -192,18 +224,19 @@ export default function CadastroScreen({ navigation }) {
         if (Platform.OS === 'web') {
           const response = await fetch(uri);
           const blob = await response.blob();
-          persistentUri = await new Promise((resolve) => {
+          persistentUri = await new Promise((resolve, reject) => {
             const reader = new FileReader();
             reader.onloadend = () => resolve(reader.result);
+            reader.onerror = reject;
             reader.readAsDataURL(blob);
           });
-        } else if (FileSystem) {
+        } else if (FileSystem && typeof FileSystem.readAsStringAsync === 'function') {
           const base64 = await FileSystem.readAsStringAsync(uri, { encoding: FileSystem.EncodingType.Base64 });
           const mimeType = uri.toLowerCase().includes('.png') ? 'image/png' : 'image/jpeg';
           persistentUri = `data:${mimeType};base64,${base64}`;
         }
       } catch (convErr) {
-        console.warn('Could not convert to base64, using original URI:', convErr);
+        if (__DEV__) console.warn('Could not convert to base64, using original URI:', convErr);
       }
       
       // Salvar imagem no storage com hash

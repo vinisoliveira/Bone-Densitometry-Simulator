@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useMemo } from 'react';
+import React, { useEffect, useRef, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -10,22 +10,41 @@ import {
   Alert,
 } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
-import { deletarPaciente } from '../utils/storage';
+import { deletarPaciente, buscarImagemPorHash } from '../utils/storage';
 
 const ExameDetalheScreen = ({ route, navigation }) => {
-  const { id, nome, idade, sexo, etnia, exame, vertebraSelecionada, dataCriacao } = route.params;
+  const {
+    id,
+    nome,
+    idade,
+    sexo,
+    etnia,
+    exame,
+    vertebraSelecionada,
+    dataCriacao,
+    imagemCustomizada,
+    imagemHash,
+  } = route.params;
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
 
+  // Imagem customizada vinda do paciente (URI ou data URL).
+  // Fallback: tenta buscar pelo hash (caso a lista não tenha passado a URI).
+  const [imagemUri, setImagemUri] = useState(imagemCustomizada || null);
+
+  useEffect(() => {
+    let active = true;
+    if (!imagemUri && imagemHash) {
+      buscarImagemPorHash(imagemHash).then((dados) => {
+        if (active && dados?.uri) setImagemUri(dados.uri);
+      });
+    }
+    return () => { active = false; };
+  }, [imagemUri, imagemHash]);
+
   // Memoizar dados computados para evitar recálculos
   const dadosExame = useMemo(() => {
-    const imagemExame = {
-      'Coluna Lombar': require('../assets/coluna-lombar.jpeg'),
-      'Fêmur': require('../assets/femur.jpeg'),
-      'Punho': require('../assets/punho.jpg'),
-    };
-
     const dataFormatada = dataCriacao
       ? new Date(dataCriacao).toLocaleDateString('pt-BR', {
           day: '2-digit',
@@ -36,8 +55,8 @@ const ExameDetalheScreen = ({ route, navigation }) => {
         })
       : 'Data não disponível';
 
-    return { imagemExame: imagemExame[exame], dataFormatada };
-  }, [exame, dataCriacao]);
+    return { dataFormatada };
+  }, [dataCriacao]);
 
   useEffect(() => {
     Animated.parallel([
@@ -166,7 +185,7 @@ const ExameDetalheScreen = ({ route, navigation }) => {
           </View>
 
           {/* Exam Image */}
-          {dadosExame.imagemExame && (
+          {imagemUri && (
             <View style={styles.card}>
               <View style={styles.cardHeader}>
                 <FontAwesome5 name="image" size={24} color="#4A90E2" />
@@ -174,7 +193,7 @@ const ExameDetalheScreen = ({ route, navigation }) => {
               </View>
               <View style={styles.imageContainer}>
                 <Image
-                  source={dadosExame.imagemExame}
+                  source={{ uri: imagemUri }}
                   style={styles.image}
                   resizeMode="contain"
                   progressiveRenderingEnabled={true}

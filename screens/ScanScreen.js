@@ -24,7 +24,20 @@ export default function ScanScreen({ route }) {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const [progress, setProgress] = useState(0);
 
-  const { id, nome, idade, sexo, etnia, exame } = route.params;
+  const { 
+    id, 
+    nome, 
+    idade,
+    dataNascimento,
+    peso,
+    altura,
+    sexo, 
+    etnia, 
+    exame,
+    operador,
+    imagemCustomizada,
+    imagemHash,
+  } = route.params || {};
 
   // Usa imagem customizada se existir
   const imagemExame = imagemCustomizada 

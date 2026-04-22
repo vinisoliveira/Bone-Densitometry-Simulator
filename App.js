@@ -8,11 +8,13 @@ import { View, ActivityIndicator } from 'react-native';
 import HomeScreen from './screens/HomeScreen';
 import CadastroScreen from './screens/CadastroScreen';
 import ListaScreen from './screens/ListaScreen';
-import ExameScreen from './screens/ExameScreen';
 import ExameDetalhesScreen from './screens/ExameDetalhesScreen';
 import SobreScreen from './screens/SobreScreen';
 import ScanScreen from './screens/ScanScreen';
-import ResultadoScreen from './screens/ResultadoScreen';
+import ResultadoColunaScreen from './screens/ResultadoColunaScreen';
+import ResultadoFemurScreen from './screens/ResultadoFemurScreen';
+import ResultadoPunhoScreen from './screens/ResultadoPunhoScreen';
+import ResultadoCorpoTotalScreen from './screens/ResultadoCorpoTotalScreen';
 import RelatorioScreen from './screens/RelatorioScreen';
 import ConfiguracoesScreen from './screens/ConfiguracoesScreen';
 import BackupsScreen from './screens/BackupsScreen';
@@ -70,8 +72,6 @@ export default function App() {
           )}
         </Stack.Screen>
 
-        <Stack.Screen name="Exame" component={ExameScreen} />
-        
         <Stack.Screen name="ExameDetalhe">
           {(props) => (
             <ExameDetalhesScreen

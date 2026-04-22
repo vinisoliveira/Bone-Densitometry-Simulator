@@ -1,5 +1,5 @@
 import React, { memo } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Dimensions, Image } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { colors, spacing, typography } from '../src/styles/theme';
 import { useTheme } from '../src/contexts/ThemeContext';
@@ -7,6 +7,7 @@ import { useTheme } from '../src/contexts/ThemeContext';
 const { width } = Dimensions.get('window');
 
 const HomeScreen = memo(({ navigation }) => {
+  const { theme } = useTheme();
   const navegarPara = (tela) => () => navigation.navigate(tela);
 
   const MenuItem = ({ icon, label, subtitle, onPress }) => {
