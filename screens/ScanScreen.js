@@ -7,9 +7,11 @@ import {
   Dimensions,
   Image,
   Easing,
+  Platform,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { FontAwesome5 } from '@expo/vector-icons';
+import * as ScreenOrientation from 'expo-screen-orientation';
 import { useTheme } from '../src/contexts/ThemeContext';
 
 const { height, width } = Dimensions.get('window');
@@ -46,6 +48,16 @@ export default function ScanScreen({ route }) {
 
   // Altura da área da imagem
   const IMAGE_HEIGHT = height * 0.45;
+
+  // Trava em landscape durante a análise DXA (scan + telas de resultado).
+  useEffect(() => {
+    if (Platform.OS !== 'web') {
+      ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE)
+        .catch(() => {});
+    }
+    // Não desbloqueamos aqui: a tela de resultado seguinte mantém o lock.
+    // O unlock é feito apenas ao sair das telas de resultado.
+  }, []);
 
   useEffect(() => {
     // Animação de fade inicial

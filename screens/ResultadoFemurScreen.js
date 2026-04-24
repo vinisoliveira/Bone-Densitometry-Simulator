@@ -272,11 +272,10 @@ export default function ResultadoFemurScreen({ route }) {
   // Lock to landscape on mobile
   useEffect(() => {
     if (Platform.OS !== 'web') {
-      ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP)
+      ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE)
         .catch(() => {});
       return () => {
-        ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP)
-          .catch(() => {});
+        ScreenOrientation.unlockAsync().catch(() => {});
       };
     }
   }, []);

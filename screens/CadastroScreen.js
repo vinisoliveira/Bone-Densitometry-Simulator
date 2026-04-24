@@ -24,16 +24,26 @@ const dataParaString = (d) => {
   return `${dd}/${mm}/${yyyy}`;
 };
 
+// Peso em kg com 1 casa decimal: usuário digita apenas dígitos e a vírgula
+// é inserida automaticamente antes do último dígito. Ex: '705' -> '70,5'.
 const formatarPeso = (texto) => {
-  // Aceita números e separador decimal (vírgula ou ponto)
-  const limpo = (texto || '').replace(/[^0-9.,]/g, '').replace(',', '.');
-  // Só permite um separador decimal
-  const partes = limpo.split('.');
-  if (partes.length > 2) return partes[0] + '.' + partes.slice(1).join('');
-  return limpo;
+  const digitos = (texto || '').replace(/\D/g, '').slice(0, 4);
+  if (digitos.length === 0) return '';
+  if (digitos.length === 1) return `0,${digitos}`;
+  const inteiros = digitos.slice(0, -1).replace(/^0+(?=\d)/, '');
+  const decimal = digitos.slice(-1);
+  return `${inteiros || '0'},${decimal}`;
 };
 
-const formatarAltura = (texto) => formatarPeso(texto);
+// Altura em metros com 2 casas decimais: '180' -> '1,80'. Ignora o primeiro
+// dígito se não for 1 ou 2 para evitar valores absurdos.
+const formatarAltura = (texto) => {
+  const digitos = (texto || '').replace(/\D/g, '').slice(0, 3);
+  if (digitos.length === 0) return '';
+  if (digitos.length === 1) return digitos;
+  if (digitos.length === 2) return `${digitos[0]},${digitos[1]}`;
+  return `${digitos[0]},${digitos.slice(1)}`;
+};
 
 export default function CadastroScreen({ navigation }) {
   const { width: windowWidth } = useWindowDimensions();
@@ -645,7 +655,7 @@ export default function CadastroScreen({ navigation }) {
                   keyboardType="number-pad"
                   value={peso}
                   onChangeText={(texto) => setPeso(formatarPeso(texto))}
-                  maxLength={5}
+                  maxLength={6}
                 />
               </View>
               <View style={[styles.inputGroup, styles.inputHalf, { backgroundColor: theme.background, borderColor: theme.border }]}>
