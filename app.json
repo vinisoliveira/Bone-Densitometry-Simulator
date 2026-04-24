@@ -3,9 +3,8 @@
     "name": "Bone Densitometry Simulator",
     "slug": "SpineViewer",
     "version": "1.0.0",
-    "orientation": "portrait",
+    "orientation": "default",
     "icon": "./assets/icons/5846d2bc-7a92-48a8-9468-6d4e3fde6a97.png",
-    "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
       "image": "./assets/icons/5846d2bc-7a92-48a8-9468-6d4e3fde6a97.png",
@@ -13,28 +12,44 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.vinisoliveira.SpBoneDensitometrySimulator",
+      "infoPlist": {
+        "NSPhotoLibraryUsageDescription": "Este app precisa acessar suas fotos para selecionar imagens de exames.",
+        "NSCameraUsageDescription": "Este app pode usar a câmera para capturar imagens de exames.",
+        "NSPhotoLibraryAddUsageDescription": "Este app precisa salvar imagens de exames na sua galeria."
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/icons/5846d2bc-7a92-48a8-9468-6d4e3fde6a97.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true,
-      "package": "com.vinisoliveira.SpBoneDensitometrySimulator"
+      "package": "com.vinisoliveira.SpBoneDensitometrySimulator",
+      "permissions": [
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
       "favicon": "./assets/icons/5846d2bc-7a92-48a8-9468-6d4e3fde6a97.png"
     },
-    "extra": {
-      "eas": {
-        "projectId": "793a4376-2819-48ab-bce5-fdcea33b83bf"
-      }
-    },
-    "owner": "vinisoliveira",
     "plugins": [
       "expo-asset",
-      "expo-font"
-    ]
+      "expo-font",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "O app acessa suas fotos para permitir selecionar imagens de exames.",
+          "cameraPermission": "O app acessa sua câmera para permitir capturar imagens de exames."
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "ad978114-f323-4e60-a342-20c33e84620e"
+      }
+    }
   }
 }

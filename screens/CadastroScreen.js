@@ -2,8 +2,7 @@ import React, { useState, useRef } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, KeyboardAvoidingView, Platform, Animated, Easing, Image, Modal, Dimensions, useWindowDimensions } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
-import * as FileSystem from 'expo-file-system';
-import { colors, spacing, typography } from '../src/styles/theme';
+import * as FileSystem from 'expo-file-system/legacy';
 import { useTheme } from '../src/contexts/ThemeContext';
 import { useCustomAlert } from '../src/hooks/useCustomAlert';
 import CustomAlert from '../src/components/CustomAlert';
@@ -208,9 +207,7 @@ export default function CadastroScreen({ navigation }) {
 
     // Abrir seletor de imagem (API compatível Android/iOS/Web)
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions
-        ? ImagePicker.MediaTypeOptions.Images
-        : ['images'],
+      mediaTypes: ['images'],
       allowsEditing: Platform.OS !== 'web', // edição não suportada no web
       quality: 0.9,
     });
@@ -740,7 +737,8 @@ export default function CadastroScreen({ navigation }) {
                 {[
                   { nome: 'Coluna Lombar' },
                   { nome: 'Fêmur' },
-                  { nome: 'Punho' }
+                  { nome: 'Punho' },
+                  { nome: 'Corpo Total' }
                 ].map((opcao) => (
                   <TouchableOpacity
                     key={opcao.nome}
@@ -748,7 +746,7 @@ export default function CadastroScreen({ navigation }) {
                       styles.examCard,
                       exame === opcao.nome && styles.examCardSelected,
                     ]}
-                    onPress={() => setExame(opcao.nome)}
+                    onPress={() => selecionarExameComImagem(opcao.nome)}
                     activeOpacity={0.7}
                   >
                     <Text style={[

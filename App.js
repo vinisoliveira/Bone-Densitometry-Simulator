@@ -4,6 +4,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import * as Font from 'expo-font';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { View, ActivityIndicator } from 'react-native';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
 import HomeScreen from './screens/HomeScreen';
 import CadastroScreen from './screens/CadastroScreen';
@@ -26,15 +27,19 @@ import { ThemeProvider } from './src/contexts/ThemeContext';
 const Stack = createNativeStackNavigator();
 
 export default function App() {
-  const [pacientes, setPacientes] = useState([]);
   const [fontsLoaded, setFontsLoaded] = useState(false);
 
   useEffect(() => {
     async function loadFonts() {
-      await Font.loadAsync({
-        ...FontAwesome5.font,
-      });
-      setFontsLoaded(true);
+      try {
+        await Font.loadAsync({
+          ...FontAwesome5.font,
+        });
+      } catch (e) {
+        if (__DEV__) console.warn('Erro ao carregar fontes:', e);
+      } finally {
+        setFontsLoaded(true);
+      }
     }
     loadFonts();
   }, []);
@@ -48,58 +53,31 @@ export default function App() {
   }
 
   return (
-    <ThemeProvider>
-    <NavigationContainer>
-      <Stack.Navigator initialRouteName="Home" screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="Home" component={HomeScreen} />
-
-        <Stack.Screen name="Cadastro">
-          {(props) => (
-            <CadastroScreen
-              {...props}
-              pacientes={pacientes}
-              setPacientes={setPacientes}
-            />
-          )}
-        </Stack.Screen>
-
-        <Stack.Screen name="Lista">
-          {(props) => (
-            <ListaScreen
-              {...props}
-              pacientes={pacientes}
-            />
-          )}
-        </Stack.Screen>
-
-        <Stack.Screen name="ExameDetalhe">
-          {(props) => (
-            <ExameDetalhesScreen
-              {...props}
-              pacientes={pacientes}
-              setPacientes={setPacientes}
-            />
-          )}
-        </Stack.Screen>
-        
-        <Stack.Screen name="Sobre" component={SobreScreen} />
-        <Stack.Screen name="Configuracoes" component={ConfiguracoesScreen} />
-        <Stack.Screen name="Backups" component={BackupsScreen} />
-        <Stack.Screen name="Privacidade" component={PrivacidadeScreen} />
-        <Stack.Screen name="TermosDeUso" component={TermosDeUsoScreen} />
-        <Stack.Screen name="Manual" component={ManualScreen} />
-        <Stack.Screen name="Scan" component={ScanScreen} />
-        <Stack.Screen name="ResultadoColuna" component={ResultadoColunaScreen} />
-        <Stack.Screen name="ResultadoFemur" component={ResultadoFemurScreen} />
-        <Stack.Screen name="ResultadoPunho" component={ResultadoPunhoScreen} />
-        <Stack.Screen name="ResultadoCorpoTotal" component={ResultadoCorpoTotalScreen} />
-        <Stack.Screen
-          name="Relatorio"
-          component={RelatorioScreen}
-        />
-  
-      </Stack.Navigator>
-    </NavigationContainer>
-    </ThemeProvider>
+    <SafeAreaProvider>
+      <ThemeProvider>
+        <SafeAreaView style={{ flex: 1, backgroundColor: '#1a1d29' }} edges={['top', 'bottom', 'left', 'right']}>
+          <NavigationContainer>
+            <Stack.Navigator initialRouteName="Home" screenOptions={{ headerShown: false }}>
+              <Stack.Screen name="Home" component={HomeScreen} />
+              <Stack.Screen name="Cadastro" component={CadastroScreen} />
+              <Stack.Screen name="Lista" component={ListaScreen} />
+              <Stack.Screen name="ExameDetalhe" component={ExameDetalhesScreen} />
+              <Stack.Screen name="Sobre" component={SobreScreen} />
+              <Stack.Screen name="Configuracoes" component={ConfiguracoesScreen} />
+              <Stack.Screen name="Backups" component={BackupsScreen} />
+              <Stack.Screen name="Privacidade" component={PrivacidadeScreen} />
+              <Stack.Screen name="TermosDeUso" component={TermosDeUsoScreen} />
+              <Stack.Screen name="Manual" component={ManualScreen} />
+              <Stack.Screen name="Scan" component={ScanScreen} />
+              <Stack.Screen name="ResultadoColuna" component={ResultadoColunaScreen} />
+              <Stack.Screen name="ResultadoFemur" component={ResultadoFemurScreen} />
+              <Stack.Screen name="ResultadoPunho" component={ResultadoPunhoScreen} />
+              <Stack.Screen name="ResultadoCorpoTotal" component={ResultadoCorpoTotalScreen} />
+              <Stack.Screen name="Relatorio" component={RelatorioScreen} />
+            </Stack.Navigator>
+          </NavigationContainer>
+        </SafeAreaView>
+      </ThemeProvider>
+    </SafeAreaProvider>
   );
 }

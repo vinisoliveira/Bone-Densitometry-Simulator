@@ -111,11 +111,11 @@ export default function ScanScreen({ route }) {
       // Determina a tela de resultado baseada no tipo de exame
       let resultadoScreen = 'ResultadoColuna'; // Coluna Lombar é o padrão
       
-      if (exame === 'Fêmur (Proximal)') {
+      if (exame === 'Fêmur' || exame === 'Fêmur (Proximal)') {
         resultadoScreen = 'ResultadoFemur';
-      } else if (exame === 'Punho (Antebraço)') {
+      } else if (exame === 'Punho' || exame === 'Punho (Antebraço)') {
         resultadoScreen = 'ResultadoPunho';
-      } else if (exame === 'Corpo Total (Full Body)') {
+      } else if (exame === 'Corpo Total' || exame === 'Corpo Total (Full Body)') {
         resultadoScreen = 'ResultadoCorpoTotal';
       }
       
