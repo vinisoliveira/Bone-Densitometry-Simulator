@@ -24,6 +24,9 @@ const ExameDetalheScreen = ({ route, navigation }) => {
     dataCriacao,
     imagemCustomizada,
     imagemHash,
+    peso,
+    altura,
+    operador,
   } = route.params;
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -215,6 +218,12 @@ const ExameDetalheScreen = ({ route, navigation }) => {
                 etnia,
                 exame,
                 vertebraSelecionada,
+                peso,
+                altura,
+                operador,
+                dataCriacao,
+                imagemCustomizada,
+                imagemHash,
               })
             }
             activeOpacity={0.8}

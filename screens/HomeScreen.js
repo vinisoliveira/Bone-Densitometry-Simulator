@@ -1,5 +1,5 @@
 import React, { memo } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Dimensions, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Dimensions, Image, ScrollView } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { colors, spacing, typography } from '../src/styles/theme';
 import { useTheme } from '../src/contexts/ThemeContext';
@@ -44,7 +44,12 @@ const HomeScreen = memo(({ navigation }) => {
         </TouchableOpacity>
       </View>
 
-      <View style={styles.header}>
+      <ScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.header}>
         <View style={styles.logoContainer}>
           <Image 
             source={require('../assets/icons/5846d2bc-7a92-48a8-9468-6d4e3fde6a97.png')} 
@@ -79,6 +84,7 @@ const HomeScreen = memo(({ navigation }) => {
           onPress={navegarPara('Sobre')}
         />
       </View>
+      </ScrollView>
     </View>
   );
 });
@@ -89,6 +95,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#1a1d29',
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingBottom: spacing.xl,
   },
   header: {
     paddingTop: spacing.xl * 2,

@@ -170,7 +170,11 @@ function generatePDFHTML(p) {
        'Exercícios supervisionados e prevenção de quedas.',
        'Reavaliar em 1 a 2 anos para acompanhamento.'];
 
-  const bmiVal = p.peso && p.altura ? (parseFloat(p.peso) / Math.pow(parseFloat(p.altura) / 100, 2)).toFixed(1) : null;
+  const _pesoNum = p.peso != null ? parseFloat(String(p.peso).replace(',', '.')) : NaN;
+  const _altNum = p.altura != null ? parseFloat(String(p.altura).replace(',', '.')) : NaN;
+  const bmiVal = (!isNaN(_pesoNum) && !isNaN(_altNum) && _altNum > 0)
+    ? (_pesoNum / (_altNum * _altNum)).toFixed(1)
+    : null;
   const bmiLabel = bmiVal ? (bmiVal < 18.5 ? 'Abaixo do peso' : bmiVal < 25 ? 'Normal' : bmiVal < 30 ? 'Sobrepeso' : 'Obesidade') : null;
 
   const diagClass = p.classification.name === 'Normal' ? 'normal'
@@ -305,7 +309,7 @@ function generatePDFHTML(p) {
     </tr>
     <tr>
       <td class="lbl">Peso</td><td>${p.peso ? p.peso + ' kg' : '—'}</td>
-      <td class="lbl">Altura</td><td>${p.altura ? p.altura + ' cm' : '—'}</td>
+      <td class="lbl">Altura</td><td>${p.altura ? p.altura + ' m' : '—'}</td>
     </tr>
     ${bmiVal ? `<tr><td class="lbl">IMC</td><td colspan="3">${bmiVal} kg/m² — ${bmiLabel}</td></tr>` : ''}
   </tbody>
@@ -427,11 +431,27 @@ function generatePDFHTML(p) {
 // ── Componente Principal ──
 
 export default function RelatorioScreen({ route, navigation }) {
-  const { nome, idade, sexo, etnia, exame, vertebraSelecionada } = route.params;
+  const {
+    id,
+    nome,
+    idade,
+    sexo,
+    etnia,
+    exame,
+    vertebraSelecionada,
+    peso,
+    altura,
+    operador,
+    dataCriacao,
+    imagemCustomizada,
+    imagemHash,
+    roiData,
+    allRoiData,
+  } = route.params || {};
 
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   const [resolvedImageUri, setResolvedImageUri] = useState(
-    imagemCustomizada?.startsWith('data:') ? imagemCustomizada : null
+    imagemCustomizada?.startsWith?.('data:') ? imagemCustomizada : null
   );
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
@@ -441,12 +461,12 @@ export default function RelatorioScreen({ route, navigation }) {
   // Resolve image with same fallback logic as ExameDetalhesScreen
   useEffect(() => {
     const resolveImage = async () => {
-      if (imagemCustomizada?.startsWith('data:')) { setResolvedImageUri(imagemCustomizada); return; }
+      if (imagemCustomizada?.startsWith?.('data:')) { setResolvedImageUri(imagemCustomizada); return; }
       if (imagemHash) {
         try {
           const { buscarImagemPorHash } = require('../utils/storage');
           const imgData = await buscarImagemPorHash(imagemHash);
-          if (imgData?.uri?.startsWith('data:')) { setResolvedImageUri(imgData.uri); return; }
+          if (imgData?.uri?.startsWith?.('data:')) { setResolvedImageUri(imgData.uri); return; }
         } catch (e) {}
       }
       if (id) {
@@ -454,7 +474,7 @@ export default function RelatorioScreen({ route, navigation }) {
           const { carregarPacientes } = require('../utils/storage');
           const lista = await carregarPacientes();
           const pac = lista.find(p => p.id === id);
-          if (pac?.imagemCustomizada?.startsWith('data:')) { setResolvedImageUri(pac.imagemCustomizada); return; }
+          if (pac?.imagemCustomizada?.startsWith?.('data:')) { setResolvedImageUri(pac.imagemCustomizada); return; }
         } catch (e) {}
       }
       setResolvedImageUri(null);
@@ -466,7 +486,16 @@ export default function RelatorioScreen({ route, navigation }) {
   const bmd = roiData?.bmd || calculateBMD(tScore);
   const zScore = roiData?.zScore || calculateZScore(tScore, idade);
   const classification = getClassification(tScore);
-  const imc = peso && altura ? (parseFloat(peso)/Math.pow(parseFloat(altura)/100,2)).toFixed(1) : null;
+  // Altura salva como string em metros (ex: "1,80"). Converte vírgula para ponto.
+  const parseNumBR = (v) => {
+    if (v == null) return NaN;
+    return parseFloat(String(v).replace(',', '.'));
+  };
+  const pesoNum = parseNumBR(peso);
+  const alturaNum = parseNumBR(altura);
+  const imc = (!isNaN(pesoNum) && !isNaN(alturaNum) && alturaNum > 0)
+    ? (pesoNum / (alturaNum * alturaNum)).toFixed(1)
+    : null;
 
   // Use real ROI data from operator placement when available, otherwise fall back to simulated
   const regions = (allRoiData && allRoiData.length > 0)
