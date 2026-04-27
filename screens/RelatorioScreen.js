@@ -517,59 +517,72 @@ export default function RelatorioScreen({ route, navigation }) {
     ]).start();
   }, []);
 
-  const gerarPDF = async () => {
-    const html = `
-      <html>
-        <head>
-          <style>
-            body { font-family: Arial, sans-serif; padding: 20px; }
-            h1 { color: #4A90E2; }
-            .info { margin: 10px 0; }
-            strong { color: #333; }
-          </style>
-        </head>
-        <body>
-          <h1>Relatório de Densitometria Óssea</h1>
-          <div class="info"><strong>Paciente:</strong> ${nome}</div>
-          <div class="info"><strong>Idade:</strong> ${idade}</div>
-          <div class="info"><strong>Sexo:</strong> ${sexo}</div>
-          <div class="info"><strong>Etnia:</strong> ${etnia}</div>
-          <div class="info"><strong>Exame:</strong> ${exame}</div>
-          <div class="info"><strong>Região Selecionada:</strong> ${vertebraSelecionada || 'Nenhuma'}</div>
-          <p><em>Relatório gerado automaticamente pelo sistema.</em></p>
-        </body>
-      </html>
-    `;
-
+  const gerarEBaixarPDF = async () => {
+    if (isGeneratingPDF) return;
+    setIsGeneratingPDF(true);
     try {
+      const now = new Date();
+      const dataAtual = now.toLocaleDateString('pt-BR');
+      const horaAtual = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+      const dataNascimento = (() => {
+        if (!route.params?.dataNascimento) return null;
+        const d = route.params.dataNascimento;
+        if (typeof d === 'string') return d;
+        try { return new Date(d).toLocaleDateString('pt-BR'); } catch { return String(d); }
+      })();
+
+      const chartSVG = generateChartSVG(tScore, idade, exame);
+
+      const html = generatePDFHTML({
+        nome,
+        dataNascimento,
+        idade,
+        sexo,
+        etnia,
+        operador,
+        peso,
+        altura,
+        dataAtual,
+        horaAtual,
+        exame,
+        regions,
+        classification,
+        bmd,
+        tScore,
+        zScore,
+        chartSVG,
+        imagemCustomizada: resolvedImageUri,
+      });
+
       if (Platform.OS === 'web') {
-        // expo-print does not reliably use the html param on web — open in new window instead
         const printWindow = window.open('', '_blank');
         if (printWindow) {
           printWindow.document.open();
           printWindow.document.write(html);
           printWindow.document.close();
           printWindow.focus();
-          // Small delay so images/styles load before print dialog opens
           setTimeout(() => { printWindow.print(); }, 600);
+        } else {
+          showAlert({ title: 'Bloqueado', message: 'Permita pop-ups para gerar o relatório.', type: 'error', buttons: [{ text: 'OK' }] });
         }
-        setIsGeneratingPDF(false);
       } else {
         const { uri } = await Print.printToFileAsync({ html, base64: false });
-        const fileName = `Densitometria_${(nome||'Paciente').replace(/\s+/g,'_')}_${(exame||'').replace(/[\s()\/]/g,'_')}_${new Date().toISOString().split('T')[0]}.pdf`;
+        const fileName = `Densitometria_${(nome || 'Paciente').replace(/\s+/g, '_')}_${(exame || '').replace(/[\s()\/]/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`;
         const newUri = `${FileSystem.documentDirectory}${fileName}`;
         await FileSystem.moveAsync({ from: uri, to: newUri });
-        setIsGeneratingPDF(false);
         const isAvailable = await Sharing.isAvailableAsync();
         if (isAvailable) {
           await Sharing.shareAsync(newUri, { mimeType: 'application/pdf', dialogTitle: 'Salvar Relatório', UTI: 'com.adobe.pdf' });
         } else {
-          showAlert({ title: 'PDF Gerado', message: 'Salvo em: '+newUri, type: 'success', buttons: [{ text: 'OK' }] });
+          showAlert({ title: 'PDF Gerado', message: 'Salvo em: ' + newUri, type: 'success', buttons: [{ text: 'OK' }] });
         }
       }
     } catch (error) {
-      setIsGeneratingPDF(false);
+      if (__DEV__) console.warn('Erro ao gerar PDF:', error);
       showAlert({ title: 'Erro', message: 'Não foi possível gerar o PDF.', type: 'error', buttons: [{ text: 'OK' }] });
+    } finally {
+      setIsGeneratingPDF(false);
     }
   };
 

@@ -14,11 +14,12 @@ import { FontAwesome5 } from '@expo/vector-icons';
 import * as ScreenOrientation from 'expo-screen-orientation';
 import { useTheme } from '../src/contexts/ThemeContext';
 
-const { height, width } = Dimensions.get('window');
-
 export default function ScanScreen({ route }) {
   const navigation = useNavigation();
   const { theme } = useTheme();
+  const [dims, setDims] = useState(() => Dimensions.get('window'));
+  const { height, width } = dims;
+  const isLandscape = width > height;
   // Animação do scanner - começa do topo (0) e vai até o final (1)
   const scanProgress = useRef(new Animated.Value(0)).current;
   const pulseAnim = useRef(new Animated.Value(1)).current;
@@ -49,14 +50,24 @@ export default function ScanScreen({ route }) {
   // Altura da área da imagem
   const IMAGE_HEIGHT = height * 0.45;
 
-  // Trava em landscape durante a análise DXA (scan + telas de resultado).
+  // Trava em portrait durante a tela de scanning. As telas de resultado
+  // seguintes aplicam seu próprio lock (landscape) ao montar.
   useEffect(() => {
     if (Platform.OS !== 'web') {
-      ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.LANDSCAPE)
+      ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP)
         .catch(() => {});
     }
-    // Não desbloqueamos aqui: a tela de resultado seguinte mantém o lock.
-    // O unlock é feito apenas ao sair das telas de resultado.
+  }, []);
+
+  // Acompanha mudanças de tamanho/orientação (especialmente na web, onde
+  // o lock de orientação não funciona).
+  useEffect(() => {
+    const sub = Dimensions.addEventListener('change', ({ window }) => {
+      setDims(window);
+    });
+    return () => {
+      if (sub?.remove) sub.remove();
+    };
   }, []);
 
   useEffect(() => {
@@ -169,6 +180,17 @@ export default function ScanScreen({ route }) {
     <View style={[styles.container, { backgroundColor: theme.background }]}>
       {/* Background gradient effect */}
       <View style={styles.gradientOverlay} />
+
+      {/* Aviso de orientação (web) — o scanner foi projetado para portrait */}
+      {Platform.OS === 'web' && isLandscape && (
+        <View style={styles.rotateOverlay}>
+          <FontAwesome5 name="mobile-alt" size={56} color="#4A90E2" />
+          <Text style={styles.rotateTitle}>Gire o dispositivo</Text>
+          <Text style={styles.rotateSubtitle}>
+            Esta tela deve ser usada em modo retrato (portrait).
+          </Text>
+        </View>
+      )}
 
       {/* Header */}
       <Animated.View style={[styles.header, { opacity: fadeAnim }]}>
@@ -296,6 +318,28 @@ const styles = StyleSheet.create({
   gradientOverlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(74, 144, 226, 0.03)',
+  },
+  rotateOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: '#0a0d14',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 1000,
+    paddingHorizontal: 24,
+  },
+  rotateTitle: {
+    color: '#FFF',
+    fontSize: 20,
+    fontWeight: '700',
+    marginTop: 18,
+    textAlign: 'center',
+  },
+  rotateSubtitle: {
+    color: '#aaa',
+    fontSize: 14,
+    marginTop: 8,
+    textAlign: 'center',
+    lineHeight: 20,
   },
   header: {
     position: 'absolute',
