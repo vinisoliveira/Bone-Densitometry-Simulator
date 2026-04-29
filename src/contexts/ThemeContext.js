@@ -47,15 +47,17 @@ export function ThemeProvider({ children }) {
   const [isDark, setIsDark] = useState(true);
 
   useEffect(() => {
-    AsyncStorage.getItem('theme_dark').then(v => {
-      if (v === 'false') setIsDark(false);
-    });
+    AsyncStorage.getItem('theme_dark')
+      .then(v => {
+        if (v === 'false') setIsDark(false);
+      })
+      .catch(() => {});
   }, []);
 
   const toggleTheme = () => {
     const next = !isDark;
     setIsDark(next);
-    AsyncStorage.setItem('theme_dark', String(next));
+    AsyncStorage.setItem('theme_dark', String(next)).catch(() => {});
   };
 
   const theme = isDark ? DARK : LIGHT;

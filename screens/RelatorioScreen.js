@@ -457,6 +457,7 @@ export default function RelatorioScreen({ route, navigation }) {
   const slideAnim = useRef(new Animated.Value(30)).current;
   const { alertConfig, showAlert, hideAlert } = useCustomAlert();
   const { theme } = useTheme();
+  const styles = React.useMemo(() => createStyles(theme), [theme]);
 
   // Resolve image with same fallback logic as ExameDetalhesScreen
   useEffect(() => {
@@ -598,12 +599,12 @@ export default function RelatorioScreen({ route, navigation }) {
       <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <Animated.View style={{ opacity: fadeAnim }}>
           {/* Patient Info Card */}
-          <View style={styles.card}>
-            <View style={styles.cardHeader}>
+          <View style={[styles.card, { backgroundColor: theme.surface }]}>
+            <View style={[styles.cardH, { borderBottomColor: theme.border }]}>
               <FontAwesome5 name="user-circle" size={24} color="#4A90E2" />
-              <Text style={styles.cardTitle}>Dados do Paciente</Text>
+              <Text style={[styles.cardT, { color: theme.text }]}>Dados do Paciente</Text>
             </View>
-            <View style={styles.cardContent}>
+            <View style={styles.cardC}>
               <InfoRow icon="user" label="Paciente" value={nome} />
               <InfoRow icon="birthday-cake" label="Idade" value={`${idade} anos`} />
               <InfoRow icon="venus-mars" label="Sexo" value={sexo} />
@@ -668,46 +669,63 @@ export default function RelatorioScreen({ route, navigation }) {
   );
 }
 
+const InfoRow = ({ icon, label, value }) => {
+  const { theme } = useTheme();
+  const styles = React.useMemo(() => createStyles(theme), [theme]);
+  return (
+    <View style={[styles.infoRow, { borderBottomColor: theme.border }]}>
+      <FontAwesome5 name={icon} size={14} color="#4A90E2" style={{ width: 22 }} />
+      <Text style={[styles.infoLabel, { color: theme.textMuted }]}>{label}</Text>
+      <Text style={[styles.infoValue, { color: theme.text }]} numberOfLines={1}>{value || '—'}</Text>
+    </View>
+  );
+};
+
 const IItem=({icon,label,value})=>{
   const { theme } = useTheme();
+  const styles = React.useMemo(() => createStyles(theme), [theme]);
   return (
     <View style={[styles.iItem, { backgroundColor: theme.background }]}><FontAwesome5 name={icon} size={13} color="#4A90E2" /><View><Text style={[styles.iLabel, { color: theme.textMuted }]}>{label}</Text><Text style={[styles.iValue, { color: theme.text }]}>{value||'—'}</Text></View></View>
   );
 };
 const MBox=({label,value,unit,color})=>{
   const { theme } = useTheme();
+  const styles = React.useMemo(() => createStyles(theme), [theme]);
   return (
     <View style={[styles.mBox, { backgroundColor: theme.background }]}><Text style={[styles.mLabel, { color: theme.textMuted }]}>{label}</Text><Text style={[styles.mValue,{color}]}>{value}</Text><Text style={[styles.mUnit, { color: theme.textFaint }]}>{unit}</Text></View>
   );
 };
 
-const styles = StyleSheet.create({
-  container:{flex:1,backgroundColor:'#1a1d29'},
+const createStyles = (theme) => StyleSheet.create({
+  container:{flex:1,backgroundColor:theme.background},
   header:{flexDirection:'row',justifyContent:'space-between',alignItems:'center',paddingTop:50,paddingHorizontal:20,paddingBottom:16},
-  backBtn:{width:40,height:40,borderRadius:20,backgroundColor:'#2a3142',justifyContent:'center',alignItems:'center'},
-  title:{fontSize:20,fontWeight:'700',color:'#FFF'},
+  backBtn:{width:40,height:40,borderRadius:20,backgroundColor:theme.surface,justifyContent:'center',alignItems:'center'},
+  title:{fontSize:20,fontWeight:'700',color:theme.text},
   scroll:{flex:1},scrollContent:{paddingHorizontal:16,paddingBottom:40},
-  card:{backgroundColor:'#2a3142',borderRadius:12,marginBottom:14,overflow:'hidden'},
-  cardH:{flexDirection:'row',alignItems:'center',padding:14,borderBottomWidth:1,borderBottomColor:'#3a3f52',gap:10},
-  cardT:{fontSize:15,fontWeight:'600',color:'#FFF'},
+  card:{backgroundColor:theme.surface,borderRadius:12,marginBottom:14,overflow:'hidden'},
+  cardH:{flexDirection:'row',alignItems:'center',padding:14,borderBottomWidth:1,borderBottomColor:theme.border,gap:10},
+  cardT:{fontSize:15,fontWeight:'600',color:theme.text},
   cardC:{padding:14},
+  infoRow:{flexDirection:'row',alignItems:'center',paddingVertical:10,borderBottomWidth:1,gap:10},
+  infoLabel:{fontSize:12,fontWeight:'600',width:80},
+  infoValue:{flex:1,fontSize:13,fontWeight:'500'},
   iGrid:{flexDirection:'row',flexWrap:'wrap',gap:8},
-  iItem:{flexDirection:'row',alignItems:'center',gap:8,backgroundColor:'#1a1d29',padding:10,borderRadius:8,minWidth:'45%',flex:1},
-  iLabel:{fontSize:10,color:'#999',textTransform:'uppercase',letterSpacing:0.5},
-  iValue:{fontSize:13,color:'#FFF',fontWeight:'600',marginTop:2},
+  iItem:{flexDirection:'row',alignItems:'center',gap:8,backgroundColor:theme.background,padding:10,borderRadius:8,minWidth:'45%',flex:1},
+  iLabel:{fontSize:10,color:theme.textMuted,textTransform:'uppercase',letterSpacing:0.5},
+  iValue:{fontSize:13,color:theme.text,fontWeight:'600',marginTop:2},
   mRow:{flexDirection:'row',gap:10,marginBottom:14},
-  mBox:{flex:1,backgroundColor:'#1a1d29',padding:14,borderRadius:10,alignItems:'center'},
-  mLabel:{fontSize:10,color:'#999',textTransform:'uppercase',letterSpacing:0.5,marginBottom:4},
+  mBox:{flex:1,backgroundColor:theme.background,padding:14,borderRadius:10,alignItems:'center'},
+  mLabel:{fontSize:10,color:theme.textMuted,textTransform:'uppercase',letterSpacing:0.5,marginBottom:4},
   mValue:{fontSize:22,fontWeight:'700'},
-  mUnit:{fontSize:9,color:'#666',marginTop:3},
+  mUnit:{fontSize:9,color:theme.textFaint,marginTop:3},
   badge:{flexDirection:'row',alignItems:'center',justifyContent:'center',padding:12,borderRadius:10,borderWidth:1.5,gap:10,marginBottom:8},
   badgeT:{fontSize:16,fontWeight:'700',textTransform:'uppercase',letterSpacing:1},
-  desc:{fontSize:12,color:'#aaa',textAlign:'center',lineHeight:18},
-  tHead:{flexDirection:'row',backgroundColor:'#1a1d29',padding:10,borderRadius:6,marginBottom:4},
+  desc:{fontSize:12,color:theme.textMuted,textAlign:'center',lineHeight:18},
+  tHead:{flexDirection:'row',backgroundColor:theme.background,padding:10,borderRadius:6,marginBottom:4},
   tHT:{flex:1,fontSize:11,fontWeight:'700',color:'#4A90E2',textAlign:'center'},
-  tRow:{flexDirection:'row',padding:10,borderBottomWidth:1,borderBottomColor:'#3a3f52'},
+  tRow:{flexDirection:'row',padding:10,borderBottomWidth:1,borderBottomColor:theme.border},
   tRowT:{backgroundColor:'rgba(74,144,226,0.1)',borderRadius:6},
-  tCell:{flex:1,fontSize:12,color:'#ddd',textAlign:'center'},
+  tCell:{flex:1,fontSize:12,color:theme.textSecondary,textAlign:'center'},
   imgSec:{padding:14,alignItems:'center',backgroundColor:'#000'},
   examImg:{width:'100%',height:350,maxWidth:400,borderRadius:8},
   pdfBtn:{flexDirection:'row',alignItems:'center',justifyContent:'center',backgroundColor:'#1a5276',borderRadius:12,paddingVertical:16,gap:12,marginBottom:10},

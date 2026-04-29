@@ -11,8 +11,11 @@ import {
 } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { deletarPaciente, buscarImagemPorHash } from '../utils/storage';
+import { useTheme } from '../src/contexts/ThemeContext';
 
 const ExameDetalheScreen = ({ route, navigation }) => {
+  const { theme } = useTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
   const {
     id,
     nome,
@@ -27,7 +30,7 @@ const ExameDetalheScreen = ({ route, navigation }) => {
     peso,
     altura,
     operador,
-  } = route.params;
+  } = route.params || {};
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
@@ -246,10 +249,10 @@ const ExameDetalheScreen = ({ route, navigation }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (theme) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1a1d29',
+    backgroundColor: theme.background,
   },
   header: {
     flexDirection: 'row',
@@ -263,7 +266,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#2a3142',
+    backgroundColor: theme.surface,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -280,7 +283,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: theme.text,
   },
   scrollView: {
     flex: 1,
@@ -290,7 +293,7 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   card: {
-    backgroundColor: '#2a3142',
+    backgroundColor: theme.surface,
     borderRadius: 12,
     marginBottom: 16,
     overflow: 'hidden',
@@ -300,13 +303,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#3a3f52',
+    borderBottomColor: theme.border,
     gap: 12,
   },
   cardTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: theme.text,
   },
   cardContent: {
     padding: 16,
@@ -327,13 +330,13 @@ const styles = StyleSheet.create({
   },
   infoLabel: {
     fontSize: 14,
-    color: '#999',
+    color: theme.textMuted,
     fontWeight: '500',
     minWidth: 110,
   },
   infoValue: {
     fontSize: 14,
-    color: '#FFFFFF',
+    color: theme.text,
     fontWeight: '600',
     flex: 1,
   },

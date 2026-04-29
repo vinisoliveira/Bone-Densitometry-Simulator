@@ -53,6 +53,7 @@ export default function CadastroScreen({ navigation }) {
   
   const { alertConfig, showAlert, hideAlert } = useCustomAlert();
   const { theme } = useTheme();
+  const styles = React.useMemo(() => createStyles(theme), [theme]);
   
   const [paciente, setPaciente] = useState('');
   const [idade, setIdade] = useState('');
@@ -202,27 +203,28 @@ export default function CadastroScreen({ navigation }) {
 
   // Função para selecionar imagem ao clicar no tipo de exame
   const selecionarExameComImagem = async (tipoExame) => {
-    // Pedir permissão para acessar a galeria
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    
-    if (status !== 'granted') {
-      showAlert({
-        title: 'Permissão Negada',
-        message: 'Precisamos de permissão para acessar suas fotos.',
-        type: 'error',
-        buttons: [{ text: 'OK' }],
+    try {
+      // Pedir permissão para acessar a galeria
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      
+      if (status !== 'granted') {
+        showAlert({
+          title: 'Permissão Negada',
+          message: 'Precisamos de permissão para acessar suas fotos.',
+          type: 'error',
+          buttons: [{ text: 'OK' }],
+        });
+        return;
+      }
+
+      // Abrir seletor de imagem (API compatível Android/iOS/Web)
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsEditing: Platform.OS !== 'web', // edição não suportada no web
+        quality: 0.9,
       });
-      return;
-    }
 
-    // Abrir seletor de imagem (API compatível Android/iOS/Web)
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
-      allowsEditing: Platform.OS !== 'web', // edição não suportada no web
-      quality: 0.9,
-    });
-
-    if (!result.canceled && result.assets && result.assets.length > 0) {
+      if (!result.canceled && result.assets && result.assets.length > 0) {
       const uri = result.assets[0].uri;
       
       // Convert to base64 data URI for persistence across sessions and platforms
@@ -261,6 +263,15 @@ export default function CadastroScreen({ navigation }) {
           buttons: [{ text: 'OK' }],
         });
       }
+    }
+    } catch (err) {
+      if (__DEV__) console.warn('Erro ao selecionar imagem:', err);
+      showAlert({
+        title: 'Erro',
+        message: 'Não foi possível abrir a galeria. Tente novamente.',
+        type: 'error',
+        buttons: [{ text: 'OK' }],
+      });
     }
   };
 
@@ -754,6 +765,7 @@ export default function CadastroScreen({ navigation }) {
                     key={opcao.nome}
                     style={[
                       styles.examCard,
+                      { backgroundColor: theme.surface, borderColor: theme.border },
                       exame === opcao.nome && styles.examCardSelected,
                     ]}
                     onPress={() => selecionarExameComImagem(opcao.nome)}
@@ -761,6 +773,7 @@ export default function CadastroScreen({ navigation }) {
                   >
                     <Text style={[
                       styles.examText,
+                      { color: theme.textMuted },
                       exame === opcao.nome && styles.examTextSelected
                     ]}>
                       {opcao.nome}
@@ -907,10 +920,10 @@ export default function CadastroScreen({ navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1a1d29',
+    backgroundColor: theme.background,
   },
   header: {
     flexDirection: 'row',
@@ -924,7 +937,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#2a3142',
+    backgroundColor: theme.surface,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -934,7 +947,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: theme.text,
   },
   keyboardView: {
     flex: 1,
@@ -947,7 +960,7 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   formCard: {
-    backgroundColor: '#2a3142',
+    backgroundColor: theme.surface,
     borderRadius: 16,
     padding: 20,
     marginBottom: 20,
@@ -955,12 +968,12 @@ const styles = StyleSheet.create({
   inputGroup: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#1a1d29',
+    backgroundColor: theme.background,
     borderRadius: 12,
     marginBottom: 16,
     paddingHorizontal: 12,
     borderWidth: 1,
-    borderColor: '#3a3f52',
+    borderColor: theme.border,
     minHeight: 52,
   },
   inputIcon: {
@@ -977,7 +990,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 12,
     fontSize: 14,
-    color: '#FFFFFF',
+    color: theme.text,
     minWidth: 0,
   },
   section: {
@@ -993,7 +1006,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 15,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: theme.text,
   },
   optionRow: {
     flexDirection: 'row',
@@ -1001,19 +1014,19 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   optionButton: {
-    backgroundColor: '#1a1d29',
+    backgroundColor: theme.background,
     paddingVertical: 10,
     paddingHorizontal: 16,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: '#3a3f52',
+    borderColor: theme.border,
   },
   optionSelected: {
     backgroundColor: '#4A90E2',
     borderColor: '#4A90E2',
   },
   optionText: {
-    color: '#999',
+    color: theme.textMuted,
     fontSize: 14,
     fontWeight: '500',
   },
@@ -1027,14 +1040,14 @@ const styles = StyleSheet.create({
   },
   examCard: {
     width: '48%',
-    backgroundColor: '#1a1d29',
+    backgroundColor: theme.background,
     borderRadius: 12,
     padding: 14,
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
     borderWidth: 1,
-    borderColor: '#3a3f52',
+    borderColor: theme.border,
     minHeight: 90,
   },
   examCardSelected: {
@@ -1044,7 +1057,7 @@ const styles = StyleSheet.create({
   examText: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#999',
+    color: theme.textMuted,
     textAlign: 'center',
   },
   examTextSelected: {
@@ -1052,7 +1065,7 @@ const styles = StyleSheet.create({
   },
   examDesc: {
     fontSize: 10,
-    color: '#666',
+    color: theme.textFaint,
     textAlign: 'center',
   },
   examDescSelected: {
@@ -1083,7 +1096,7 @@ const styles = StyleSheet.create({
   },
   examInstructions: {
     fontSize: 12,
-    color: '#888',
+    color: theme.textMuted,
     textAlign: 'center',
     marginTop: 8,
     fontStyle: 'italic',
@@ -1091,7 +1104,7 @@ const styles = StyleSheet.create({
   // Estilos para preview de imagem
   imagePreviewContainer: {
     marginTop: 16,
-    backgroundColor: '#1a1d29',
+    backgroundColor: theme.background,
     borderRadius: 12,
     padding: 12,
     borderWidth: 1,
@@ -1135,7 +1148,7 @@ const styles = StyleSheet.create({
   imagePreviewExamType: {
     marginTop: 8,
     fontSize: 12,
-    color: '#999',
+    color: theme.textMuted,
   },
   imagePreviewHash: {
     marginTop: 4,
@@ -1153,7 +1166,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     paddingBottom: 8,
     borderBottomWidth: 1,
-    borderBottomColor: '#3a3f52',
+    borderBottomColor: theme.border,
   },
   formSectionTitleText: {
     fontSize: 14,
@@ -1180,10 +1193,10 @@ const styles = StyleSheet.create({
   },
   datePickerText: {
     fontSize: 14,
-    color: '#FFFFFF',
+    color: theme.text,
   },
   datePickerPlaceholder: {
-    color: '#666',
+    color: theme.textFaint,
   },
   datePickerOverlay: {
     flex: 1,
@@ -1192,7 +1205,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   datePickerContainer: {
-    backgroundColor: '#2a3142',
+    backgroundColor: theme.surface,
     borderRadius: 16,
     padding: 20,
     width: '85%',
@@ -1207,7 +1220,7 @@ const styles = StyleSheet.create({
   datePickerTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: theme.text,
   },
   datePickerConfirmButton: {
     backgroundColor: '#4A90E2',
@@ -1230,12 +1243,12 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   calendarContainer: {
-    backgroundColor: '#2a3142',
+    backgroundColor: theme.surface,
     borderRadius: 16,
     padding: 20,
     maxWidth: 400,
     borderWidth: 1,
-    borderColor: '#3a3f52',
+    borderColor: theme.border,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
@@ -1249,12 +1262,12 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     paddingBottom: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#3a3f52',
+    borderBottomColor: theme.border,
   },
   calendarTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: theme.text,
   },
   calendarNav: {
     flexDirection: 'row',
@@ -1278,12 +1291,12 @@ const styles = StyleSheet.create({
   calendarMonthSelector: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#1a1d29',
+    backgroundColor: theme.background,
     borderRadius: 8,
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderWidth: 1,
-    borderColor: '#3a3f52',
+    borderColor: theme.border,
   },
   calendarMonthText: {
     fontSize: 14,
@@ -1293,12 +1306,12 @@ const styles = StyleSheet.create({
   calendarYearSelector: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#1a1d29',
+    backgroundColor: theme.background,
     borderRadius: 8,
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderWidth: 1,
-    borderColor: '#3a3f52',
+    borderColor: theme.border,
   },
   calendarYearText: {
     fontSize: 14,
@@ -1310,10 +1323,10 @@ const styles = StyleSheet.create({
     top: '100%',
     left: 0,
     minWidth: 120,
-    backgroundColor: '#1a1d29',
+    backgroundColor: theme.background,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#3a3f52',
+    borderColor: theme.border,
     overflow: 'hidden',
     zIndex: 9999,
     marginTop: 4,
@@ -1328,10 +1341,10 @@ const styles = StyleSheet.create({
     top: '100%',
     right: 0,
     minWidth: 80,
-    backgroundColor: '#1a1d29',
+    backgroundColor: theme.background,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#3a3f52',
+    borderColor: theme.border,
     overflow: 'hidden',
     zIndex: 9999,
     marginTop: 4,
@@ -1345,14 +1358,14 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#2a3142',
+    borderBottomColor: theme.border,
   },
   calendarDropdownItemSelected: {
     backgroundColor: 'rgba(74, 144, 226, 0.2)',
   },
   calendarDropdownText: {
     fontSize: 13,
-    color: '#FFFFFF',
+    color: theme.text,
     textAlign: 'center',
   },
   calendarDropdownTextSelected: {
@@ -1365,12 +1378,12 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     paddingBottom: 8,
     borderBottomWidth: 1,
-    borderBottomColor: '#3a3f52',
+    borderBottomColor: theme.border,
   },
   calendarWeekDay: {
     textAlign: 'center',
     fontWeight: '600',
-    color: '#888',
+    color: theme.textMuted,
   },
   calendarDaysGrid: {
     flexDirection: 'row',
@@ -1390,7 +1403,7 @@ const styles = StyleSheet.create({
   },
   calendarDayText: {
     fontSize: 14,
-    color: '#FFFFFF',
+    color: theme.text,
     fontWeight: '500',
   },
   calendarDayTextSelected: {
@@ -1398,14 +1411,14 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   calendarDayTextDisabled: {
-    color: '#666',
+    color: theme.textFaint,
   },
   calendarClearButton: {
     marginTop: 16,
     paddingVertical: 10,
     alignItems: 'center',
     borderTopWidth: 1,
-    borderTopColor: '#3a3f52',
+    borderTopColor: theme.border,
   },
   calendarClearText: {
     fontSize: 14,
@@ -1414,7 +1427,7 @@ const styles = StyleSheet.create({
   },
   requiredNote: {
     fontSize: 11,
-    color: '#666',
+    color: theme.textFaint,
     textAlign: 'center',
     marginTop: 16,
     fontStyle: 'italic',

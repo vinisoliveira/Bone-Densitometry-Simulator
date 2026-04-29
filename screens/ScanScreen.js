@@ -87,7 +87,7 @@ export default function ScanScreen({ route }) {
     }).start();
 
     // Animação de pulso
-    Animated.loop(
+    const pulseLoop = Animated.loop(
       Animated.sequence([
         Animated.timing(pulseAnim, {
           toValue: 1.1,
@@ -102,10 +102,11 @@ export default function ScanScreen({ route }) {
           useNativeDriver: true,
         }),
       ])
-    ).start();
+    );
+    pulseLoop.start();
 
     // Animação de brilho da linha de scan
-    Animated.loop(
+    const glowLoop = Animated.loop(
       Animated.sequence([
         Animated.timing(glowAnim, {
           toValue: 1,
@@ -120,7 +121,8 @@ export default function ScanScreen({ route }) {
           useNativeDriver: true,
         }),
       ])
-    ).start();
+    );
+    glowLoop.start();
 
     // Atualizar progresso
     const progressInterval = setInterval(() => {
@@ -161,6 +163,8 @@ export default function ScanScreen({ route }) {
     return () => {
       clearTimeout(timer);
       clearInterval(progressInterval);
+      pulseLoop.stop();
+      glowLoop.stop();
     };
   }, []);
 
@@ -363,10 +367,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     backgroundColor: '#4A90E2',
     marginRight: 8,
-    shadowColor: '#4A90E2',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 1,
-    shadowRadius: 4,
+    boxShadow: '0 0 4px #4A90E2',
   },
   statusText: {
     color: '#4A90E2',
@@ -409,19 +410,13 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 30,
     backgroundColor: 'rgba(74, 144, 226, 0.3)',
-    shadowColor: '#4A90E2',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 1,
-    shadowRadius: 20,
+    boxShadow: '0 0 20px #4A90E2',
   },
   scanLineCore: {
     width: '100%',
     height: 3,
     backgroundColor: '#4A90E2',
-    shadowColor: '#4A90E2',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 1,
-    shadowRadius: 10,
+    boxShadow: '0 0 10px #4A90E2',
     elevation: 10,
   },
   image: {
@@ -492,10 +487,7 @@ const styles = StyleSheet.create({
     padding: 20,
     borderWidth: 1,
     borderColor: 'rgba(74, 144, 226, 0.2)',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
+    boxShadow: '0 4px 8px rgba(0,0,0,0.3)',
     elevation: 5,
   },
   cardRow: {
@@ -550,10 +542,7 @@ const styles = StyleSheet.create({
     height: '100%',
     backgroundColor: '#4A90E2',
     borderRadius: 4,
-    shadowColor: '#4A90E2',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 1,
-    shadowRadius: 8,
+    boxShadow: '0 0 8px #4A90E2',
   },
   patientInfo: {
     backgroundColor: 'rgba(74, 144, 226, 0.08)',

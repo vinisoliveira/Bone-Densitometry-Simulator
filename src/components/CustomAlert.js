@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, Modal, StyleSheet } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
+import { useTheme } from '../contexts/ThemeContext';
 
 /**
  * Componente de Alert customizado no estilo do projeto
@@ -21,6 +22,8 @@ export default function CustomAlert({
   buttons = [{ text: 'OK', onPress: () => {} }],
   onClose 
 }) {
+  const { theme } = useTheme();
+  const styles = createStyles(theme);
   
   const getIconConfig = () => {
     switch (type) {
@@ -149,7 +152,7 @@ export default function CustomAlert({
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme) => StyleSheet.create({
   overlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.7)',
@@ -158,14 +161,14 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   container: {
-    backgroundColor: '#2a3142',
+    backgroundColor: theme.surface,
     borderRadius: 16,
     padding: 24,
     width: '100%',
     maxWidth: 340,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#3a3f52',
+    borderColor: theme.border,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
@@ -183,13 +186,13 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: theme.text,
     textAlign: 'center',
     marginBottom: 12,
   },
   message: {
     fontSize: 14,
-    color: '#AAAAAA',
+    color: theme.textMuted,
     textAlign: 'center',
     lineHeight: 20,
     marginBottom: 24,
@@ -215,7 +218,7 @@ const styles = StyleSheet.create({
   buttonCancel: {
     backgroundColor: 'transparent',
     borderWidth: 1,
-    borderColor: '#3a3f52',
+    borderColor: theme.border,
   },
   buttonDestructive: {
     backgroundColor: '#E74C3C',
@@ -228,7 +231,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   buttonTextCancel: {
-    color: '#AAAAAA',
+    color: theme.textMuted,
   },
   buttonTextDestructive: {
     color: '#FFFFFF',

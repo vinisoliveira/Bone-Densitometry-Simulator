@@ -6,6 +6,7 @@ import { useTheme } from '../src/contexts/ThemeContext';
 
 const SobreScreen = ({ navigation }) => {
   const { theme } = useTheme();
+  const styles = React.useMemo(() => createStyles(theme), [theme]);
   const InfoCard = ({ icon, title, children }) => (
     <View style={[styles.card, { backgroundColor: theme.surface }]}>
       <View style={[styles.cardHeader, { borderBottomColor: theme.border }]}>
@@ -88,6 +89,7 @@ const SobreScreen = ({ navigation }) => {
 
 const TechItem = ({ icon, name }) => {
   const { theme } = useTheme();
+  const styles = React.useMemo(() => createStyles(theme), [theme]);
   return (
     <View style={styles.techItem}>
       <FontAwesome5 name={icon} size={16} color="#667eea" />
@@ -98,6 +100,7 @@ const TechItem = ({ icon, name }) => {
 
 const DevItem = ({ name }) => {
   const { theme } = useTheme();
+  const styles = React.useMemo(() => createStyles(theme), [theme]);
   return (
     <View style={styles.devItem}>
       <View style={styles.devIcon}>
@@ -108,10 +111,10 @@ const DevItem = ({ name }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (theme) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1a1d29',
+    backgroundColor: theme.background,
   },
   header: {
     flexDirection: 'row',
@@ -125,7 +128,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#2a3142',
+    backgroundColor: theme.surface,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -135,7 +138,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: theme.text,
   },
   scrollView: {
     flex: 1,
@@ -152,7 +155,7 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: '#2a3142',
+    backgroundColor: theme.surface,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 16,
@@ -160,15 +163,15 @@ const styles = StyleSheet.create({
   appName: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: theme.text,
     marginBottom: 4,
   },
   appVersion: {
     fontSize: 14,
-    color: '#999',
+    color: theme.textMuted,
   },
   card: {
-    backgroundColor: '#2a3142',
+    backgroundColor: theme.surface,
     borderRadius: 12,
     marginBottom: 16,
     overflow: 'hidden',
@@ -178,7 +181,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#3a3f52',
+    borderBottomColor: theme.border,
   },
   iconWrapper: {
     width: 36,
@@ -192,14 +195,14 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: theme.text,
   },
   cardContent: {
     padding: 16,
   },
   text: {
     fontSize: 14,
-    color: '#ccc',
+    color: theme.textSecondary,
     lineHeight: 22,
   },
   techList: {
@@ -212,7 +215,7 @@ const styles = StyleSheet.create({
   },
   techText: {
     fontSize: 14,
-    color: '#ccc',
+    color: theme.textSecondary,
     fontWeight: '500',
   },
   devList: {
@@ -233,12 +236,12 @@ const styles = StyleSheet.create({
   },
   devText: {
     fontSize: 14,
-    color: '#ccc',
+    color: theme.textSecondary,
     fontWeight: '600',
   },
   classText: {
     fontSize: 14,
-    color: '#ccc',
+    color: theme.textSecondary,
     lineHeight: 22,
   },
   footer: {
@@ -247,7 +250,7 @@ const styles = StyleSheet.create({
   },
   footerText: {
     fontSize: 12,
-    color: '#666',
+    color: theme.textMuted,
   },
 });
 

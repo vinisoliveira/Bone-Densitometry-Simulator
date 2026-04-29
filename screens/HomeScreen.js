@@ -8,6 +8,7 @@ const { width } = Dimensions.get('window');
 
 const HomeScreen = memo(({ navigation }) => {
   const { theme } = useTheme();
+  const styles = React.useMemo(() => createStyles(theme), [theme]);
   const navegarPara = (tela) => () => navigation.navigate(tela);
 
   const MenuItem = ({ icon, label, subtitle, onPress }) => {
@@ -25,7 +26,7 @@ const HomeScreen = memo(({ navigation }) => {
             <Text style={[styles.menuLabel, { color: theme.text }]}>{label}</Text>
             <Text style={[styles.menuSubtitle, { color: theme.textMuted }]}>{subtitle}</Text>
           </View>
-          <FontAwesome5 name="chevron-right" size={18} color="#666" />
+          <FontAwesome5 name="chevron-right" size={18} color={theme.textMuted} />
         </TouchableOpacity>
       </View>
     );
@@ -91,10 +92,10 @@ const HomeScreen = memo(({ navigation }) => {
 
 export default HomeScreen;
 
-const styles = StyleSheet.create({
+const createStyles = (theme) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1a1d29',
+    backgroundColor: theme.background,
   },
   scrollContent: {
     flexGrow: 1,
@@ -131,20 +132,20 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: theme.text,
     textAlign: 'center',
   },
   subtitle: {
     fontSize: 20,
     fontWeight: '300',
-    color: '#FFFFFF',
+    color: theme.text,
     textAlign: 'center',
     marginTop: spacing.xs,
     marginBottom: spacing.md,
   },
   description: {
     fontSize: 14,
-    color: '#999',
+    color: theme.textMuted,
     textAlign: 'center',
     paddingHorizontal: spacing.xl,
   },
@@ -155,13 +156,13 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: theme.text,
     marginBottom: spacing.md,
   },
   menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#2a3142',
+    backgroundColor: theme.surface,
     borderRadius: 16,
     padding: spacing.lg,
     marginBottom: spacing.md,
@@ -186,12 +187,12 @@ const styles = StyleSheet.create({
   menuLabel: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: theme.text,
     marginBottom: 4,
   },
   menuSubtitle: {
     fontSize: 14,
-    color: '#999',
+    color: theme.textMuted,
   },
   footer: {
     paddingBottom: spacing.xl,
@@ -200,7 +201,7 @@ const styles = StyleSheet.create({
   },
   footerText: {
     fontSize: 12,
-    color: '#666',
+    color: theme.textMuted,
     textAlign: 'center',
   },
   configButton: {
@@ -213,7 +214,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: '#2a3142',
+    backgroundColor: theme.surface,
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',

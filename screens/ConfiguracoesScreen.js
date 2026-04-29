@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch, ActivityIndicator } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
@@ -12,6 +12,7 @@ import { useTheme } from '../src/contexts/ThemeContext';
 const ConfiguracoesScreen = ({ navigation }) => {
   const { theme, isDark, toggleTheme } = useTheme();
   const { alertConfig, showAlert, hideAlert } = useCustomAlert();
+  const styles = React.useMemo(() => createStyles(theme), [theme]);
 
   const handleCriarBackup = async () => {
     try {
@@ -122,23 +123,23 @@ const ConfiguracoesScreen = ({ navigation }) => {
   );
 };
 
-const styles = StyleSheet.create({
-  container:{flex:1,backgroundColor:'#1a1d29'},
+const createStyles = (theme) => StyleSheet.create({
+  container:{flex:1,backgroundColor:theme.background},
   header:{flexDirection:'row',justifyContent:'space-between',alignItems:'center',paddingTop:50,paddingHorizontal:20,paddingBottom:20},
-  backButton:{width:40,height:40,borderRadius:20,backgroundColor:'#2a3142',justifyContent:'center',alignItems:'center'},
-  title:{fontSize:20,fontWeight:'700',color:'#FFF'},
+  backButton:{width:40,height:40,borderRadius:20,backgroundColor:theme.surface,justifyContent:'center',alignItems:'center'},
+  title:{fontSize:20,fontWeight:'700',color:theme.text},
   scrollView:{flex:1},scrollContent:{paddingHorizontal:20,paddingBottom:40},
   section:{marginBottom:24},
-  sectionTitle:{fontSize:12,fontWeight:'700',color:'#666',marginBottom:12,letterSpacing:1},
-  sectionCard:{backgroundColor:'#2a3142',borderRadius:12,overflow:'hidden'},
+  sectionTitle:{fontSize:12,fontWeight:'700',color:theme.textMuted,marginBottom:12,letterSpacing:1},
+  sectionCard:{backgroundColor:theme.surface,borderRadius:12,overflow:'hidden'},
   settingItem:{flexDirection:'row',alignItems:'center',padding:16},
   settingIcon:{width:36,height:36,borderRadius:18,backgroundColor:'rgba(74,144,226,0.15)',justifyContent:'center',alignItems:'center',marginRight:12},
   settingContent:{flex:1},
-  settingTitle:{fontSize:15,fontWeight:'600',color:'#FFF',marginBottom:2},
-  settingSubtitle:{fontSize:13,color:'#999'},
-  divider:{height:1,backgroundColor:'#3a3f52',marginLeft:64},
+  settingTitle:{fontSize:15,fontWeight:'600',color:theme.text,marginBottom:2},
+  settingSubtitle:{fontSize:13,color:theme.textMuted},
+  divider:{height:1,backgroundColor:theme.border,marginLeft:64},
   versionContainer:{alignItems:'center',paddingVertical:24},
-  versionText:{fontSize:13,color:'#666'},
+  versionText:{fontSize:13,color:theme.textMuted},
 });
 
 export default ConfiguracoesScreen;

@@ -25,6 +25,7 @@ const BackupsScreen = ({ navigation }) => {
   const [refreshing, setRefreshing] = useState(false);
   const { alertConfig, showAlert, hideAlert } = useCustomAlert();
   const { theme } = useTheme();
+  const styles = React.useMemo(() => createStyles(theme), [theme]);
   
   // Estado para guardar ação pendente de confirmação
   const [pendingAction, setPendingAction] = useState(null);
@@ -320,10 +321,10 @@ const BackupsScreen = ({ navigation }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (theme) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1a1d29',
+    backgroundColor: theme.background,
   },
   header: {
     flexDirection: 'row',
@@ -337,7 +338,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#2a3142',
+    backgroundColor: theme.surface,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -345,14 +346,14 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#2a3142',
+    backgroundColor: theme.surface,
     justifyContent: 'center',
     alignItems: 'center',
   },
   title: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: theme.text,
   },
   scrollView: {
     flex: 1,
@@ -373,19 +374,19 @@ const styles = StyleSheet.create({
   infoText: {
     flex: 1,
     fontSize: 13,
-    color: '#999',
+    color: theme.textMuted,
     lineHeight: 18,
   },
   sectionTitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#666',
+    color: theme.textMuted,
     marginBottom: 16,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   backupCard: {
-    backgroundColor: '#2a3142',
+    backgroundColor: theme.surface,
     borderRadius: 16,
     padding: 16,
     marginBottom: 16,
@@ -410,12 +411,12 @@ const styles = StyleSheet.create({
   backupNome: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: theme.text,
     marginBottom: 2,
   },
   backupData: {
     fontSize: 13,
-    color: '#999',
+    color: theme.textMuted,
   },
   backupStats: {
     flexDirection: 'row',
@@ -423,7 +424,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderTopWidth: 1,
     borderBottomWidth: 1,
-    borderColor: '#3a3f52',
+    borderColor: theme.border,
     marginBottom: 12,
   },
   statItem: {
@@ -433,7 +434,7 @@ const styles = StyleSheet.create({
   },
   statText: {
     fontSize: 13,
-    color: '#999',
+    color: theme.textMuted,
   },
   backupActions: {
     flexDirection: 'row',
@@ -469,7 +470,7 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: '#2a3142',
+    backgroundColor: theme.surface,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 20,
@@ -477,12 +478,12 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: theme.text,
     marginBottom: 10,
   },
   emptyText: {
     fontSize: 14,
-    color: '#999',
+    color: theme.textMuted,
     textAlign: 'center',
     lineHeight: 22,
   },

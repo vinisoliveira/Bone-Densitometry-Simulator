@@ -7,6 +7,7 @@ import { useTheme } from '../src/contexts/ThemeContext';
 
 export default function ListaScreen({ navigation }) {
   const { theme } = useTheme();
+  const styles = React.useMemo(() => createStyles(theme), [theme]);
   const [pacientes, setPacientes] = useState([]);
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
@@ -68,11 +69,11 @@ export default function ListaScreen({ navigation }) {
         <View style={styles.cardContent}>
           <Text style={styles.nome}>{item.nome}</Text>
           <View style={styles.exameContainer}>
-            <FontAwesome5 name="file-medical-alt" size={12} color="#999" />
+            <FontAwesome5 name="file-medical-alt" size={12} color={theme.textMuted} />
             <Text style={styles.exame}>{item.exame}</Text>
           </View>
         </View>
-        <FontAwesome5 name="chevron-right" size={16} color="#666" />
+        <FontAwesome5 name="chevron-right" size={16} color={theme.textMuted} />
       </TouchableOpacity>
     );
   };
@@ -138,10 +139,10 @@ export default function ListaScreen({ navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1a1d29',
+    backgroundColor: theme.background,
   },
   header: {
     flexDirection: 'row',
@@ -155,7 +156,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#2a3142',
+    backgroundColor: theme.surface,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -163,14 +164,14 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#2a3142',
+    backgroundColor: theme.surface,
     justifyContent: 'center',
     alignItems: 'center',
   },
   title: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: theme.text,
     textAlign: 'center',
   },
   list: {
@@ -180,7 +181,7 @@ const styles = StyleSheet.create({
   card: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#2a3142',
+    backgroundColor: theme.surface,
     borderRadius: 12,
     padding: spacing.md,
     marginBottom: spacing.md,
@@ -205,7 +206,7 @@ const styles = StyleSheet.create({
   nome: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: theme.text,
     marginBottom: 4,
   },
   exameContainer: {
@@ -215,7 +216,7 @@ const styles = StyleSheet.create({
   },
   exame: {
     fontSize: 13,
-    color: '#999',
+    color: theme.textMuted,
   },
   emptyContainer: {
     flex: 1,
@@ -225,13 +226,13 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 18,
-    color: '#FFFFFF',
+    color: theme.text,
     marginTop: spacing.lg,
     fontWeight: '600',
   },
   emptySubtext: {
     fontSize: 14,
-    color: '#999',
+    color: theme.textMuted,
     marginTop: spacing.sm,
     marginBottom: spacing.xl,
     textAlign: 'center',

@@ -53,6 +53,8 @@ const BodyROI = ({
   containerSize,
   customSize,
 }) => {
+  const { theme } = useTheme();
+  const styles = React.useMemo(() => createStyles(theme), [theme]);
   const startPosRef = useRef({ x: region.x, y: region.y });
   const currentPosRef = useRef({ x: region.x, y: region.y });
   const [currentPos, setCurrentPos] = useState({ x: region.x, y: region.y });
@@ -209,7 +211,7 @@ export default function ResultadoCorpoTotalScreen({ route }) {
     roiPositions: initialRoiPositions = {},
     roiScale: initialRoiScale = 1,
     roiSizes: initialRoiSizes = {},
-  } = route.params;
+  } = route.params || {};
 
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const isNarrow = screenWidth < 600;

@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, Dimensions } from 'react-native';
 import Svg, { Rect, Line, Text as SvgText, Path, Circle } from 'react-native-svg';
+import { useTheme } from '../contexts/ThemeContext';
 
 const { width: screenWidth } = Dimensions.get('window');
 const CHART_WIDTH = screenWidth - 80;
@@ -8,6 +9,8 @@ const CHART_HEIGHT = 260;
 const PADDING = { top: 20, right: 20, bottom: 50, left: 20 };
 
 export default function DensitometryChart({ tScore, age, examType }) {
+  const { theme } = useTheme();
+  const styles = createStyles(theme);
   // Zonas de classificação baseadas em T-Score
   const zones = [
     { name: 'Normal', color: '#4CAF50', tScoreMin: -1, tScoreMax: 3, label: 'T-Score: > -1' },
@@ -147,7 +150,7 @@ export default function DensitometryChart({ tScore, age, examType }) {
                 y1={y}
                 x2={CHART_WIDTH - PADDING.right}
                 y2={y}
-                stroke="#2a3142"
+                stroke={theme.surface}
                 strokeWidth="2"
                 strokeDasharray="5,5"
               />
@@ -162,7 +165,7 @@ export default function DensitometryChart({ tScore, age, examType }) {
               y1={PADDING.top}
               x2={getX(age)}
               y2={CHART_HEIGHT - PADDING.bottom}
-              stroke="#3a3f52"
+              stroke={theme.border}
               strokeWidth="1"
               strokeDasharray="3,3"
               opacity={0.5}
@@ -199,7 +202,7 @@ export default function DensitometryChart({ tScore, age, examType }) {
             y1={CHART_HEIGHT - PADDING.bottom}
             x2={CHART_WIDTH - PADDING.right}
             y2={CHART_HEIGHT - PADDING.bottom}
-            stroke="#FFFFFF"
+            stroke={theme.text}
             strokeWidth="2"
           />
 
@@ -209,7 +212,7 @@ export default function DensitometryChart({ tScore, age, examType }) {
               key={`x-label-${index}`}
               x={getX(age)}
               y={CHART_HEIGHT - PADDING.bottom + 20}
-              fill="#FFFFFF"
+              fill={theme.text}
               fontSize="12"
               fontWeight="600"
               textAnchor="middle"
@@ -222,7 +225,7 @@ export default function DensitometryChart({ tScore, age, examType }) {
           <SvgText
             x={CHART_WIDTH / 2}
             y={CHART_HEIGHT - 10}
-            fill="#FFFFFF"
+            fill={theme.text}
             fontSize="13"
             fontWeight="700"
             textAnchor="middle"
@@ -325,19 +328,19 @@ export default function DensitometryChart({ tScore, age, examType }) {
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme) => StyleSheet.create({
   container: {
     width: '100%',
   },
   chartContainer: {
     alignItems: 'center',
-    backgroundColor: '#1e2230',
+    backgroundColor: theme.card,
     borderRadius: 12,
     padding: 10,
     marginBottom: 16,
   },
   legend: {
-    backgroundColor: '#2a3142',
+    backgroundColor: theme.surface,
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
@@ -345,7 +348,7 @@ const styles = StyleSheet.create({
   legendTitle: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: theme.text,
     marginBottom: 12,
     textAlign: 'center',
   },
@@ -373,12 +376,12 @@ const styles = StyleSheet.create({
   legendName: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: theme.text,
     marginBottom: 2,
   },
   legendScore: {
     fontSize: 11,
-    color: '#999',
+    color: theme.textMuted,
   },
   infoBox: {
     backgroundColor: 'rgba(74, 144, 226, 0.1)',
@@ -395,12 +398,12 @@ const styles = StyleSheet.create({
   },
   infoText: {
     fontSize: 12,
-    color: '#CCCCCC',
+    color: theme.textSecondary,
     marginBottom: 6,
     lineHeight: 18,
   },
   infoBold: {
     fontWeight: '700',
-    color: '#FFFFFF',
+    color: theme.text,
   },
 });
